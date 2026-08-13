@@ -1,0 +1,68 @@
+import { Canvas } from "@react-three/fiber";
+import { useWorldStore } from "../../store/worldStore";
+import { useFarmStore } from "../../store/farmStore";
+import { useUiStore } from "../../store/uiStore";
+import { useInteriorStore } from "../../store/interiorStore";
+import { useCameraStore } from "../../store/cameraStore";
+import { createRenderer } from "../renderer/renderer";
+import { CameraRig } from "../camera/CameraRig";
+import { PostFX } from "../fx/PostFX";
+import { Terrain } from "../../entities/terrain/Terrain";
+import { Water } from "../../entities/terrain/Water";
+import { Trees } from "../../entities/vegetation/Trees";
+import { GrassField } from "../../entities/vegetation/GrassField";
+import { Flowers } from "../../entities/vegetation/Flowers";
+import { Rocks } from "../../entities/vegetation/Rocks";
+import { Buildings } from "../../entities/buildings/Buildings";
+import { Animals } from "../../entities/animals/Animals";
+import { TimeSystem } from "../../systems/time/TimeSystem";
+import { WeatherSystem, Rain } from "../../systems/weather/WeatherSystem";
+import { EconomySystem } from "../../systems/economy/EconomySystem";
+import { PhysicsWorld } from "../../systems/physics/PhysicsWorld";
+import { InteriorCamera } from "../interiors/InteriorCamera";
+import { InteriorGroup } from "../interiors/InteriorGroup";
+
+export function Experience() {
+  const booted = useWorldStore((s) => s.booted);
+
+  return (
+    <Canvas
+      shadows
+      dpr={[1, 2]}
+      gl={createRenderer as unknown as React.ComponentProps<typeof Canvas>["gl"]}
+      camera={{ fov: 50, near: 0.5, far: 1600, position: [110, 95, -125] }}
+      onCreated={(state) => {
+        useWorldStore.getState().setBooted(true);
+        (window as unknown as Record<string, unknown>).__IFS__ = {
+          renderer: state.gl,
+          scene: state.scene,
+          camera: state.camera,
+          ui: useUiStore,
+          world: useWorldStore,
+          interior: useInteriorStore,
+          cameraCtl: useCameraStore,
+          farm: useFarmStore,
+        };
+      }}
+    >
+      <color attach="background" args={["#a9cfe6"]} />
+      <TimeSystem />
+      <CameraRig />
+      <InteriorCamera />
+      <InteriorGroup />
+      <Terrain />
+      <Water />
+      <GrassField />
+      <Trees />
+      <Flowers />
+      <Rocks />
+      <Buildings />
+      <Animals />
+      <WeatherSystem />
+      <Rain />
+      <EconomySystem />
+      <PhysicsWorld />
+      {booted && <PostFX />}
+    </Canvas>
+  );
+}
