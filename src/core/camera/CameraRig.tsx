@@ -25,12 +25,18 @@ export function CameraRig() {
   });
 
   const activeKeys = useRef<Set<string>>(new Set());
-  const dragState = useRef({ down: false, x: 0, y: 0 });
+  const dragState = useRef<{ down: boolean; x: number; y: number; mode: "pan" | "rotate" }>({
+    down: false,
+    x: 0,
+    y: 0,
+    mode: "pan",
+  });
   const panVel = useRef({ x: 0, z: 0 });
-  const zoomVel = useRef(0);
 
   useEffect(() => {
     const el = gl.domElement;
+    const prevTouchAction = el.style.touchAction;
+    el.style.touchAction = "none";
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (keys.includes(e.code)) {
@@ -43,29 +49,79 @@ export function CameraRig() {
 
     const onContextMenu = (e: Event) => e.preventDefault();
 
+    const activePointers = new Map<number, { x: number; y: number }>();
+    let pinchDist: number | null = null;
+
+    const pointerDist = () => {
+      const pts = [...activePointers.values()];
+      return pts.length < 2 ? 0 : Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    };
+
     const onPointerDown = (e: PointerEvent) => {
-      if (e.button === 0) {
-        dragState.current = { down: true, x: e.clientX, y: e.clientY };
+      if (e.pointerType === "touch") {
+        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (activePointers.size === 2) {
+          pinchDist = pointerDist();
+          dragState.current.down = false;
+        }
+      }
+      const mode: "pan" | "rotate" = e.pointerType === "touch" ? "rotate" : e.button === 2 ? "rotate" : "pan";
+      if (activePointers.size < 2) {
+        dragState.current = { down: true, x: e.clientX, y: e.clientY, mode };
       }
     };
+
     const onPointerMove = (e: PointerEvent) => {
       const st = useCameraStore.getState();
+      if (e.pointerType === "touch") {
+        const p = activePointers.get(e.pointerId);
+        if (p) {
+          p.x = e.clientX;
+          p.y = e.clientY;
+        }
+        if (activePointers.size >= 2 && pinchDist !== null) {
+          const d = pointerDist();
+          const scale = d / pinchDist;
+          pinchDist = d;
+          if (scale > 0 && Math.abs(1 - scale) > 0.001) {
+            st.setDistance(clamp(st.distance / scale, CAMERA.distanceMin, CAMERA.distanceMax));
+          }
+          return;
+        }
+      }
       if (dragState.current.down) {
         const dx = e.clientX - dragState.current.x;
         const dy = e.clientY - dragState.current.y;
         dragState.current.x = e.clientX;
         dragState.current.y = e.clientY;
-        st.setYaw(st.yaw - dx * CAMERA.rotateSpeed);
-        st.setPitch(clamp(st.pitch + dy * CAMERA.rotateSpeed, CAMERA.pitchMin, CAMERA.pitchMax));
+        if (dragState.current.mode === "pan") {
+          const k = st.distance * 0.0008;
+          const rightX = Math.cos(st.yaw);
+          const rightZ = -Math.sin(st.yaw);
+          const fwdX = Math.sin(st.yaw);
+          const fwdZ = Math.cos(st.yaw);
+          st.nudgeTarget(-rightX * dx * k + fwdX * dy * k, -rightZ * dx * k + fwdZ * dy * k);
+        } else {
+          st.setYaw(st.yaw - dx * CAMERA.rotateSpeed);
+          st.setPitch(clamp(st.pitch + dy * CAMERA.rotateSpeed, CAMERA.pitchMin, CAMERA.pitchMax));
+        }
       }
     };
-    const onPointerUp = (e: PointerEvent) => {
-      if (e.button === 0) dragState.current.down = false;
+
+    const onPointerEnd = (e: PointerEvent) => {
+      if (e.pointerType === "touch") {
+        activePointers.delete(e.pointerId);
+        pinchDist = null;
+      }
+      if (e.button === 0 || e.button === 2) dragState.current.down = false;
     };
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      zoomVel.current += Math.sign(e.deltaY) * CAMERA.zoomSpeed;
+      const st = useCameraStore.getState();
+      st.setDistance(
+        clamp(st.distance * Math.exp(-e.deltaY * CAMERA.zoomSpeed), CAMERA.distanceMin, CAMERA.distanceMax)
+      );
     };
 
     window.addEventListener("keydown", onKeyDown);
@@ -74,17 +130,20 @@ export function CameraRig() {
     el.addEventListener("contextmenu", onContextMenu);
     el.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointerup", onPointerEnd);
+    window.addEventListener("pointercancel", onPointerEnd);
     el.addEventListener("wheel", onWheel, { passive: false });
 
     return () => {
+      el.style.touchAction = prevTouchAction;
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", onBlur);
       el.removeEventListener("contextmenu", onContextMenu);
       el.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointerup", onPointerEnd);
+      window.removeEventListener("pointercancel", onPointerEnd);
       el.removeEventListener("wheel", onWheel);
     };
   }, [gl]);
@@ -120,8 +179,7 @@ export function CameraRig() {
 
     c.yaw = damp(c.yaw, goal.yaw, CAMERA.damping, dt);
     c.pitch = damp(c.pitch, goal.pitch, CAMERA.damping, dt);
-    c.distance = damp(c.distance, clamp(goal.distance + zoomVel.current * 60, CAMERA.distanceMin, CAMERA.distanceMax), CAMERA.damping, dt);
-    zoomVel.current = 0;
+    c.distance = damp(c.distance, clamp(goal.distance, CAMERA.distanceMin, CAMERA.distanceMax), CAMERA.damping, dt);
 
     const limit = WORLD.half - 15;
     const gx = clamp(goal.target[0], -limit, limit);
