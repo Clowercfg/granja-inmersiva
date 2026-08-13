@@ -68,42 +68,56 @@ export interface FenceSeg {
 }
 
 const FENCE_SPACING = 6;
-const GATE_GAP = 4;
+/** Media anchura de la puerta: la cerca se pega justo a sus bordes sin dejar hueco. */
+const GATE_HALF = 2;
 
-function gateAxis(def: EnclosureDef): "x" | "z" {
-  return def.gate.edge === "minX" || def.gate.edge === "maxX" ? "z" : "x";
-}
-
-function onGate(def: EnclosureDef, edge: EnclosureDef["gate"]["edge"], coord: number): boolean {
-  if (def.gate.edge !== edge) return false;
-  const axis = gateAxis(def);
-  const lo = axis === "x" ? def.bounds.minX : def.bounds.minZ;
-  const hi = axis === "x" ? def.bounds.maxX : def.bounds.maxZ;
-  const center = lo + def.gate.t * (hi - lo);
-  return Math.abs(coord - center) < GATE_GAP;
+function tileCenters(from: number, to: number, len: number): number[] {
+  const span = to - from;
+  if (span <= 0) return [];
+  const n = Math.max(1, Math.ceil(span / len));
+  const step = span / n;
+  const out: number[] = [];
+  for (let i = 0; i < n; i++) out.push(from + (i + 0.5) * step);
+  return out;
 }
 
 /** Genera los segmentos de cerca del perímetro del corral, dejando hueco para la puerta. */
 export function getEnclosureFences(def: EnclosureDef): FenceSeg[] {
   const b = def.bounds;
   const segs: FenceSeg[] = [];
-  const step = FENCE_SPACING;
+  const len = FENCE_SPACING;
 
-  for (let x = b.minX + step / 2; x < b.maxX - step / 2; x += step) {
-    if (!onGate(def, "minZ", x)) segs.push({ x, z: b.minZ, rot: 0 });
-    if (!onGate(def, "maxZ", x)) segs.push({ x, z: b.maxZ, rot: 0 });
-  }
-  for (let z = b.minZ + step / 2; z < b.maxZ - step / 2; z += step) {
-    if (!onGate(def, "minX", z)) segs.push({ x: b.minX, z, rot: Math.PI / 2 });
-    if (!onGate(def, "maxX", z)) segs.push({ x: b.maxX, z, rot: Math.PI / 2 });
-  }
+  const addEdge = (edge: "minX" | "maxX" | "minZ" | "maxZ", fixed: number, rot: number) => {
+    const alongX = edge === "minZ" || edge === "maxZ";
+    const lo = alongX ? b.minX : b.minZ;
+    const hi = alongX ? b.maxX : b.maxZ;
+    const ranges: Array<[number, number]> = [];
+    if (def.gate.edge === edge) {
+      const center = lo + def.gate.t * (hi - lo);
+      ranges.push([lo, center - GATE_HALF], [center + GATE_HALF, hi]);
+    } else {
+      ranges.push([lo, hi]);
+    }
+    for (const [from, to] of ranges) {
+      for (const c of tileCenters(from, to, len)) {
+        if (alongX) segs.push({ x: c, z: fixed, rot });
+        else segs.push({ x: fixed, z: c, rot });
+      }
+    }
+  };
+
+  addEdge("minZ", b.minZ, 0);
+  addEdge("maxZ", b.maxZ, 0);
+  addEdge("minX", b.minX, Math.PI / 2);
+  addEdge("maxX", b.maxX, Math.PI / 2);
+
   return segs;
 }
 
 export function getGatePositions(def: EnclosureDef): Array<{ x: number; z: number; rot: number }> {
-  const axis = gateAxis(def);
-  const lo = axis === "x" ? def.bounds.minX : def.bounds.minZ;
-  const hi = axis === "x" ? def.bounds.maxX : def.bounds.maxZ;
+  const alongX = def.gate.edge === "minZ" || def.gate.edge === "maxZ";
+  const lo = alongX ? def.bounds.minX : def.bounds.minZ;
+  const hi = alongX ? def.bounds.maxX : def.bounds.maxZ;
   const c = lo + def.gate.t * (hi - lo);
   const b = def.bounds;
   const rot = def.gate.edge === "minX" || def.gate.edge === "maxX" ? Math.PI / 2 : 0;

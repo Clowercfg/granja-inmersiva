@@ -8,6 +8,8 @@ import { useSelectionStore } from "../../store/selectionStore";
 import { useInteriorStore } from "../../store/interiorStore";
 import { terrainHeight } from "../../utils/terrain";
 import { SelectionRing } from "../common/SelectionRing";
+import { useAsset } from "../../core/assets/useAsset";
+import { cloneAsset } from "../../core/assets/assetStore";
 
 export interface BuildingProps {
   uid: string;
@@ -35,7 +37,8 @@ function buildMesh(type: BuildingType): THREE.Group {
 }
 
 export function Building({ uid, type, position, rotation, level }: BuildingProps) {
-  const mesh = useMemo(() => buildMesh(type), [type]);
+  const asset = useAsset(`building:${type}`);
+  const mesh = useMemo(() => cloneAsset(asset) ?? buildMesh(type), [asset, type]);
   const select = useSelectionStore((s) => s.select);
   const setHover = useSelectionStore((s) => s.setHover);
   const selected = useSelectionStore((s) => s.selected?.uid === uid);

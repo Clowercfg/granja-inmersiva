@@ -4,10 +4,20 @@ import { useFrame } from "@react-three/fiber";
 import { buildTreeGeometry } from "./treeGeometry";
 import { getVegetation } from "./vegetationData";
 import { useRendererMode } from "../../core/renderer/useRendererMode";
+import { useAsset } from "../../core/assets/useAsset";
+import { geometryFromObject, ensureWhiteVertexColors } from "../../core/assets/assetStore";
 
 export function Trees() {
   const mode = useRendererMode();
-  const treeGeo = useMemo(() => buildTreeGeometry(), []);
+  const asset = useAsset("tree");
+
+  const treeGeo = useMemo(() => {
+    if (asset.status === "loaded" && asset.object) {
+      const geo = geometryFromObject(asset.object);
+      if (geo) return ensureWhiteVertexColors(geo);
+    }
+    return buildTreeGeometry();
+  }, [asset]);
 
   const instanced = useMemo(() => {
     const data = getVegetation().trees;

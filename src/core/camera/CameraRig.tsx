@@ -25,7 +25,7 @@ export function CameraRig() {
   });
 
   const activeKeys = useRef<Set<string>>(new Set());
-  const rightState = useRef({ down: false, x: 0, y: 0 });
+  const dragState = useRef({ down: false, x: 0, y: 0 });
   const panVel = useRef({ x: 0, z: 0 });
   const zoomVel = useRef(0);
 
@@ -44,23 +44,23 @@ export function CameraRig() {
     const onContextMenu = (e: Event) => e.preventDefault();
 
     const onPointerDown = (e: PointerEvent) => {
-      if (e.button === 2) {
-        rightState.current = { down: true, x: e.clientX, y: e.clientY };
+      if (e.button === 0) {
+        dragState.current = { down: true, x: e.clientX, y: e.clientY };
       }
     };
     const onPointerMove = (e: PointerEvent) => {
       const st = useCameraStore.getState();
-      if (rightState.current.down) {
-        const dx = e.clientX - rightState.current.x;
-        const dy = e.clientY - rightState.current.y;
-        rightState.current.x = e.clientX;
-        rightState.current.y = e.clientY;
+      if (dragState.current.down) {
+        const dx = e.clientX - dragState.current.x;
+        const dy = e.clientY - dragState.current.y;
+        dragState.current.x = e.clientX;
+        dragState.current.y = e.clientY;
         st.setYaw(st.yaw - dx * CAMERA.rotateSpeed);
         st.setPitch(clamp(st.pitch + dy * CAMERA.rotateSpeed, CAMERA.pitchMin, CAMERA.pitchMax));
       }
     };
     const onPointerUp = (e: PointerEvent) => {
-      if (e.button === 2) rightState.current.down = false;
+      if (e.button === 0) dragState.current.down = false;
     };
 
     const onWheel = (e: WheelEvent) => {

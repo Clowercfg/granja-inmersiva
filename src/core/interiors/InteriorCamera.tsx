@@ -13,7 +13,7 @@ function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-const right = { down: false, x: 0, y: 0 };
+const drag = { down: false, x: 0, y: 0 };
 let zoomVel = 0;
 
 export function InteriorCamera() {
@@ -37,24 +37,24 @@ export function InteriorCamera() {
   useEffect(() => {
     const el = gl.domElement;
     const onPointerDown = (e: PointerEvent) => {
-      if (e.button === 2) {
-        right.down = true;
-        right.x = e.clientX;
-        right.y = e.clientY;
+      if (e.button === 0) {
+        drag.down = true;
+        drag.x = e.clientX;
+        drag.y = e.clientY;
       }
     };
     const onPointerMove = (e: PointerEvent) => {
-      if (!right.down || useInteriorStore.getState().phase !== "inside") return;
-      const dx = e.clientX - right.x;
-      const dy = e.clientY - right.y;
-      right.x = e.clientX;
-      right.y = e.clientY;
+      if (!drag.down || useInteriorStore.getState().phase !== "inside") return;
+      const dx = e.clientX - drag.x;
+      const dy = e.clientY - drag.y;
+      drag.x = e.clientX;
+      drag.y = e.clientY;
       const o = orbit.current;
       o.yaw -= dx * CAMERA.rotateSpeed;
       o.pitch = THREE.MathUtils.clamp(o.pitch + dy * CAMERA.rotateSpeed, 0.08, 1.35);
     };
     const onPointerUp = (e: PointerEvent) => {
-      if (e.button === 2) right.down = false;
+      if (e.button === 0) drag.down = false;
     };
     const onWheel = (e: WheelEvent) => {
       if (useInteriorStore.getState().phase !== "inside") return;

@@ -4,10 +4,18 @@ import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import { ENCLOSURES, getEnclosureFences, getGatePositions } from "../../config/enclosures";
 import { buildPenRail, buildFenceGate } from "./buildingFactory";
 import { terrainHeight } from "../../utils/terrain";
+import { useSelectionStore } from "../../store/selectionStore";
+import { useAsset } from "../../core/assets/useAsset";
+import { cloneAsset } from "../../core/assets/assetStore";
 
 const RAIL_LENGTH = 6;
+/** Largo de diseño del modelo pen-rail.glb; se escala en X al largo del tramo. */
+const PEN_RAIL_DESIGN_LENGTH = 6;
 
 export function Enclosures() {
+  const railAsset = useAsset("pen-rail");
+  const gateAsset = useAsset("fence-gate");
+
   const fences = useMemo(
     () =>
       ENCLOSURES.flatMap((def) =>
@@ -30,6 +38,16 @@ export function Enclosures() {
     []
   );
 
+  const railObjects = useMemo(
+    () => fences.map(() => cloneAsset(railAsset, [RAIL_LENGTH / PEN_RAIL_DESIGN_LENGTH, 1, 1]) ?? buildPenRail(RAIL_LENGTH)),
+    [fences, railAsset]
+  );
+
+  const gateObjects = useMemo(
+    () => gates.map(() => cloneAsset(gateAsset) ?? buildFenceGate()),
+    [gates, gateAsset]
+  );
+
   const patches = useMemo(
     () =>
       ENCLOSURES.map((def) => {
@@ -46,7 +64,16 @@ export function Enclosures() {
         const w = def.bounds.maxX - def.bounds.minX;
         const d = def.bounds.maxZ - def.bounds.minZ;
         return (
-          <mesh key={`patch-${def.id}`} position={[x, y, z]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+          <mesh
+            key={`patch-${def.id}`}
+            position={[x, y, z]}
+            rotation={[-Math.PI / 2, 0, 0]}
+            receiveShadow
+            onClick={(e: { stopPropagation: () => void }) => {
+              e.stopPropagation();
+              useSelectionStore.getState().select(null);
+            }}
+          >
             <planeGeometry args={[w - 0.6, d - 0.6]} />
             <meshStandardMaterial color="#6f9a5a" roughness={1} />
           </mesh>
@@ -55,13 +82,13 @@ export function Enclosures() {
 
       {fences.map(({ def, x, z, rot, y }, i) => (
         <group key={`rail-${def.id}-${i}`} position={[x, y, z]} rotation={[0, rot, 0]}>
-          <primitive object={buildPenRail(RAIL_LENGTH)} />
+          <primitive object={railObjects[i]} />
         </group>
       ))}
 
       {gates.map(({ def, x, z, rot, y }, i) => (
         <group key={`gate-${def.id}-${i}`} position={[x, y, z]} rotation={[0, rot, 0]}>
-          <primitive object={buildFenceGate()} />
+          <primitive object={gateObjects[i]} />
         </group>
       ))}
 

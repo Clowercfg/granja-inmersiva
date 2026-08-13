@@ -15,6 +15,7 @@ import { Flowers } from "../../entities/vegetation/Flowers";
 import { Rocks } from "../../entities/vegetation/Rocks";
 import { Buildings } from "../../entities/buildings/Buildings";
 import { Animals } from "../../entities/animals/Animals";
+import { CropField } from "../../entities/crops/CropField";
 import { TimeSystem } from "../../systems/time/TimeSystem";
 import { WeatherSystem, Rain } from "../../systems/weather/WeatherSystem";
 import { EconomySystem } from "../../systems/economy/EconomySystem";
@@ -56,6 +57,7 @@ export function Experience() {
       <Trees />
       <Flowers />
       <Rocks />
+      <CropField />
       <Buildings />
       <Animals />
       <WeatherSystem />
