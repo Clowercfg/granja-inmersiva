@@ -5,6 +5,7 @@ import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ASSETS, resolveUrl, type AssetDef } from "./assetConfig";
+import type { AnimalKind } from "../../types";
 
 export type AssetStatus = "idle" | "loading" | "loaded" | "missing";
 
@@ -124,7 +125,7 @@ export interface AnimalPartsBase {
  * Busca nodos animables por nombre convencional (body, head, tail, leg*, wing*).
  * Los nodos ausentes simplemente no se animan.
  */
-export function attachAnimalParts(model: THREE.Object3D, _kind: "cow" | "chicken"): AnimalPartsBase {
+export function attachAnimalParts(model: THREE.Object3D, _kind: AnimalKind): AnimalPartsBase {
   const names = new Map<string, THREE.Object3D>();
   const legs: THREE.Object3D[] = [];
   const wings: THREE.Object3D[] = [];
@@ -147,7 +148,7 @@ export function attachAnimalParts(model: THREE.Object3D, _kind: "cow" | "chicken
 }
 
 /** Clona el modelo del animal y le adjunta los nodos animables. */
-export function prepareAnimalModel(entry: AssetEntry | undefined, kind: "cow" | "chicken"): THREE.Object3D | null {
+export function prepareAnimalModel(entry: AssetEntry | undefined, kind: AnimalKind): THREE.Object3D | null {
   const clone = cloneAsset(entry);
   if (!clone) return null;
   clone.userData.parts = attachAnimalParts(clone, kind);

@@ -2,14 +2,20 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { buildTreeGeometry } from "./treeGeometry";
-import { getVegetation } from "./vegetationData";
+import { getVegetation, type VegetationInstance } from "./vegetationData";
 import { useRendererMode } from "../../core/renderer/useRendererMode";
 import { useAsset } from "../../core/assets/useAsset";
 import { geometryFromObject, ensureWhiteVertexColors } from "../../core/assets/assetStore";
 
-export function Trees() {
+const TREE_VARIANTS = ["tree:default", "tree:cone", "tree:plateau", "tree:q1", "tree:q2", "tree:q3"] as const;
+
+function variantIndex(phase: number): number {
+  return Math.floor(phase * TREE_VARIANTS.length) % TREE_VARIANTS.length;
+}
+
+function TreeGroup({ assetKey, instances }: { assetKey: string; instances: VegetationInstance[] }) {
   const mode = useRendererMode();
-  const asset = useAsset("tree");
+  const asset = useAsset(assetKey);
 
   const treeGeo = useMemo(() => {
     if (asset.status === "loaded" && asset.object) {
@@ -20,8 +26,8 @@ export function Trees() {
   }, [asset]);
 
   const instanced = useMemo(() => {
-    const data = getVegetation().trees;
-    const mesh = new THREE.InstancedMesh(treeGeo, new THREE.MeshStandardMaterial(), data.length);
+    const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 });
+    const mesh = new THREE.InstancedMesh(treeGeo, mat, instances.length);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     mesh.frustumCulled = false;
@@ -31,16 +37,16 @@ export function Trees() {
     const euler = new THREE.Euler();
     const scale = new THREE.Vector3();
     const col = new THREE.Color();
-    const colors = new Float32Array(data.length * 3);
-    const phases = new Float32Array(data.length);
+    const colors = new Float32Array(instances.length * 3);
+    const phases = new Float32Array(instances.length);
 
-    data.forEach((t, i) => {
+    instances.forEach((t, i) => {
       euler.set(0, t.yaw, 0);
       q.setFromEuler(euler);
       scale.set(t.scale, t.scale * (0.9 + t.phase * 0.25), t.scale);
       m.compose(new THREE.Vector3(t.x, t.y, t.z), q, scale);
       mesh.setMatrixAt(i, m);
-      col.setHSL(0.24 + t.phase * 0.05, 0.35 + t.phase * 0.2, 0.28 + t.phase * 0.12);
+      col.setHSL(0.1 + t.phase * 0.05, 0.07, 0.88 + t.phase * 0.12);
       colors[i * 3] = col.r;
       colors[i * 3 + 1] = col.g;
       colors[i * 3 + 2] = col.b;
@@ -48,18 +54,12 @@ export function Trees() {
     });
 
     mesh.instanceMatrix.needsUpdate = true;
-    const instCol = new THREE.InstancedBufferAttribute(colors, 3);
-    mesh.instanceColor = instCol;
-    const ph = new THREE.InstancedBufferAttribute(phases, 1);
-    mesh.geometry.setAttribute("aPhase", ph);
+    mesh.instanceColor = new THREE.InstancedBufferAttribute(colors, 3);
+    mesh.geometry.setAttribute("aPhase", new THREE.InstancedBufferAttribute(phases, 1));
 
-    const mat = mesh.material as THREE.MeshStandardMaterial;
-    mat.vertexColors = true;
-    mat.roughness = 0.95;
-    mat.metalness = 0;
     if (mode === "webgl") injectSway(mat);
     return mesh;
-  }, [treeGeo, mode]);
+  }, [treeGeo, instances, mode]);
 
   const ref = useRef<THREE.InstancedMesh>(null);
 
@@ -78,6 +78,23 @@ export function Trees() {
   });
 
   return <primitive object={instanced} ref={ref} dispose={null} />;
+}
+
+export function Trees() {
+  const trees = useMemo(() => getVegetation().trees, []);
+  const groups = useMemo(() => {
+    const byVariant: VegetationInstance[][] = TREE_VARIANTS.map(() => []);
+    for (const t of trees) byVariant[variantIndex(t.phase)].push(t);
+    return byVariant;
+  }, [trees]);
+
+  return (
+    <group>
+      {TREE_VARIANTS.map((key, i) =>
+        groups[i].length > 0 ? <TreeGroup key={key} assetKey={key} instances={groups[i]} /> : null
+      )}
+    </group>
+  );
 }
 
 function injectSway(mat: THREE.MeshStandardMaterial): void {

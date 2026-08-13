@@ -90,7 +90,7 @@ function CropFieldRows({ crop, plot }: { crop: CropTypeDef; plot: PlotRect }) {
       s.set(sc, sc, sc);
       matrix.compose(new THREE.Vector3(x, y, z), q, s);
       m.setMatrixAt(i, matrix);
-      col.setHSL(0.22 + rng() * 0.1, 0.4, 0.35 + rng() * 0.2);
+      col.setHSL(0.2 + rng() * 0.05, 0.1, 0.9 + rng() * 0.1);
       colors[i * 3] = col.r;
       colors[i * 3 + 1] = col.g;
       colors[i * 3 + 2] = col.b;

@@ -1,10 +1,18 @@
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
-import { getVegetation } from "./vegetationData";
+import { getVegetation, type VegetationInstance } from "./vegetationData";
 import { useRendererMode } from "../../core/renderer/useRendererMode";
+import { useAsset } from "../../core/assets/useAsset";
+import { geometryFromObject, ensureWhiteVertexColors } from "../../core/assets/assetStore";
 
-function buildFlowerGeometry(): THREE.BufferGeometry {
+const FLOWER_VARIANTS = ["flower:red", "flower:yellow", "flower:purple"] as const;
+
+function variantIndex(phase: number): number {
+  return Math.floor(phase * FLOWER_VARIANTS.length) % FLOWER_VARIANTS.length;
+}
+
+function buildFlowerFallback(): THREE.BufferGeometry {
   const stem = new THREE.CylinderGeometry(0.02, 0.03, 0.45, 5);
   stem.translate(0, 0.22, 0);
   const head = new THREE.IcosahedronGeometry(0.09, 0);
@@ -37,44 +45,52 @@ function buildFlowerGeometry(): THREE.BufferGeometry {
   return geo;
 }
 
-export function Flowers() {
+function FlowerGroup({ assetKey, instances }: { assetKey: string; instances: VegetationInstance[] }) {
   const mode = useRendererMode();
-  const geo = useMemo(() => buildFlowerGeometry(), []);
-  const data = useMemo(() => getVegetation(), []);
+  const asset = useAsset(assetKey);
+
+  const geo = useMemo(() => {
+    if (asset.status === "loaded" && asset.object) {
+      const loaded = geometryFromObject(asset.object);
+      if (loaded) return ensureWhiteVertexColors(loaded);
+    }
+    return buildFlowerFallback();
+  }, [asset]);
+
   const mesh = useMemo(() => {
     const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
-    const m = new THREE.InstancedMesh(geo, mat, data.flowers.length);
+    const m = new THREE.InstancedMesh(geo, mat, instances.length);
     m.castShadow = false;
     m.frustumCulled = false;
+
     const matrix = new THREE.Matrix4();
     const q = new THREE.Quaternion();
     const euler = new THREE.Euler();
     const s = new THREE.Vector3();
     const col = new THREE.Color();
-    const colors = new Float32Array(data.flowers.length * 3);
-    const phases = new Float32Array(data.flowers.length);
-    data.flowers.forEach((f, i) => {
+    const colors = new Float32Array(instances.length * 3);
+    const phases = new Float32Array(instances.length);
+
+    instances.forEach((f, i) => {
       euler.set(0, f.yaw, 0);
       q.setFromEuler(euler);
       s.set(f.scale, f.scale * 1.1, f.scale);
       matrix.compose(new THREE.Vector3(f.x, f.y, f.z), q, s);
       m.setMatrixAt(i, matrix);
-      const hue = 0.03 + f.phase * 0.1;
-      const variety = f.phase;
-      if (variety < 0.33) col.setHSL(hue, 0.8, 0.65);
-      else if (variety < 0.66) col.setHSL(0.55 + f.phase * 0.1, 0.75, 0.6);
-      else col.setHSL(0.93 + f.phase * 0.03, 0.7, 0.68);
+      col.setHSL(0.04 + f.phase * 0.05, 0.08, 0.9 + f.phase * 0.1);
       colors[i * 3] = col.r;
       colors[i * 3 + 1] = col.g;
       colors[i * 3 + 2] = col.b;
       phases[i] = f.phase;
     });
+
     m.instanceMatrix.needsUpdate = true;
     m.instanceColor = new THREE.InstancedBufferAttribute(colors, 3);
     m.geometry.setAttribute("aPhase", new THREE.InstancedBufferAttribute(phases, 1));
     if (mode === "webgl") {
       mat.onBeforeCompile = (shader) => {
         shader.uniforms.uTime = { value: 0 };
+        mat.userData.uniforms = shader.uniforms;
         shader.vertexShader =
           "attribute float aPhase;\nuniform float uTime;\n" +
           shader.vertexShader.replace(
@@ -88,9 +104,10 @@ export function Flowers() {
             `
           );
       };
+      mat.customProgramCacheKey = () => "flower-sway";
     }
     return m;
-  }, [geo, data, mode]);
+  }, [geo, instances, mode]);
 
   const ref = useRef<THREE.InstancedMesh>(null);
 
@@ -103,4 +120,21 @@ export function Flowers() {
   });
 
   return <primitive object={mesh} ref={ref} dispose={null} />;
+}
+
+export function Flowers() {
+  const flowers = useMemo(() => getVegetation().flowers, []);
+  const groups = useMemo(() => {
+    const byVariant: VegetationInstance[][] = FLOWER_VARIANTS.map(() => []);
+    for (const f of flowers) byVariant[variantIndex(f.phase)].push(f);
+    return byVariant;
+  }, [flowers]);
+
+  return (
+    <group>
+      {FLOWER_VARIANTS.map((key, i) =>
+        groups[i].length > 0 ? <FlowerGroup key={key} assetKey={key} instances={groups[i]} /> : null
+      )}
+    </group>
+  );
 }

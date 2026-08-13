@@ -12,7 +12,13 @@ export interface VegetationInstance {
   phase: number;
 }
 
-let cached: { trees: VegetationInstance[]; grass: VegetationInstance[]; flowers: VegetationInstance[]; rocks: VegetationInstance[] } | null = null;
+let cached: {
+  trees: VegetationInstance[];
+  grass: VegetationInstance[];
+  flowers: VegetationInstance[];
+  rocks: VegetationInstance[];
+  bushes: VegetationInstance[];
+} | null = null;
 
 function scatter(
   rng: () => number,
@@ -144,7 +150,9 @@ export function getVegetation() {
     });
   }
 
-  cached = { trees, grass, flowers, rocks };
+  const bushes: VegetationInstance[] = scatter(rng, 60, 200, 32, 110, 4.0, true);
+
+  cached = { trees, grass, flowers, rocks, bushes };
   return cached;
 }
 

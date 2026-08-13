@@ -4,27 +4,28 @@ import { getVegetation, type VegetationInstance } from "./vegetationData";
 import { useAsset } from "../../core/assets/useAsset";
 import { geometryFromObject, ensureWhiteVertexColors } from "../../core/assets/assetStore";
 
-const ROCK_VARIANTS = ["rock:largeA", "rock:smallA", "rock:smallB", "rock:smallC", "rock:q1"] as const;
+const BUSH_VARIANTS = ["bush:kenney", "bush:kenneyLarge", "bush:kenneySmall", "bush:q1", "bush:q2"] as const;
 
 function variantIndex(phase: number): number {
-  return Math.floor(phase * ROCK_VARIANTS.length) % ROCK_VARIANTS.length;
+  return Math.floor(phase * BUSH_VARIANTS.length) % BUSH_VARIANTS.length;
 }
 
-function buildRockFallback(): THREE.BufferGeometry {
-  const g = new THREE.DodecahedronGeometry(0.5, 0);
+function buildBushFallback(): THREE.BufferGeometry {
+  const g = new THREE.IcosahedronGeometry(0.45, 1);
+  g.scale(1, 0.75, 1);
   const pos = g.attributes.position;
   const colors = new Float32Array(pos.count * 3);
   for (let i = 0; i < pos.count; i++) {
     const t = i / pos.count;
-    colors[i * 3] = 0.55 + t * 0.25;
-    colors[i * 3 + 1] = 0.53 + t * 0.22;
-    colors[i * 3 + 2] = 0.5 + t * 0.18;
+    colors[i * 3] = 0.22 + t * 0.12;
+    colors[i * 3 + 1] = 0.45 + t * 0.2;
+    colors[i * 3 + 2] = 0.2 + t * 0.1;
   }
   g.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   return g;
 }
 
-function RockGroup({ assetKey, instances }: { assetKey: string; instances: VegetationInstance[] }) {
+function BushGroup({ assetKey, instances }: { assetKey: string; instances: VegetationInstance[] }) {
   const asset = useAsset(assetKey);
 
   const geo = useMemo(() => {
@@ -32,7 +33,7 @@ function RockGroup({ assetKey, instances }: { assetKey: string; instances: Veget
       const loaded = geometryFromObject(asset.object);
       if (loaded) return ensureWhiteVertexColors(loaded);
     }
-    return buildRockFallback();
+    return buildBushFallback();
   }, [asset]);
 
   const mesh = useMemo(() => {
@@ -49,13 +50,13 @@ function RockGroup({ assetKey, instances }: { assetKey: string; instances: Veget
     const col = new THREE.Color();
     const colors = new Float32Array(instances.length * 3);
 
-    instances.forEach((r, i) => {
-      euler.set(r.phase * Math.PI, r.yaw, r.phase * Math.PI * 0.5);
+    instances.forEach((b, i) => {
+      euler.set(0, b.yaw, 0);
       q.setFromEuler(euler);
-      s.set(r.scale, r.scale * (0.7 + r.phase * 0.5), r.scale);
-      matrix.compose(new THREE.Vector3(r.x, r.y, r.z), q, s);
+      s.set(b.scale, b.scale * (0.8 + b.phase * 0.4), b.scale);
+      matrix.compose(new THREE.Vector3(b.x, b.y, b.z), q, s);
       m.setMatrixAt(i, matrix);
-      col.setHSL(0.08 + r.phase * 0.04, 0.06, 0.8 + r.phase * 0.16);
+      col.setHSL(0.22 + b.phase * 0.05, 0.14, 0.6 + b.phase * 0.2);
       colors[i * 3] = col.r;
       colors[i * 3 + 1] = col.g;
       colors[i * 3 + 2] = col.b;
@@ -70,18 +71,18 @@ function RockGroup({ assetKey, instances }: { assetKey: string; instances: Veget
   return <primitive object={mesh} ref={ref} dispose={null} />;
 }
 
-export function Rocks() {
-  const rocks = useMemo(() => getVegetation().rocks, []);
+export function Bushes() {
+  const bushes = useMemo(() => getVegetation().bushes, []);
   const groups = useMemo(() => {
-    const byVariant: VegetationInstance[][] = ROCK_VARIANTS.map(() => []);
-    for (const r of rocks) byVariant[variantIndex(r.phase)].push(r);
+    const byVariant: VegetationInstance[][] = BUSH_VARIANTS.map(() => []);
+    for (const b of bushes) byVariant[variantIndex(b.phase)].push(b);
     return byVariant;
-  }, [rocks]);
+  }, [bushes]);
 
   return (
     <group>
-      {ROCK_VARIANTS.map((key, i) =>
-        groups[i].length > 0 ? <RockGroup key={key} assetKey={key} instances={groups[i]} /> : null
+      {BUSH_VARIANTS.map((key, i) =>
+        groups[i].length > 0 ? <BushGroup key={key} assetKey={key} instances={groups[i]} /> : null
       )}
     </group>
   );

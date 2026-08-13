@@ -6,11 +6,12 @@ import { buildPenRail, buildFenceGate } from "./buildingFactory";
 import { terrainHeight } from "../../utils/terrain";
 import { useSelectionStore } from "../../store/selectionStore";
 import { useAsset } from "../../core/assets/useAsset";
-import { cloneAsset } from "../../core/assets/assetStore";
+import { cloneAsset, geometryFromObject, ensureWhiteVertexColors } from "../../core/assets/assetStore";
 
-const RAIL_LENGTH = 6;
-/** Largo de diseño del modelo pen-rail.glb; se escala en X al largo del tramo. */
-const PEN_RAIL_DESIGN_LENGTH = 6;
+/** Desplazamiento en Z local del cuerpo de la cerca Kenney para centrarla en la línea del perímetro. */
+const FENCE_BODY_Z = 0.558;
+/** La puerta real mide 1.2 de ancho; se estira al hueco de 4 unidades (GATE_HALF * 2). */
+const GATE_SCALE = 4 / 1.2;
 
 export function Enclosures() {
   const railAsset = useAsset("pen-rail");
@@ -20,7 +21,6 @@ export function Enclosures() {
     () =>
       ENCLOSURES.flatMap((def) =>
         getEnclosureFences(def).map((f) => ({
-          def,
           x: f.x,
           z: f.z,
           rot: f.rot,
@@ -33,20 +33,48 @@ export function Enclosures() {
   const gates = useMemo(
     () =>
       ENCLOSURES.flatMap((def) =>
-        getGatePositions(def).map((g) => ({ def, x: g.x, z: g.z, rot: g.rot, y: terrainHeight(g.x, g.z) }))
+        getGatePositions(def).map((g) => ({ x: g.x, z: g.z, rot: g.rot, y: terrainHeight(g.x, g.z) }))
       ),
     []
   );
 
-  const railObjects = useMemo(
-    () => fences.map(() => cloneAsset(railAsset, [RAIL_LENGTH / PEN_RAIL_DESIGN_LENGTH, 1, 1]) ?? buildPenRail(RAIL_LENGTH)),
-    [fences, railAsset]
-  );
+  const fenceGeo = useMemo(() => {
+    if (railAsset.status === "loaded" && railAsset.object) {
+      const geo = geometryFromObject(railAsset.object);
+      if (geo) return ensureWhiteVertexColors(geo);
+    }
+    return null;
+  }, [railAsset]);
+
+  const fenceMesh = useMemo(() => {
+    if (!fenceGeo) return null;
+    const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0 });
+    const m = new THREE.InstancedMesh(fenceGeo, mat, fences.length);
+    m.castShadow = true;
+    m.receiveShadow = true;
+    m.frustumCulled = false;
+
+    const matrix = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    const euler = new THREE.Euler();
+    fences.forEach((f, i) => {
+      euler.set(0, f.rot, 0);
+      q.setFromEuler(euler);
+      const ox = Math.sin(f.rot) * FENCE_BODY_Z;
+      const oz = Math.cos(f.rot) * FENCE_BODY_Z;
+      matrix.compose(new THREE.Vector3(f.x + ox, f.y, f.z + oz), q, new THREE.Vector3(1, 1, 1));
+      m.setMatrixAt(i, matrix);
+    });
+    m.instanceMatrix.needsUpdate = true;
+    return m;
+  }, [fenceGeo, fences]);
 
   const gateObjects = useMemo(
-    () => gates.map(() => cloneAsset(gateAsset) ?? buildFenceGate()),
+    () => gates.map(() => cloneAsset(gateAsset, [GATE_SCALE, 1, 1]) ?? buildFenceGate()),
     [gates, gateAsset]
   );
+
+  const fallbackRails = useMemo(() => fences.map(() => buildPenRail(1.2)), [fences]);
 
   const patches = useMemo(
     () =>
@@ -80,14 +108,26 @@ export function Enclosures() {
         );
       })}
 
-      {fences.map(({ def, x, z, rot, y }, i) => (
-        <group key={`rail-${def.id}-${i}`} position={[x, y, z]} rotation={[0, rot, 0]}>
-          <primitive object={railObjects[i]} />
-        </group>
-      ))}
+      {fenceMesh ? (
+        <primitive object={fenceMesh} dispose={null} />
+      ) : (
+        fences.map((f, i) => (
+          <group
+            key={`rail-fallback-${i}`}
+            position={[f.x + Math.sin(f.rot) * FENCE_BODY_Z, f.y, f.z + Math.cos(f.rot) * FENCE_BODY_Z]}
+            rotation={[0, f.rot, 0]}
+          >
+            <primitive object={fallbackRails[i]} />
+          </group>
+        ))
+      )}
 
-      {gates.map(({ def, x, z, rot, y }, i) => (
-        <group key={`gate-${def.id}-${i}`} position={[x, y, z]} rotation={[0, rot, 0]}>
+      {gates.map(({ x, z, rot, y }, i) => (
+        <group
+          key={`gate-${i}`}
+          position={[x + Math.sin(rot) * FENCE_BODY_Z, y, z + Math.cos(rot) * FENCE_BODY_Z]}
+          rotation={[0, rot, 0]}
+        >
           <primitive object={gateObjects[i]} />
         </group>
       ))}

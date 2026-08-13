@@ -67,7 +67,8 @@ export interface FenceSeg {
   rot: number;
 }
 
-const FENCE_SPACING = 6;
+/** Separación entre postes de la cerca real (cada tile Kenney mide 1.2). */
+const FENCE_SPACING = 1.2;
 /** Media anchura de la puerta: la cerca se pega justo a sus bordes sin dejar hueco. */
 const GATE_HALF = 2;
 
