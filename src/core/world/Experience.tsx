@@ -4,6 +4,8 @@ import { useFarmStore } from "../../store/farmStore";
 import { useUiStore } from "../../store/uiStore";
 import { useInteriorStore } from "../../store/interiorStore";
 import { useCameraStore } from "../../store/cameraStore";
+import { useCropStore } from "../../store/cropStore";
+import { useEconomyStore } from "../../store/economyStore";
 import { createRenderer } from "../renderer/renderer";
 import { CameraRig } from "../camera/CameraRig";
 import { PostFX } from "../fx/PostFX";
@@ -21,6 +23,7 @@ import { Decor } from "../../entities/props/Decor";
 import { TimeSystem } from "../../systems/time/TimeSystem";
 import { WeatherSystem, Rain } from "../../systems/weather/WeatherSystem";
 import { EconomySystem } from "../../systems/economy/EconomySystem";
+import { CropSystem } from "../../systems/economy/CropSystem";
 import { PhysicsWorld } from "../../systems/physics/PhysicsWorld";
 import { InteriorCamera } from "../interiors/InteriorCamera";
 import { InteriorGroup } from "../interiors/InteriorGroup";
@@ -45,6 +48,8 @@ export function Experience() {
           interior: useInteriorStore,
           cameraCtl: useCameraStore,
           farm: useFarmStore,
+          crops: useCropStore,
+          economy: useEconomyStore,
         };
       }}
     >
@@ -67,6 +72,7 @@ export function Experience() {
       <WeatherSystem />
       <Rain />
       <EconomySystem />
+      <CropSystem />
       <PhysicsWorld />
       {booted && <PostFX />}
     </Canvas>

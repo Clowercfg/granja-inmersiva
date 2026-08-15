@@ -100,7 +100,7 @@ export function CameraRig() {
           const rightZ = -Math.sin(st.yaw);
           const fwdX = Math.sin(st.yaw);
           const fwdZ = Math.cos(st.yaw);
-          st.nudgeTarget(-rightX * dx * k + fwdX * dy * k, -rightZ * dx * k + fwdZ * dy * k);
+          st.nudgeTarget(rightX * dx * k - fwdX * dy * k, rightZ * dx * k - fwdZ * dy * k);
         } else {
           st.setYaw(st.yaw - dx * CAMERA.rotateSpeed);
           st.setPitch(clamp(st.pitch + dy * CAMERA.rotateSpeed, CAMERA.pitchMin, CAMERA.pitchMax));
@@ -156,8 +156,8 @@ export function CameraRig() {
     const boost = activeKeys.current.has("ShiftLeft") || activeKeys.current.has("ShiftRight") ? CAMERA.panSpeedBoost : 1;
     let panX = 0;
     let panZ = 0;
-    if (activeKeys.current.has("KeyW")) panZ += 1;
-    if (activeKeys.current.has("KeyS")) panZ -= 1;
+    if (activeKeys.current.has("KeyW")) panZ -= 1;
+    if (activeKeys.current.has("KeyS")) panZ += 1;
     if (activeKeys.current.has("KeyD")) panX += 1;
     if (activeKeys.current.has("KeyA")) panX -= 1;
 

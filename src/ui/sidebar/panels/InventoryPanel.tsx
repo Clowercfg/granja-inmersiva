@@ -40,7 +40,7 @@ const CATEGORIES: Array<{ name: string; icon: string; items: InvItem[] }> = [
   {
     name: "Recursos",
     icon: "💰",
-    items: [{ name: "Oro", count: 0 }],
+    items: [{ name: "USD", count: 0 }],
   },
 ];
 

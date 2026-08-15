@@ -116,7 +116,7 @@ export function HUD() {
           <span>{mode === "webgpu" ? "WebGPU" : "WebGL2"}</span>
         </div>
         <div className="rightbar">
-          <div className="pill gold">${Math.round(gold).toLocaleString()}</div>
+          <div className="pill gold">USD {Math.round(gold).toLocaleString()}</div>
           <button className="btn" onClick={() => setShowHelp((h) => !h)}>
             ?
           </button>

@@ -7,11 +7,61 @@ import { terrainHeight } from "../../utils/terrain";
 import { useSelectionStore } from "../../store/selectionStore";
 import { useAsset } from "../../core/assets/useAsset";
 import { cloneAsset, geometryFromObject, ensureWhiteVertexColors } from "../../core/assets/assetStore";
+import { fbm } from "../../utils/noise";
+import { clamp, smoothstep } from "../../utils/math";
 
 /** Desplazamiento en Z local del cuerpo de la cerca Kenney para centrarla en la línea del perímetro. */
 const FENCE_BODY_Z = 0.558;
 /** La puerta real mide 1.2 de ancho; se estira al hueco de 4 unidades (GATE_HALF * 2). */
 const GATE_SCALE = 4 / 1.2;
+
+/**
+ * Textura procedural de piso de corral: tierra pisoteada con matices y briznas de pasto.
+ * Los colores se calculan en bytes sRGB (no usar THREE.Color aquí: convierte a linear).
+ */
+function bakePenFloorTexture(size = 256): THREE.CanvasTexture {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return new THREE.CanvasTexture(canvas);
+  const img = ctx.createImageData(size, size);
+  const DIRT = [0x7a, 0x5a, 0x38];
+  const DIRT_DARK = [0x5c, 0x42, 0x29];
+  const TUFT = [0x6f, 0x9a, 0x42];
+  for (let j = 0; j < size; j++) {
+    for (let i = 0; i < size; i++) {
+      const u = i / size;
+      const v = j / size;
+      const n = fbm(u * 9 + 3.1, v * 9 - 1.7, 3);
+      const mottle = fbm(u * 26 + 9.7, v * 26 + 4.2, 2);
+      const t = clamp(0.5 + n * 0.5, 0, 1);
+      let r = DIRT[0] + (DIRT_DARK[0] - DIRT[0]) * t;
+      let g = DIRT[1] + (DIRT_DARK[1] - DIRT[1]) * t;
+      let b = DIRT[2] + (DIRT_DARK[2] - DIRT[2]) * t;
+      const f = 0.88 + mottle * 0.24;
+      r *= f;
+      g *= f;
+      b *= f;
+      const tuft = smoothstep(0.24, 0.44, fbm(u * 44 + 21.7, v * 44 + 31.2, 2)) * 0.55;
+      r += (TUFT[0] - r) * tuft;
+      g += (TUFT[1] - g) * tuft;
+      b += (TUFT[2] - b) * tuft;
+      const idx = (j * size + i) * 4;
+      img.data[idx] = clamp(Math.round(r), 0, 255);
+      img.data[idx + 1] = clamp(Math.round(g), 0, 255);
+      img.data[idx + 2] = clamp(Math.round(b), 0, 255);
+      img.data[idx + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
 
 export function Enclosures() {
   const railAsset = useAsset("pen-rail");
@@ -86,9 +136,24 @@ export function Enclosures() {
     []
   );
 
+  const floorTex = useMemo(() => bakePenFloorTexture(), []);
+
+  const floorMats = useMemo(
+    () =>
+      ENCLOSURES.map((def) => {
+        const w = def.bounds.maxX - def.bounds.minX;
+        const d = def.bounds.maxZ - def.bounds.minZ;
+        const tex = floorTex.clone();
+        tex.repeat.set(Math.max(1, w / 4), Math.max(1, d / 4));
+        tex.needsUpdate = true;
+        return new THREE.MeshStandardMaterial({ map: tex, roughness: 1, metalness: 0 });
+      }),
+    [floorTex]
+  );
+
   return (
     <group>
-      {patches.map(({ def, x, z, y }) => {
+      {patches.map(({ def, x, z, y }, i) => {
         const w = def.bounds.maxX - def.bounds.minX;
         const d = def.bounds.maxZ - def.bounds.minZ;
         return (
@@ -97,13 +162,13 @@ export function Enclosures() {
             position={[x, y, z]}
             rotation={[-Math.PI / 2, 0, 0]}
             receiveShadow
+            material={floorMats[i]}
             onClick={(e: { stopPropagation: () => void }) => {
               e.stopPropagation();
               useSelectionStore.getState().select(null);
             }}
           >
             <planeGeometry args={[w - 0.6, d - 0.6]} />
-            <meshStandardMaterial color="#6f9a5a" roughness={1} />
           </mesh>
         );
       })}
