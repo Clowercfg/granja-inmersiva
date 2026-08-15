@@ -4,6 +4,7 @@ import { AnimalsPanel } from "./panels/AnimalsPanel";
 import { VetPanel } from "./panels/VetPanel";
 import { CropsPanel } from "./panels/CropsPanel";
 import { InfrastructurePanel } from "./panels/InfrastructurePanel";
+import { UpgradesPanel } from "./panels/UpgradesPanel";
 import { InventoryPanel } from "./panels/InventoryPanel";
 import { CalendarPanel } from "./panels/CalendarPanel";
 
@@ -12,6 +13,7 @@ const SECTIONS: Array<{ id: GameSectionId; label: string; icon: string; hint: st
   { id: "veterinary", label: "Veterinario", icon: "🩺", hint: "Salud y tratamientos" },
   { id: "crops", label: "Cultivos", icon: "🌾", hint: "Parcelas y cosechas" },
   { id: "infrastructure", label: "Infraestructura", icon: "🏗️", hint: "Edificios existentes" },
+  { id: "upgrades", label: "Mejoras", icon: "🏗️", hint: "Niveles y capacidades" },
   { id: "inventory", label: "Inventario", icon: "📦", hint: "Materiales y recursos" },
   { id: "calendar", label: "Calendario", icon: "📅", hint: "Fecha real y estación" },
 ];
@@ -26,6 +28,8 @@ function PanelContent({ id }: { id: GameSectionId }) {
       return <CropsPanel />;
     case "infrastructure":
       return <InfrastructurePanel />;
+    case "upgrades":
+      return <UpgradesPanel />;
     case "inventory":
       return <InventoryPanel />;
     case "calendar":

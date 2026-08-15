@@ -6,6 +6,7 @@ import { BUILDING_INFO, ENCLOSURE_INFO } from "../../../config/buildingInfo";
 import { getInteriorDef, hasInterior } from "../../../config/interiors";
 import { useInteriorStore } from "../../../store/interiorStore";
 import { useSelectionStore } from "../../../store/selectionStore";
+import { useUpgradesStore } from "../../../store/upgradesStore";
 import { PanelShell, StatCell, PanelSection } from "./PanelShell";
 
 interface Row {
@@ -14,9 +15,18 @@ interface Row {
   level: number;
 }
 
+/** Capacidad dinámica según el nivel de mejoras comprado. */
+function upgradedCapacity(type: BuildingType): string | null {
+  if (type === "cowPen") return `${useUpgradesStore.getState().capacityOf("stable")} vacas`;
+  if (type === "chickenPen") return `${useUpgradesStore.getState().capacityOf("coop")} gallinas`;
+  return null;
+}
+
 function InfrastructureRow({ uid, type, level }: Row) {
   const info = BUILDING_INFO[type];
   const enterable = hasInterior(type);
+  const dynCap = upgradedCapacity(type);
+  const capacity = dynCap ?? info?.capacity;
 
   const onEnter = () => {
     useInteriorStore.getState().requestEnter(uid, type);
@@ -44,7 +54,7 @@ function InfrastructureRow({ uid, type, level }: Row) {
         </div>
         <div className="panelrow-sub">{info?.detail}</div>
         <div className="infra-stats">
-          <span>🗄️ {info?.capacity ?? "—"}</span>
+          <span>🗄️ {capacity ?? "—"}</span>
           <span>📦 {info?.storage ?? "—"}</span>
         </div>
       </div>
@@ -67,6 +77,7 @@ export function InfrastructurePanel() {
     () => STATIC_BUILDINGS.map((b) => ({ uid: b.uid, type: b.type, level: b.level })),
     []
   );
+  useUpgradesStore((s) => s.levels["stable"] + ":" + s.levels["coop"]);
 
   return (
     <PanelShell icon="🏗️" title="Infraestructura" subtitle="Edificios existentes de la granja">

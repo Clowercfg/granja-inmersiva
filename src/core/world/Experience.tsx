@@ -7,6 +7,7 @@ import { useCameraStore } from "../../store/cameraStore";
 import { useCropStore } from "../../store/cropStore";
 import { useEconomyStore } from "../../store/economyStore";
 import { useVetStore } from "../../store/vetStore";
+import { useUpgradesStore } from "../../store/upgradesStore";
 import { createRenderer } from "../renderer/renderer";
 import { CameraRig } from "../camera/CameraRig";
 import { PostFX } from "../fx/PostFX";
@@ -34,7 +35,11 @@ export function Experience() {
   const booted = useWorldStore((s) => s.booted);
 
   return (
-    <Canvas
+    <div
+      style={{ width: "100%", height: "100%" }}
+      onClick={() => useUiStore.getState().closeSection()}
+    >
+      <Canvas
       shadows
       dpr={[1, 2]}
       gl={createRenderer as unknown as React.ComponentProps<typeof Canvas>["gl"]}
@@ -53,6 +58,7 @@ export function Experience() {
           crops: useCropStore,
           economy: useEconomyStore,
           vet: useVetStore,
+          upgrades: useUpgradesStore,
         };
       }}
     >
@@ -79,6 +85,7 @@ export function Experience() {
       <VetSystem />
       <PhysicsWorld />
       {booted && <PostFX />}
-    </Canvas>
+      </Canvas>
+    </div>
   );
 }
