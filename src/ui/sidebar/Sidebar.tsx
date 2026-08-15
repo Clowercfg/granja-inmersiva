@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useUiStore, type GameSectionId } from "../../store/uiStore";
 import { AnimalsPanel } from "./panels/AnimalsPanel";
+import { VetPanel } from "./panels/VetPanel";
 import { CropsPanel } from "./panels/CropsPanel";
 import { InfrastructurePanel } from "./panels/InfrastructurePanel";
 import { InventoryPanel } from "./panels/InventoryPanel";
@@ -8,6 +9,7 @@ import { CalendarPanel } from "./panels/CalendarPanel";
 
 const SECTIONS: Array<{ id: GameSectionId; label: string; icon: string; hint: string }> = [
   { id: "animals", label: "Animales", icon: "🐄", hint: "Población y estado" },
+  { id: "veterinary", label: "Veterinario", icon: "🩺", hint: "Salud y tratamientos" },
   { id: "crops", label: "Cultivos", icon: "🌾", hint: "Parcelas y cosechas" },
   { id: "infrastructure", label: "Infraestructura", icon: "🏗️", hint: "Edificios existentes" },
   { id: "inventory", label: "Inventario", icon: "📦", hint: "Materiales y recursos" },
@@ -18,6 +20,8 @@ function PanelContent({ id }: { id: GameSectionId }) {
   switch (id) {
     case "animals":
       return <AnimalsPanel />;
+    case "veterinary":
+      return <VetPanel />;
     case "crops":
       return <CropsPanel />;
     case "infrastructure":

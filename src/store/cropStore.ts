@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { getCropEconomy } from "../config/economy";
+import { PLOT_ECONOMY } from "../config/crops";
 import { useEconomyStore } from "./economyStore";
 
 export type CropState = "growing" | "ready";
@@ -45,7 +46,7 @@ interface CropStore {
 const emptyInventory = (): CropInventory => ({ seeds: 0, harvest: 0 });
 
 /** Semillas iniciales por cultivo (configurable). */
-const STARTING_SEEDS: Record<string, number> = { carrot: 3 };
+const STARTING_SEEDS: Record<string, number> = { wheat: 3, carrot: 3, potato: 3 };
 
 /** Milisegundos totales de crecimiento de un cultivo. */
 export function growthMsOf(planted: Pick<PlantedCrop, "cropId">): number {
@@ -80,6 +81,7 @@ export const useCropStore = create<CropStore>((set, get) => ({
   plantCrop: (cropId, plotIndex) => {
     const econ = getCropEconomy(cropId);
     if (!econ) return false;
+    if (!PLOT_ECONOMY.some((p) => p.cropId === cropId && p.plotIndex === plotIndex)) return false;
     if (get().planted.some((p) => p.plotIndex === plotIndex)) return false;
     const inv = get().inventory[cropId];
     if (!inv || inv.seeds < 1) return false;

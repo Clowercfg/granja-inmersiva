@@ -3,15 +3,12 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { useAsset } from "../../core/assets/useAsset";
 import { geometryFromObject, ensureWhiteVertexColors } from "../../core/assets/assetStore";
-import { CROP_TYPES, PLOT_CROPS, type CropTypeDef } from "../../config/crops";
+import { CROP_TYPES, PLOT_CROPS, PLOT_ECONOMY, type CropTypeDef } from "../../config/crops";
 import { PLOTS, type PlotRect } from "../../utils/terrain";
 import { terrainHeight } from "../../utils/terrain";
 import { makeRng } from "../../utils/math";
 import { useCropStore, growthProgressOf, type PlantedCrop } from "../../store/cropStore";
 import { SelectionRing } from "../common/SelectionRing";
-
-/** Índice de la parcela de zanahoria en PLOTS. */
-const CARROT_PLOT = 2;
 
 function buildCropPlaceholder(def: CropTypeDef): THREE.BufferGeometry {
   const stemGeo = new THREE.CylinderGeometry(0.03, 0.05, def.heightMax, 5);
@@ -191,18 +188,18 @@ function GrowingCropRows({
   );
 }
 
-/** Parcela interactiva de zanahoria: clic para sembrar, clic en cultivo listo para cosechar. */
-function CarrotPlot() {
-  const planted = useCropStore((s) => s.planted.find((p) => p.plotIndex === CARROT_PLOT) ?? null);
+/** Parcela interactiva: clic para sembrar, clic en cultivo listo para cosechar. */
+function CropPlot({ cropId, plotIndex }: { cropId: string; plotIndex: number }) {
+  const planted = useCropStore((s) => s.planted.find((p) => p.plotIndex === plotIndex) ?? null);
   const [hovered, setHovered] = useState(false);
-  const plot = PLOTS[CARROT_PLOT];
+  const plot = PLOTS[plotIndex];
   const groundY = terrainHeight(plot.cx, plot.cz);
 
-  const carrotDef = CROP_TYPES.find((c) => c.id === "carrot") ?? CROP_TYPES[0];
+  const cropDef = CROP_TYPES.find((c) => c.id === cropId) ?? CROP_TYPES[0];
 
   const onPlotClick = () => {
     if (planted) return;
-    useCropStore.getState().plantCrop("carrot", CARROT_PLOT);
+    useCropStore.getState().plantCrop(cropId, plotIndex);
   };
   const onHarvest = () => {
     if (planted?.state === "ready") useCropStore.getState().harvestCrop(planted.id);
@@ -244,7 +241,7 @@ function CarrotPlot() {
           pulse={!!planted}
         />
       )}
-      {planted && <GrowingCropRows crop={carrotDef} plot={plot} planted={planted} onHarvest={onHarvest} />}
+      {planted && <GrowingCropRows crop={cropDef} plot={plot} planted={planted} onHarvest={onHarvest} />}
     </group>
   );
 }
@@ -252,7 +249,7 @@ function CarrotPlot() {
 export function CropField() {
   const rows = useMemo(
     () =>
-      PLOT_CROPS.filter((pc) => pc.plotIndex !== CARROT_PLOT).map((pc) => ({
+      PLOT_CROPS.filter((pc) => !PLOT_ECONOMY.some((p) => p.plotIndex === pc.plotIndex)).map((pc) => ({
         crop: CROP_TYPES.find((c) => c.id === pc.cropId) ?? CROP_TYPES[0],
         plot: PLOTS[pc.plotIndex],
       })),
@@ -264,7 +261,9 @@ export function CropField() {
       {rows.map(({ crop, plot }) => (
         <CropFieldRows key={crop.id} crop={crop} plot={plot} />
       ))}
-      <CarrotPlot />
+      {PLOT_ECONOMY.map(({ cropId, plotIndex }) => (
+        <CropPlot key={cropId} cropId={cropId} plotIndex={plotIndex} />
+      ))}
     </group>
   );
 }

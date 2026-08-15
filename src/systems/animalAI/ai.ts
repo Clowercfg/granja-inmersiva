@@ -5,6 +5,7 @@ import { OBSTACLES } from "../../config/layout";
 import { getTreeColliders } from "../../entities/vegetation/vegetationData";
 import { angLerp, clamp, lerp } from "../../utils/math";
 import { timeManager } from "../time/TimeManager";
+import { useVetStore } from "../../store/vetStore";
 
 const cowSpeed = 1.5;
 const chickenSpeed = 1.05;
@@ -170,8 +171,11 @@ export function updateAgent(a: AnimalAgent, dt: number, rng: () => number, now: 
   }
 
   if (a.nextHarvestAt > 0 && now >= a.nextHarvestAt) {
-    const eatBoost = a.state === "eating" ? 1.6 : 1;
-    a.pendingProduction += (a.kind === "cow" ? 1.2 : 0.35) * eatBoost;
+    const factor = useVetStore.getState().productionFactor(a.id);
+    if (factor > 0) {
+      const eatBoost = a.state === "eating" ? 1.6 : 1;
+      a.pendingProduction += (a.kind === "cow" ? 1.2 : 0.35) * eatBoost * factor;
+    }
     a.nextHarvestAt = now + (a.kind === "cow" ? 45 : 30);
   }
 }

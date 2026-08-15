@@ -40,7 +40,6 @@ Draco — el decodificador ya está incluido en `public/three/draco/`).
 | `crop:wheat` | `crops/wheat.glb` |
 | `crop:corn` | `crops/corn.glb` |
 | `crop:carrot` | `crops/carrot.glb` |
-| `crop:tomato` | `crops/tomato.glb` |
 | `terrain-color` | `terrain/color-map.jpg` (o `.png`) |
 | `terrain-normal` | `terrain/normal-map.jpg` (o `.png`) |
 

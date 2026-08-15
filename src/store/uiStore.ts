@@ -1,6 +1,12 @@
 import { create } from "zustand";
 
-export type GameSectionId = "animals" | "crops" | "infrastructure" | "inventory" | "calendar";
+export type GameSectionId =
+  | "animals"
+  | "veterinary"
+  | "crops"
+  | "infrastructure"
+  | "inventory"
+  | "calendar";
 
 interface UiStore {
   section: GameSectionId | null;

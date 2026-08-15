@@ -62,7 +62,6 @@ export const ASSETS: Record<string, AssetDef> = {
   "crop:wheat": { url: "assets/3d/crops/wheat.glb", kind: "gltf" },
   "crop:corn": { url: "assets/3d/crops/corn.glb", kind: "gltf" },
   "crop:carrot": { url: "assets/3d/crops/carrot.glb", kind: "gltf" },
-  "crop:tomato": { url: "assets/3d/crops/tomato.glb", kind: "gltf" },
 
   // Props decorativos (Kenney Nature Kit).
   "prop:lily": { url: "assets/3d/props/lily_small.glb", kind: "gltf" },
