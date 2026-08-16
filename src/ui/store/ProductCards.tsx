@@ -1,8 +1,8 @@
 import { PRODUCT_ECONOMY, GOODS_ECONOMY, getProductEconomy } from "../../config/economy";
-import { StoreCard, fmtMoney } from "./StoreUI";
+import { StoreCard, fmtMoney, fmtProfit } from "./StoreUI";
 
 const PRODUCT_SOURCE: Record<string, string> = {
-  egg: "Gallinas y gallos",
+  egg: "Gallinas",
   milk: "Vacas",
   meat: "Cerdos",
   "boiled-egg": "Procesadora",
@@ -26,7 +26,7 @@ function productList(): Array<{ id: string; name: string; icon: string; price: n
     list.push({ id, name: def.name, icon: def.icon, price: def.price });
   }
   for (const [id, def] of Object.entries(GOODS_ECONOMY)) {
-    if (PRODUCT_ECONOMY[id]) continue;
+    if (PRODUCT_ECONOMY[id] || id === "eggs") continue;
     list.push({ id, name: def.name, icon: def.icon, price: def.sellPrice });
   }
   return list;
@@ -50,7 +50,7 @@ export function ProductCards() {
               <span className="scard-tag">Venta: {PRODUCT_MARKET[p.id] ?? "Almacén"}</span>
             </div>
             <div className="scard-detail">
-              Precio de venta <b className="scard-price">{fmtMoney(p.price)}</b>
+              Precio de venta <b className="scard-price">{fmtProfit(p.price)}</b>
               {prod && prod.price !== p.price ? ` (referencia ${fmtMoney(prod.price)})` : ""}
             </div>
             <div className="scard-note">Se vende automáticamente desde la granja o el almacén.</div>

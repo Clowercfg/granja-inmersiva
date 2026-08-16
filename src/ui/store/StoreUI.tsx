@@ -9,10 +9,10 @@ export function fmtMoney(v: number): string {
   return "$" + v.toFixed(2);
 }
 
-/** Formatea una ganancia por unidad, mostrando céntimos extra cuando es menor de $0.01. */
+/** Formatea una ganancia o precio por unidad mostrando decimales extra cuando no son un precio redondo de 2 decimales. */
 export function fmtProfit(v: number): string {
-  if (Math.abs(v) >= 0.01) return fmtMoney(v);
-  return "$" + v.toFixed(4).replace(/0+$/, "");
+  if (Math.abs(v - Math.round(v * 100) / 100) < 1e-9) return fmtMoney(v);
+  return "$" + v.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
 }
 
 /** Anima un valor numérico hacia su objetivo (saldo de la tienda). */
