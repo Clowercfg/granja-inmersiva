@@ -2,7 +2,7 @@ import type { BuildingType } from "./config/world";
 
 export type EntityKind = "animal" | "building" | "tree";
 
-export type AnimalKind = "cow" | "chicken";
+export type AnimalKind = "cow" | "chicken" | "rooster" | "pig";
 
 export type AnimalState = "rest" | "wander" | "eating" | "sleep";
 

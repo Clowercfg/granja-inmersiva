@@ -10,6 +10,8 @@ import { useUpgradesStore } from "../../store/upgradesStore";
 
 const cowSpeed = 1.5;
 const chickenSpeed = 1.05;
+const roosterSpeed = 1.1;
+const pigSpeed = 1.2;
 
 interface Collider {
   x: number;
@@ -74,7 +76,8 @@ function pickState(a: AnimalAgent, rng: () => number): void {
 
 export function updateAgent(a: AnimalAgent, dt: number, rng: () => number, now: number): void {
   a.idlePhase += dt;
-  const speed = a.kind === "cow" ? cowSpeed : chickenSpeed;
+  const speed =
+    a.kind === "cow" ? cowSpeed : a.kind === "pig" ? pigSpeed : a.kind === "rooster" ? roosterSpeed : chickenSpeed;
   const night = isNight();
 
   if (a.state === "wander") {
@@ -135,8 +138,9 @@ export function updateAgent(a: AnimalAgent, dt: number, rng: () => number, now: 
   }
 
   // Separación entre animales del mismo corral.
-  const SEPARATION = a.kind === "cow" ? 2.4 : 0.7;
-  const herd = a.kind === "cow" ? cowPenPositions : chickenPenPositions;
+  const SEPARATION = a.kind === "cow" ? 2.4 : a.kind === "pig" ? 2.0 : 0.7;
+  const herd =
+    a.kind === "cow" ? cowPenPositions : a.kind === "pig" ? pigPenPositions : chickenPenPositions;
   for (const other of herd.values()) {
     if (!other || other.id === a.id) continue;
     const ox = a.position[0] - other.position[0];
@@ -175,19 +179,24 @@ export function updateAgent(a: AnimalAgent, dt: number, rng: () => number, now: 
     const factor = useVetStore.getState().productionFactor(a.id);
     if (factor > 0) {
       const eatBoost = a.state === "eating" ? 1.6 : 1;
-      a.pendingProduction += (a.kind === "cow" ? 1.2 : 0.35) * eatBoost * factor;
+      const rate =
+        a.kind === "cow" ? 1.2 : a.kind === "pig" ? 1.1 : a.kind === "rooster" ? 0.4 : 0.35;
+      a.pendingProduction += rate * eatBoost * factor;
     }
     const speedFactor = useUpgradesStore.getState().intervalFactor(a.kind);
-    a.nextHarvestAt = now + (a.kind === "cow" ? 45 : 30) * speedFactor;
+    const interval = a.kind === "cow" || a.kind === "pig" ? 45 : 30;
+    a.nextHarvestAt = now + interval * speedFactor;
   }
 }
 
 // Registros ligeros para separación entre animales del mismo tipo.
 const cowPenPositions = new Map<number, { id: number; position: [number, number, number] }>();
+const pigPenPositions = new Map<number, { id: number; position: [number, number, number] }>();
 const chickenPenPositions = new Map<number, { id: number; position: [number, number, number] }>();
 
 export function registerSeparation(a: AnimalAgent): void {
-  const target = a.kind === "cow" ? cowPenPositions : chickenPenPositions;
+  const target =
+    a.kind === "cow" ? cowPenPositions : a.kind === "pig" ? pigPenPositions : chickenPenPositions;
   const entry = { id: a.id, position: a.position };
   target.set(a.id, entry);
 }

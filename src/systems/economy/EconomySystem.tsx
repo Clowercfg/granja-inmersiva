@@ -2,11 +2,7 @@ import { useEffect } from "react";
 import { animalRegistry } from "../../store/farmStore";
 import { useEconomyStore } from "../../store/economyStore";
 import { useWorldStore } from "../../store/worldStore";
-
-const PRICE: Record<"cow" | "chicken", number> = {
-  cow: 2.4,
-  chicken: 1.2,
-};
+import { PRODUCTION_PRICE } from "../../config/economy";
 
 export function EconomySystem() {
   useEffect(() => {
@@ -17,7 +13,7 @@ export function EconomySystem() {
       let income = 0;
       for (const a of animalRegistry.values()) {
         if (a.pendingProduction > 0) {
-          income += a.pendingProduction * PRICE[a.kind];
+          income += a.pendingProduction * PRODUCTION_PRICE[a.kind];
           a.pendingProduction = 0;
         }
       }

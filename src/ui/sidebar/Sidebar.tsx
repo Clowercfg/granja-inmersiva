@@ -39,7 +39,9 @@ function PanelContent({ id }: { id: GameSectionId }) {
 
 export function Sidebar() {
   const section = useUiStore((s) => s.section);
+  const storeOpen = useUiStore((s) => s.storeOpen);
   const toggle = useUiStore((s) => s.toggleSection);
+  const toggleStore = useUiStore((s) => s.toggleStore);
   const last = useRef<GameSectionId | null>(null);
   if (section) last.current = section;
   const open = section !== null;
@@ -48,6 +50,15 @@ export function Sidebar() {
   return (
     <div className="sidebar">
       <div className="sidebar-rail">
+        <button
+          className={`sbtn sbtn-store ${storeOpen ? "active" : ""}`}
+          onClick={toggleStore}
+          title="Tienda — compra todo para tu granja"
+        >
+          <span className="sbtn-icon">🛒</span>
+          <span className="sbtn-label">Tienda</span>
+        </button>
+        <div className="rail-sep" />
         {SECTIONS.map((s) => {
           const active = section === s.id;
           return (

@@ -8,6 +8,16 @@ import { useCropStore } from "../../store/cropStore";
 import { useEconomyStore } from "../../store/economyStore";
 import { useVetStore } from "../../store/vetStore";
 import { useUpgradesStore } from "../../store/upgradesStore";
+import { useShopStore } from "../../store/shopStore";
+import { useStorageStore } from "../../store/storageStore";
+import {
+  OFFER_LIST,
+  MAX_DISCOUNT,
+  offerNormalPrice,
+  offerSalePrice,
+  offerSavings,
+  effectiveDiscount,
+} from "../../config/offers";
 import { createRenderer } from "../renderer/renderer";
 import { CameraRig } from "../camera/CameraRig";
 import { PostFX } from "../fx/PostFX";
@@ -37,7 +47,7 @@ export function Experience() {
   return (
     <div
       style={{ width: "100%", height: "100%" }}
-      onClick={() => useUiStore.getState().closeSection()}
+      onClick={() => useUiStore.getState().closeOverlays()}
     >
       <Canvas
       shadows
@@ -59,6 +69,16 @@ export function Experience() {
           economy: useEconomyStore,
           vet: useVetStore,
           upgrades: useUpgradesStore,
+          shop: useShopStore,
+          storage: useStorageStore,
+          offers: {
+            list: OFFER_LIST,
+            maxDiscount: MAX_DISCOUNT,
+            normalPrice: offerNormalPrice,
+            salePrice: offerSalePrice,
+            savings: offerSavings,
+            effectiveDiscount,
+          },
         };
       }}
     >

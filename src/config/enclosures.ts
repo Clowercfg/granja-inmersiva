@@ -30,18 +30,29 @@ export const ENCLOSURES: EnclosureDef[] = [
   },
   {
     id: "chicken-pen",
-    name: "Corral de pollos",
+    name: "Corral de aves",
     icon: "🐔",
     kind: "chicken",
     bounds: { minX: 40, maxX: 56, minZ: -2, maxZ: 14 },
     capacity: 24,
     gate: { edge: "minZ", t: 0.4 },
   },
+  {
+    id: "pig-pen",
+    name: "Pocilga",
+    icon: "🐖",
+    kind: "pig",
+    bounds: { minX: 31, maxX: 55, minZ: -50, maxZ: -32 },
+    capacity: 20,
+    gate: { edge: "minX", t: 0.5 },
+  },
 ];
 
 export const ENCLOSURE_BY_KIND: Record<AnimalKind, EnclosureDef> = {
   cow: ENCLOSURES[0],
   chicken: ENCLOSURES[1],
+  rooster: ENCLOSURES[1],
+  pig: ENCLOSURES[2],
 };
 
 export function insideEnclosure(x: number, z: number): EnclosureDef | null {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useFarmStore } from "../../../store/farmStore";
-import type { AnimalAgent } from "../../../types";
+import type { AnimalAgent, AnimalKind } from "../../../types";
 import { ENCLOSURE_BY_KIND } from "../../../config/enclosures";
 import { PanelShell, StatCell } from "./PanelShell";
 
@@ -11,7 +11,19 @@ const STATE_LABEL: Record<AnimalAgent["state"], string> = {
   sleep: "Durmiendo",
 };
 
-const ANIMAL_ICON = { cow: "🐄", chicken: "🐔" } as const;
+const ANIMAL_ICON: Record<AnimalKind, string> = {
+  cow: "🐄",
+  chicken: "🐔",
+  rooster: "🐓",
+  pig: "🐖",
+};
+
+const SPECIES_NAME: Record<AnimalKind, string> = {
+  cow: "Vacas",
+  chicken: "Gallinas",
+  rooster: "Gallos",
+  pig: "Cerdos",
+};
 
 function locationOf(a: AnimalAgent): string {
   return ENCLOSURE_BY_KIND[a.kind].name;
@@ -48,8 +60,14 @@ export function AnimalsPanel() {
     return () => clearInterval(iv);
   }, []);
 
-  const cows = animals.filter((a) => a.kind === "cow");
-  const chickens = animals.filter((a) => a.kind === "chicken");
+  const byKind: Record<AnimalKind, number> = {
+    cow: 0,
+    chicken: 0,
+    rooster: 0,
+    pig: 0,
+  };
+  for (const a of animals) byKind[a.kind] += 1;
+
   const avgHealth =
     animals.length === 0
       ? 100
@@ -58,10 +76,10 @@ export function AnimalsPanel() {
   return (
     <PanelShell icon="🐄" title="Animales" subtitle="Población y estado de tu ganado">
       <div className="panel-grid">
-        <StatCell icon="🐄" label="Vacas" value={cows.length} />
-        <StatCell icon="🐔" label="Pollos" value={chickens.length} />
-        <StatCell icon="❤️" label="Salud media" value={`${avgHealth}%`} />
-        <StatCell icon="🧺" label="Especies" value="2" />
+        <StatCell icon="🐄" label="Vacas" value={byKind.cow} />
+        <StatCell icon="🐔" label="Gallinas" value={byKind.chicken} />
+        <StatCell icon="🐓" label="Gallos" value={byKind.rooster} />
+        <StatCell icon="🐖" label="Cerdos" value={byKind.pig} />
       </div>
 
       {animals.length === 0 && (
@@ -72,8 +90,8 @@ export function AnimalsPanel() {
       ))}
 
       <div className="hint">
-        Las vacas viven en su corral y los pollos en el suyo. Durante el día pasean y pastan dentro
-        de su área; por la noche se echan a dormir.
+        Las vacas viven en su corral, los cerdos en la pocilga y las aves en el corral de aves.
+        Durante el día pasean y pastan dentro de su área; por la noche se echan a dormir.
       </div>
     </PanelShell>
   );

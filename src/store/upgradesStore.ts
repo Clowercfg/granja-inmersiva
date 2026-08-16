@@ -7,6 +7,7 @@ import {
   findSpecial,
   stableProductionHours,
   pigCycleDays,
+  PIG_CYCLE_DAYS,
 } from "../config/upgrades";
 
 const STORAGE_KEY = "granja-inmersiva-upgrades-v1";
@@ -115,10 +116,17 @@ export const useUpgradesStore = create<UpgradesStore>((set, get) => ({
   },
 
   intervalFactor: (kind) => {
-    if (kind !== "cow") return 1;
-    const normal = stableProductionHours(false);
-    const improved = stableProductionHours(get().specials["stable-speed"] === true);
-    return improved / normal;
+    if (kind === "cow") {
+      const normal = stableProductionHours(false);
+      const improved = stableProductionHours(get().specials["stable-speed"] === true);
+      return improved / normal;
+    }
+    if (kind === "pig") {
+      const normal = PIG_CYCLE_DAYS.normalDays;
+      const current = get().cycleDaysOf();
+      return normal / current;
+    }
+    return 1;
   },
 
   cycleDaysOf: () => pigCycleDays(get().specials["pig-engorde-1"] === true, get().specials["pig-engorde-2"] === true),

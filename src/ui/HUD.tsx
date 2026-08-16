@@ -3,9 +3,11 @@ import { useWorldStore } from "../store/worldStore";
 import { useEconomyStore } from "../store/economyStore";
 import { useSelectionStore } from "../store/selectionStore";
 import { useInteriorStore } from "../store/interiorStore";
+import { useUiStore } from "../store/uiStore";
 import { animalRegistry } from "../store/farmStore";
 import { WEATHER } from "../config/world";
-import type { AnimalState } from "../types";
+import { PRODUCTION_PRICE } from "../config/economy";
+import type { AnimalKind, AnimalState } from "../types";
 import { getBuildingTypeByUid, getInteriorDef, hasInterior } from "../config/interiors";
 import { DAY_PHASE_LABEL, SEASON_LABEL } from "../systems/time/TimeManager";
 import type { DayPhase, Season } from "../systems/time/TimeManager";
@@ -15,6 +17,13 @@ const STATE_LABEL: Record<AnimalState, string> = {
   wander: "Paseando",
   eating: "Paciendo",
   sleep: "Durmiendo",
+};
+
+const PRODUCTION_UNIT: Record<AnimalKind, string> = {
+  cow: "L leche",
+  chicken: "huevos",
+  rooster: "huevos",
+  pig: "kg carne",
 };
 
 const PHASE_ICON: Record<DayPhase, string> = {
@@ -32,8 +41,6 @@ const SEASON_ICON: Record<Season, string> = {
   autumn: "🍂",
   winter: "❄️",
 };
-
-const PRICE: Record<"cow" | "chicken", number> = { cow: 2.4, chicken: 1.2 };
 
 function pad(n: number): string {
   return String(n).padStart(2, "0");
@@ -60,6 +67,11 @@ export function HUD() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.code === "Escape") {
+        const ui = useUiStore.getState();
+        if (ui.storeOpen) {
+          ui.closeStore();
+          return;
+        }
         const it = useInteriorStore.getState();
         if (it.phase !== "idle") {
           if (it.phase === "inside") it.requestExit();
@@ -207,8 +219,8 @@ function SelectionPanel() {
             <span>Producción pendiente</span>
             <b>
               {agent.pendingProduction.toFixed(1)}{" "}
-              {agent.kind === "cow" ? "L leche" : "huevos"} · $
-              {(agent.pendingProduction * PRICE[agent.kind]).toFixed(2)}
+              {PRODUCTION_UNIT[agent.kind]} · $
+              {(agent.pendingProduction * PRODUCTION_PRICE[agent.kind]).toFixed(2)}
             </b>
           </div>
           <div className="hint">

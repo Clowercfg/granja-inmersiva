@@ -4,22 +4,52 @@ import { useFrame } from "@react-three/fiber";
 import { animalRegistry } from "../../store/farmStore";
 import { buildCow } from "./cow";
 import { buildChicken } from "./chicken";
+import { buildRooster } from "./rooster";
+import { buildPig } from "./pig";
 import { useSelectionStore } from "../../store/selectionStore";
 import { SelectionRing } from "../common/SelectionRing";
 import { clamp } from "../../utils/math";
 import { useAsset } from "../../core/assets/useAsset";
 import { prepareAnimalModel, type AnimalPartsBase } from "../../core/assets/assetStore";
+import type { AnimalKind } from "../../types";
+
+const KIND_ASSET: Record<AnimalKind, string> = {
+  cow: "animal:cow",
+  chicken: "animal:chicken",
+  rooster: "animal:chicken",
+  pig: "animal:pig",
+};
+
+const KIND_SUBTITLE: Record<AnimalKind, string> = {
+  cow: "Vaca lechera",
+  chicken: "Gallina ponedora",
+  rooster: "Gallo reproductor",
+  pig: "Cerdo de engorde",
+};
+
+function buildKind(kind: AnimalKind): THREE.Object3D | null {
+  switch (kind) {
+    case "cow":
+      return buildCow();
+    case "rooster":
+      return buildRooster();
+    case "pig":
+      return buildPig();
+    default:
+      return buildChicken();
+  }
+}
 
 export function Animal({ id }: { id: number }) {
   const agent = animalRegistry.get(id);
   const groupRef = useRef<THREE.Group>(null);
 
-  const asset = useAsset(agent?.kind === "cow" ? "animal:cow" : "animal:chicken");
+  const asset = useAsset(agent ? KIND_ASSET[agent.kind] : "animal:chicken");
 
   const model = useMemo(() => {
     if (!agent) return null;
     const loaded = prepareAnimalModel(asset, agent.kind);
-    return loaded ?? (agent.kind === "cow" ? buildCow() : buildChicken());
+    return loaded ?? buildKind(agent.kind);
   }, [agent, asset]);
 
   const select = useSelectionStore((s) => s.select);
@@ -54,7 +84,7 @@ export function Animal({ id }: { id: number }) {
     const tail = parts.tail;
     if (!body || !head || !tail) return;
 
-    if (agent.kind === "cow") {
+    if (agent.kind === "cow" || agent.kind === "pig") {
       const sleeping = agent.state === "sleep";
       const eating = agent.state === "eating";
       const baseY = sleeping ? 0.5 : 0.62;
@@ -94,7 +124,7 @@ export function Animal({ id }: { id: number }) {
             kind: "animal",
             uid: `animal-${agent.id}`,
             title: agent.name,
-            subtitle: agent.kind === "cow" ? "Vaca lechera" : "Gallina ponedora",
+            subtitle: KIND_SUBTITLE[agent.kind],
           });
         }}
         onPointerOver={(e: { stopPropagation: () => void }) => {
@@ -103,7 +133,7 @@ export function Animal({ id }: { id: number }) {
             kind: "animal",
             uid: `animal-${agent.id}`,
             title: agent.name,
-            subtitle: agent.kind === "cow" ? "Vaca lechera" : "Gallina ponedora",
+            subtitle: KIND_SUBTITLE[agent.kind],
           });
           document.body.style.cursor = "pointer";
         }}

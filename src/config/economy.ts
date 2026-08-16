@@ -96,6 +96,42 @@ export function getAnimalEconomy(kind: string): AnimalEconomyDef | null {
 }
 
 /**
+ * Productos que la granja produce o procesa. Precio por unidad:
+ * - egg:       huevo (producción de gallinas y gallos).
+ * - milk:      leche (producción de vacas).
+ * - meat:      carne (producción de cerdos).
+ * - boiled-egg: huevo hervido (resultado de procesar un huevo).
+ * El precio de VENTA de cada animal se obtiene desde aquí (nunca en la UI).
+ */
+export interface ProductEconomyDef {
+  name: string;
+  icon: string;
+  price: number;
+}
+
+export const PRODUCT_ECONOMY: Record<string, ProductEconomyDef> = {
+  egg: { name: "Huevo", icon: "🥚", price: 1.2 },
+  milk: { name: "Leche", icon: "🥛", price: 2.4 },
+  meat: { name: "Carne", icon: "🍖", price: 2.0 },
+  "boiled-egg": { name: "Huevo hervido", icon: "🍳", price: 1.35 },
+};
+
+export function getProductEconomy(productId: string): ProductEconomyDef | null {
+  return PRODUCT_ECONOMY[productId] ?? null;
+}
+
+/**
+ * Precio de venta por unidad de producción de cada animal (referencia única,
+ * usado por EconomySystem y la HUD). Coincide con los precios de producto.
+ */
+export const PRODUCTION_PRICE = {
+  cow: PRODUCT_ECONOMY.milk.price,
+  chicken: PRODUCT_ECONOMY.egg.price,
+  rooster: PRODUCT_ECONOMY.egg.price,
+  pig: PRODUCT_ECONOMY.meat.price,
+} as const;
+
+/**
  * Frecuencia de enfermedad. Granja de referencia = 20 animales.
  * - sickPerFarmDay:       ~1 animal enfermo cada 9 días (1/9 ≈ 0.1111 por día).
  * - referenceFarmSize:    animales de la granja de referencia (se reparte la tasa).
