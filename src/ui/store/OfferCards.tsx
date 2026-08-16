@@ -11,7 +11,7 @@ import { useEconomyStore } from "../../store/economyStore";
 import { useShopStore } from "../../store/shopStore";
 import { StoreCard, fmtMoney, type NotifyFn } from "./StoreUI";
 
-const CROP_ICON: Record<string, string> = { wheat: "🌾", carrot: "🥕", potato: "🥔" };
+const CROP_ICON: Record<string, string> = { wheat: "🌾", corn: "🌽", carrot: "🥕", potato: "🥔" };
 
 function itemLabel(item: OfferDef["items"][number]): string {
   if (item.type === "seed") {
@@ -59,13 +59,15 @@ function OfferCard({ def, notify }: { def: OfferDef; notify: NotifyFn }) {
         <span className="offer-sale">{fmtMoney(sale)}</span>
       </div>
       <div className="offer-savings">AHORRO {fmtMoney(savings)}</div>
-      <button
-        className="buybtn buybtn-offer"
-        disabled={gold < sale}
-        onClick={() => notify(useShopStore.getState().buyCombo(def.id), def.icon)}
-      >
-        COMPRAR COMBO
-      </button>
+      <div className="scard-actions">
+        <button
+          className="buybtn buybtn-offer"
+          disabled={gold < sale}
+          onClick={() => notify(useShopStore.getState().buyCombo(def.id), def.icon)}
+        >
+          COMPRAR COMBO
+        </button>
+      </div>
     </StoreCard>
   );
 }

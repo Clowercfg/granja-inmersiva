@@ -9,6 +9,12 @@ export function fmtMoney(v: number): string {
   return "$" + v.toFixed(2);
 }
 
+/** Formatea una ganancia por unidad, mostrando céntimos extra cuando es menor de $0.01. */
+export function fmtProfit(v: number): string {
+  if (Math.abs(v) >= 0.01) return fmtMoney(v);
+  return "$" + v.toFixed(4).replace(/0+$/, "");
+}
+
 /** Anima un valor numérico hacia su objetivo (saldo de la tienda). */
 export function useAnimatedNumber(target: number, duration = 450): number {
   const [display, setDisplay] = useState(target);

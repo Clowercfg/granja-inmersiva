@@ -94,7 +94,7 @@ function noCapacity(building: string, capacity: number, needed: number): ShopRes
 }
 
 /** Comprueba que los animales de un combo quepan en sus edificios. */
-function validateAnimalCapacity(items: OfferDef["items"]): ShopResult | null {
+export function validateAnimalCapacity(items: OfferDef["items"]): ShopResult | null {
   const neededByBuilding: Record<string, number> = {};
   for (const item of items) {
     if (item.type !== "animal" || item.qty <= 0) continue;

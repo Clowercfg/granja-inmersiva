@@ -32,6 +32,19 @@ export interface OfferDef {
 
 export const OFFERS: OfferDef[] = [
   {
+    id: "seedpack",
+    name: "Lote de Semillas",
+    icon: "🌾",
+    description: "Trigo + Maíz + Zanahoria + Papa, 100 de cada.",
+    discount: 0.1,
+    items: [
+      { type: "seed", cropId: "wheat", qty: 100 },
+      { type: "seed", cropId: "corn", qty: 100 },
+      { type: "seed", cropId: "carrot", qty: 100 },
+      { type: "seed", cropId: "potato", qty: 100 },
+    ],
+  },
+  {
     id: "beginner",
     name: "Combo Principiante",
     icon: "🌱",

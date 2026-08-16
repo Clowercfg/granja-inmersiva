@@ -30,6 +30,7 @@ export const PLOT_CROPS: Array<{ plotIndex: number; cropId: string }> = [
 /** Parcelas con economía activa (sembrar/cosechar): índice de PLOTS -> cropId. */
 export const PLOT_ECONOMY: Array<{ plotIndex: number; cropId: string }> = [
   { plotIndex: 0, cropId: "wheat" },
+  { plotIndex: 1, cropId: "corn" },
   { plotIndex: 2, cropId: "carrot" },
   { plotIndex: 3, cropId: "potato" },
 ];
