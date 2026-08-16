@@ -1691,85 +1691,6 @@ body.store-open .hud {
   transform: translateY(1px) scale(0.98);
 }
 
-/* ============ NAV INFERIOR ============ */
-
-.store-bottom {
-  display: flex;
-  gap: 12px;
-  align-items: stretch;
-  flex-shrink: 0;
-}
-
-.store-bottomnav {
-  flex: 1;
-  display: flex;
-  gap: 8px;
-  padding: 9px 12px;
-  background: linear-gradient(180deg, #8a5a2b, #6b4423);
-  border: 3px solid #4a2d15;
-  border-radius: 14px;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 220, 150, 0.12);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.store-bottomnav::-webkit-scrollbar {
-  display: none;
-}
-
-.bottom-tab {
-  position: relative;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 14px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(255, 220, 150, 0.16);
-  color: #ffe9c4;
-  cursor: pointer;
-  font-size: 11.5px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.bottom-tab:hover {
-  background: rgba(0, 0, 0, 0.3);
-  transform: translateY(-1px);
-}
-
-.bottom-tab.active {
-  background: linear-gradient(180deg, #63c14e, #3f9e3f);
-  border-color: #ffe9a8;
-  color: #fff;
-  box-shadow: 0 0 14px rgba(255, 214, 122, 0.4);
-}
-
-.bottom-tab-icon {
-  font-size: 15px;
-}
-
-.bottom-tab-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background: linear-gradient(180deg, #f06b5c, #c93a2f);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 900;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-}
-
 /* ============ TARJETAS ============ */
 
 .store-grid {
@@ -2520,12 +2441,6 @@ body.store-open .hud {
   .store-right > * {
     flex: 1 1 240px;
   }
-  .store-bottom {
-    flex-direction: column;
-  }
-  .store-bottomnav {
-    overflow-x: auto;
-  }
   .panel-body {
     overflow: visible;
   }
@@ -2564,10 +2479,6 @@ body.store-open .hud {
   }
   .scard-icon {
     font-size: 38px;
-  }
-  .bottom-tab {
-    padding: 7px 11px;
-    font-size: 10px;
   }
   .panel-head-title {
     font-size: 14px;

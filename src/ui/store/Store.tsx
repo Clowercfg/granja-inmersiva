@@ -40,13 +40,6 @@ const CAT_TITLE: Record<StoreCategory, { icon: string; label: string }> = {
   offers: { icon: "🎁", label: "Ofertas limitadas" },
 };
 
-const BOTTOM_NAV: { id: string; label: string; icon: string; cat: StoreCategory; badge?: boolean }[] = [
-  { id: "featured", label: "Destacados", icon: "⭐", cat: "crops" },
-  { id: "bestsellers", label: "Más vendidos", icon: "🏅", cat: "animals" },
-  { id: "new", label: "Nuevos", icon: "🆕", cat: "products" },
-  { id: "limited", label: "Limitados", icon: "⌛", cat: "offers", badge: true },
-];
-
 interface Toast {
   id: number;
   ok: boolean;
@@ -289,22 +282,6 @@ export function Store() {
               </button>
             </div>
           </aside>
-        </div>
-
-        <div className="store-bottom">
-          <nav className="store-bottomnav" aria-label="Selección rápida">
-            {BOTTOM_NAV.map((b) => (
-              <button
-                key={b.id}
-                className={`bottom-tab ${cat === b.cat ? "active" : ""}`}
-                onClick={() => setCat(b.cat)}
-              >
-                <span className="bottom-tab-icon">{b.icon}</span>
-                <span className="bottom-tab-label">{b.label}</span>
-                {b.badge && <span className="bottom-tab-badge">{OFFER_LIST.length}</span>}
-              </button>
-            ))}
-          </nav>
         </div>
       </div>
 
