@@ -2,16 +2,20 @@ import { useEffect, useRef, useState } from "react";
 import { useUpgradesStore } from "../../../store/upgradesStore";
 import { useEconomyStore } from "../../../store/economyStore";
 import { UPGRADE_BUILDINGS, type BuildingUpgradeDef, type SpecialUpgradeDef } from "../../../config/upgrades";
+import { useT } from "../../../store/languageStore";
 import { PanelShell, StatCell } from "./PanelShell";
 
-const TYPE_TAG: Record<string, string> = {
-  capacity: "🟢 Capacidad",
-  speed: "🔵 Velocidad",
-  efficiency: "🟡 Eficiencia",
+const UNIT_KEY: Record<string, string> = {
+  gallinas: "unit.hens",
+  vacas: "unit.cows",
+  cerdos: "unit.pigs",
+  huevos: "unit.eggs",
+  "u.": "unit.units",
+  máquinas: "unit.machines",
 };
 
-function fmtPrice(v: number): string {
-  if (v === 0) return "GRATIS";
+function fmtPrice(v: number, t: (key: string) => string): string {
+  if (v === 0) return t("panel.upgrades.free");
   return "$" + v.toFixed(2).replace(/\.00$/, "");
 }
 
@@ -21,6 +25,7 @@ function paybackDays(price: number, gain: number | undefined): number | null {
 }
 
 function SpecialRow({ building, special }: { building: BuildingUpgradeDef; special: SpecialUpgradeDef }) {
+  const t = useT();
   const bought = useUpgradesStore((s) => !!s.specials[special.id]);
   const gold = useEconomyStore((s) => s.gold);
   const missing = Math.max(0, special.price - gold);
@@ -31,16 +36,19 @@ function SpecialRow({ building, special }: { building: BuildingUpgradeDef; speci
       <div className="panelrow-icon">{special.icon}</div>
       <div className="panelrow-main">
         <div className="panelrow-title">
-          {special.name} <span className={`status-chip ${bought ? "status-ok" : "status-idle"}`}>{bought ? "Comprada" : TYPE_TAG[special.type]}</span>
+          {t(`upgrade.special.${special.id}`)}{" "}
+          <span className={`status-chip ${bought ? "status-ok" : "status-idle"}`}>
+            {bought ? t("panel.upgrades.owned_chip") : t(`panel.upgrades.type.${special.type}`)}
+          </span>
         </div>
-        <div className="panelrow-sub">{special.description}</div>
+        <div className="panelrow-sub">{t(`upgrade.special.${special.id}.desc`)}</div>
         {roi !== null && (
-          <div className="panelrow-sub muted">Recuperación estimada: ≈ {roi} día{roi === 1 ? "" : "s"}</div>
+          <div className="panelrow-sub muted">{t("panel.upgrades.roi", { days: roi })}</div>
         )}
       </div>
       <div className="panelrow-side">
-        <b>{fmtPrice(special.price)}</b>
-        {!bought && missing > 0 && <span className="muted">faltan {fmtPrice(missing)}</span>}
+        <b>{fmtPrice(special.price, t)}</b>
+        {!bought && missing > 0 && <span className="muted">{t("panel.upgrades.missing", { money: fmtPrice(missing, t) })}</span>}
       </div>
       <div className="panelrow-actions">
         <button
@@ -48,7 +56,7 @@ function SpecialRow({ building, special }: { building: BuildingUpgradeDef; speci
           disabled={bought || missing > 0}
           onClick={() => useUpgradesStore.getState().buySpecial(special.id)}
         >
-          {bought ? "✓ Comprada" : "MEJORAR"}
+          {bought ? t("panel.upgrades.bought_btn") : t("panel.upgrades.buy")}
         </button>
       </div>
     </div>
@@ -56,6 +64,7 @@ function SpecialRow({ building, special }: { building: BuildingUpgradeDef; speci
 }
 
 function BuildingCard({ def }: { def: BuildingUpgradeDef }) {
+  const t = useT();
   const level = useUpgradesStore((s) => s.levels[def.id]);
   const gold = useEconomyStore((s) => s.gold);
   const [, setTick] = useState(0);
@@ -76,10 +85,15 @@ function BuildingCard({ def }: { def: BuildingUpgradeDef }) {
   const delta = atMax ? 0 : Math.max(0, nextCapacity - capacity);
   const gain = atMax ? undefined : def.estDailyGainPerUnit * delta;
   const roi = paybackDays(price, atMax ? undefined : gain);
+  const unit = t(UNIT_KEY[def.unit] ?? "unit.units");
+  const name = t(`upgrade.${def.id}`);
 
   const onBuy = () => {
     if (useUpgradesStore.getState().buyLevel(def.id) && confirmRef.current) {
-      confirmRef.current.textContent = `✓ Compra realizada: ${def.name} Nivel ${useUpgradesStore.getState().levels[def.id]}`;
+      confirmRef.current.textContent = t("panel.upgrades.confirm", {
+        name,
+        level: useUpgradesStore.getState().levels[def.id],
+      });
       setTimeout(() => {
         if (confirmRef.current) confirmRef.current.textContent = "";
       }, 3000);
@@ -90,10 +104,12 @@ function BuildingCard({ def }: { def: BuildingUpgradeDef }) {
     <div className="pansection upgrade-card">
       <div className="pansection-head">
         <span className="pansection-title">
-          {def.icon} {def.name.toUpperCase()}
+          {def.icon} {name.toUpperCase()}
         </span>
         <span className="upgrade-level">
-          {nextDef ? `NIVEL ${level} → ${nextDef.level}` : `NIVEL ${level} · MÁXIMO`}
+          {nextDef
+            ? t("panel.upgrades.level_range", { a: level, b: nextDef.level })
+            : t("panel.upgrades.level_max", { a: level })}
         </span>
       </div>
       <div className="pansection-body">
@@ -101,22 +117,20 @@ function BuildingCard({ def }: { def: BuildingUpgradeDef }) {
           <div className="panelrow-icon">{def.icon}</div>
           <div className="panelrow-main">
             <div className="panelrow-title">
-              Capacidad {capacity} → {atMax ? capacity : nextCapacity} {def.unit}
+              {t("panel.upgrades.capacity_line", { a: capacity, b: atMax ? capacity : nextCapacity, unit })}
             </div>
             <div className="panelrow-sub">
               {atMax
-                ? "Máximo nivel alcanzado."
-                : `Beneficio: +${delta} ${def.unit} de capacidad.`}
+                ? t("panel.upgrades.max_reached")
+                : t("panel.upgrades.benefit", { delta, unit })}
             </div>
             {!atMax && roi !== null && (
-              <div className="panelrow-sub muted">
-                Recuperación estimada: ≈ {roi} día{roi === 1 ? "" : "s"}
-              </div>
+              <div className="panelrow-sub muted">{t("panel.upgrades.roi", { days: roi })}</div>
             )}
           </div>
           <div className="panelrow-side">
-            <b>{fmtPrice(price)}</b>
-            {!atMax && missing > 0 && <span className="muted">faltan {fmtPrice(missing)}</span>}
+            <b>{fmtPrice(price, t)}</b>
+            {!atMax && missing > 0 && <span className="muted">{t("panel.upgrades.missing", { money: fmtPrice(missing, t) })}</span>}
           </div>
           <div className="panelrow-actions">
             <button
@@ -124,7 +138,7 @@ function BuildingCard({ def }: { def: BuildingUpgradeDef }) {
               disabled={atMax || missing > 0}
               onClick={onBuy}
             >
-              {atMax ? "MÁXIMO" : "🏗️ MEJORAR"}
+              {atMax ? t("panel.upgrades.max") : `🏗️ ${t("panel.upgrades.buy")}`}
             </button>
           </div>
         </div>
@@ -140,6 +154,7 @@ function BuildingCard({ def }: { def: BuildingUpgradeDef }) {
 }
 
 export function UpgradesPanel() {
+  const t = useT();
   const gold = useEconomyStore((s) => s.gold);
   const [, setTick] = useState(0);
 
@@ -154,26 +169,20 @@ export function UpgradesPanel() {
   );
 
   return (
-    <PanelShell icon="🏗️" title="Mejoras" subtitle="Niveles, capacidades y eficiencia de tus edificios">
+    <PanelShell icon="🏗️" title={t("panel.upgrades.title")} subtitle={t("panel.upgrades.subtitle")}>
       <div className="panel-grid">
-        <StatCell icon="💰" label="Saldo disponible" value={"$" + gold.toFixed(2).replace(/\.00$/, "")} />
-        <StatCell icon="🏗️" label="Edificios mejorables" value={UPGRADE_BUILDINGS.length} />
-        <StatCell icon="📈" label="Mejoras compradas" value={purchased} />
+        <StatCell icon="💰" label={t("panel.upgrades.balance")} value={"$" + gold.toFixed(2).replace(/\.00$/, "")} />
+        <StatCell icon="🏗️" label={t("panel.upgrades.upgradeable")} value={UPGRADE_BUILDINGS.length} />
+        <StatCell icon="📈" label={t("panel.upgrades.bought")} value={purchased} />
       </div>
 
-      <div className="hint">
-        Las mejoras no generan dinero directamente: aumentan capacidad, velocidad o eficiencia. El costo se
-        descuenta de tu saldo al instante y solo puedes comprar en orden (nivel a nivel).
-      </div>
+      <div className="hint">{t("panel.upgrades.hint_1")}</div>
 
       {UPGRADE_BUILDINGS.map((def) => (
         <BuildingCard key={def.id} def={def} />
       ))}
 
-      <div className="hint">
-        Los tiempos de recuperación son orientativos y no garantizan rentabilidad: dependen del uso real que
-        hagas de cada mejora.
-      </div>
+      <div className="hint">{t("panel.upgrades.hint_2")}</div>
     </PanelShell>
   );
 }

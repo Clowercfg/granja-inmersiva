@@ -5,6 +5,7 @@ import { useEconomyStore } from "../store/economyStore";
 import { useStorageStore } from "../store/storageStore";
 import { useInteriorStore } from "../store/interiorStore";
 import { CROP_ECONOMY, GOODS_ECONOMY } from "../config/economy";
+import { useT } from "../store/languageStore";
 
 const CROP_ICON: Record<string, string> = { wheat: "🌾", carrot: "🥕", potato: "🥔" };
 
@@ -13,6 +14,7 @@ function fmtPrice(n: number): string {
 }
 
 export function CrateOverlay() {
+  const t = useT();
   const focus = useStorageStore((s) => s.focus);
   const closeCrate = useStorageStore((s) => s.closeCrate);
   const cropInventory = useCropStore((s) => s.inventory);
@@ -36,7 +38,8 @@ export function CrateOverlay() {
     ? (goodsInventory[focus.id] ?? 0)
     : (cropInventory[focus.id]?.harvest ?? 0);
   const icon = isGoods ? goodsEcon.icon : (CROP_ICON[focus.id] ?? "📦");
-  const subtitle = isGoods ? "Almacén · producto elaborado" : "Almacén · cosecha guardada";
+  const subtitle = isGoods ? t("crate.goods_sub") : t("crate.crop_sub");
+  const name = isGoods ? t(`product.${focus.id}`) : t(`crop.${focus.id}`);
   const sell = (qty: number) => (isGoods ? sellGoods(focus.id, qty) : sellHarvest(focus.id, qty));
 
   return (
@@ -45,36 +48,36 @@ export function CrateOverlay() {
         <div className="crateoverlay-head">
           <span className="crateoverlay-icon">{icon}</span>
           <div>
-            <div className="crateoverlay-title">{econ.name}</div>
+            <div className="crateoverlay-title">{name}</div>
             <div className="crateoverlay-sub">{subtitle}</div>
           </div>
         </div>
         <div className="crateoverlay-stats">
           <div className="crateoverlay-stat">
-            <span>Cantidad</span>
+            <span>{t("crate.quantity")}</span>
             <b>{count}</b>
           </div>
           <div className="crateoverlay-stat">
-            <span>Precio venta</span>
+            <span>{t("crate.sale_price")}</span>
             <b>${fmtPrice(econ.sellPrice)}</b>
           </div>
           <div className="crateoverlay-stat">
-            <span>Valor total</span>
+            <span>{t("crate.total_value")}</span>
             <b>${(count * econ.sellPrice).toFixed(2)}</b>
           </div>
         </div>
         <div className="crateoverlay-actions">
           <button className="btn" disabled={count < 1} onClick={() => sell(1)}>
-            Vender 1
+            {t("crate.sell_1")}
           </button>
           <button className="btn primary" disabled={count < 1} onClick={() => sell(count)}>
-            Vender todo
+            {t("crate.sell_all")}
           </button>
           <button className="btn" onClick={closeCrate}>
-            Cerrar
+            {t("crate.close")}
           </button>
         </div>
-        <div className="crateoverlay-hint">Saldo USD: ${gold.toFixed(2)}</div>
+        <div className="crateoverlay-hint">{t("crate.balance", { gold: gold.toFixed(2) })}</div>
       </div>
     </div>
   );

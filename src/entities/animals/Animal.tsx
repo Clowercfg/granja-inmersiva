@@ -7,6 +7,7 @@ import { buildChicken } from "./chicken";
 import { buildRooster } from "./rooster";
 import { buildPig } from "./pig";
 import { useSelectionStore } from "../../store/selectionStore";
+import { useT } from "../../store/languageStore";
 import { SelectionRing } from "../common/SelectionRing";
 import { clamp } from "../../utils/math";
 import { useAsset } from "../../core/assets/useAsset";
@@ -18,13 +19,6 @@ const KIND_ASSET: Record<AnimalKind, string> = {
   chicken: "animal:chicken",
   rooster: "animal:chicken",
   pig: "animal:pig",
-};
-
-const KIND_SUBTITLE: Record<AnimalKind, string> = {
-  cow: "Vaca lechera",
-  chicken: "Gallina ponedora",
-  rooster: "Gallo reproductor",
-  pig: "Cerdo de engorde",
 };
 
 function buildKind(kind: AnimalKind): THREE.Object3D | null {
@@ -56,6 +50,8 @@ export function Animal({ id }: { id: number }) {
   const setHover = useSelectionStore((s) => s.setHover);
   const selected = useSelectionStore((s) => s.selected?.uid === `animal-${id}`);
   const hovered = useSelectionStore((s) => s.hovered?.uid === `animal-${id}`);
+  const t = useT();
+  const kindLabel = t(`kind.${agent?.kind ?? "chicken"}`);
 
   useFrame((state, delta) => {
     const group = groupRef.current;
@@ -124,7 +120,7 @@ export function Animal({ id }: { id: number }) {
             kind: "animal",
             uid: `animal-${agent.id}`,
             title: agent.name,
-            subtitle: KIND_SUBTITLE[agent.kind],
+            subtitle: kindLabel,
           });
         }}
         onPointerOver={(e: { stopPropagation: () => void }) => {
@@ -133,7 +129,7 @@ export function Animal({ id }: { id: number }) {
             kind: "animal",
             uid: `animal-${agent.id}`,
             title: agent.name,
-            subtitle: KIND_SUBTITLE[agent.kind],
+            subtitle: kindLabel,
           });
           document.body.style.cursor = "pointer";
         }}

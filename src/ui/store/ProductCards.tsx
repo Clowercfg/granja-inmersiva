@@ -1,37 +1,29 @@
 import { PRODUCT_ECONOMY, GOODS_ECONOMY, getProductEconomy } from "../../config/economy";
+import { useT } from "../../store/languageStore";
 import { StoreCard, fmtMoney, fmtProfit } from "./StoreUI";
 
-const PRODUCT_SOURCE: Record<string, string> = {
-  egg: "Gallinas",
-  milk: "Vacas",
-  meat: "Cerdos",
-  "boiled-egg": "Procesadora",
-  honey: "Colmenas",
-  cheese: "Procesadora",
-};
-
-const PRODUCT_MARKET: Record<string, string> = {
-  egg: "Almacén",
-  milk: "Almacén",
-  meat: "Almacén",
-  "boiled-egg": "Almacén",
-  honey: "Almacén",
-  cheese: "Almacén",
+const SOURCE_KEY: Record<string, string> = {
+  egg: "store.source.egg",
+  milk: "store.source.milk",
+  meat: "store.source.meat",
+  "boiled-egg": "store.source.boiled-egg",
+  honey: "store.source.honey",
+  cheese: "store.source.cheese",
 };
 
 /** Productos ocultos del catálogo (la economía central los conserva). */
 const HIDDEN_PRODUCTS = new Set(["milk", "boiled-egg", "cheese", "honey"]);
 
 /** Productos de la granja (solo los disponibles en cada economía). */
-function productList(): Array<{ id: string; name: string; icon: string; price: number }> {
-  const list: Array<{ id: string; name: string; icon: string; price: number }> = [];
+function productList(): Array<{ id: string; icon: string; price: number }> {
+  const list: Array<{ id: string; icon: string; price: number }> = [];
   for (const [id, def] of Object.entries(PRODUCT_ECONOMY)) {
     if (HIDDEN_PRODUCTS.has(id)) continue;
-    list.push({ id, name: def.name, icon: def.icon, price: def.price });
+    list.push({ id, icon: def.icon, price: def.price });
   }
   for (const [id, def] of Object.entries(GOODS_ECONOMY)) {
     if (PRODUCT_ECONOMY[id] || id === "eggs" || HIDDEN_PRODUCTS.has(id)) continue;
-    list.push({ id, name: def.name, icon: def.icon, price: def.sellPrice });
+    list.push({ id, icon: def.icon, price: def.sellPrice });
   }
   return list;
 }
@@ -41,6 +33,7 @@ function productList(): Array<{ id: string; name: string; icon: string; price: n
  * siempre leído desde la economía central (nunca hardcodeado en la UI).
  */
 export function ProductCards() {
+  const t = useT();
   return (
     <div className="store-grid">
       {productList().map((p) => {
@@ -48,16 +41,18 @@ export function ProductCards() {
         return (
           <StoreCard key={p.id} className="scard-product">
             <div className="scard-icon">{p.icon}</div>
-            <div className="scard-title">{p.name.toUpperCase()}</div>
+            <div className="scard-title">{t(`product.${p.id}`).toUpperCase()}</div>
             <div className="scard-tags">
-              <span className="scard-tag">{PRODUCT_SOURCE[p.id] ?? "Producción"}</span>
-              <span className="scard-tag">Venta: {PRODUCT_MARKET[p.id] ?? "Almacén"}</span>
+              <span className="scard-tag">{t(SOURCE_KEY[p.id] ?? "store.product.source_default")}</span>
+              <span className="scard-tag">
+                {t("store.product.market", { market: t("store.product.market_default") })}
+              </span>
             </div>
             <div className="scard-detail">
-              Precio de venta <b className="scard-price">{fmtProfit(p.price)}</b>
-              {prod && prod.price !== p.price ? ` (referencia ${fmtMoney(prod.price)})` : ""}
+              {t("store.product.price")} <b className="scard-price">{fmtProfit(p.price)}</b>
+              {prod && prod.price !== p.price ? ` ${t("store.product.ref", { money: fmtMoney(prod.price) })}` : ""}
             </div>
-            <div className="scard-note">Se vende automáticamente desde la granja o el almacén.</div>
+            <div className="scard-note">{t("store.product.note")}</div>
           </StoreCard>
         );
       })}

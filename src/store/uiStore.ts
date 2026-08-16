@@ -7,7 +7,8 @@ export type GameSectionId =
   | "infrastructure"
   | "upgrades"
   | "inventory"
-  | "calendar";
+  | "calendar"
+  | "language";
 
 interface UiStore {
   section: GameSectionId | null;

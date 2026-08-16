@@ -1,0 +1,469 @@
+{
+  "app": {
+    "brand": "IMMERSIVE FARM 3D",
+    "tagline": "SIMULADOR DE GRANJA",
+    "loading": {
+      "webgpu": "Iniciando motor WebGPU…",
+      "webgl": "Iniciando motor WebGL2…"
+    }
+  },
+  "weather": {
+    "clear": "Despejado",
+    "cloudy": "Nublado",
+    "rain": "Lluvia"
+  },
+  "time": {
+    "dayphase": {
+      "dawn": "Amanecer",
+      "morning": "Mañana",
+      "midday": "Mediodía",
+      "afternoon": "Tarde",
+      "dusk": "Atardecer",
+      "night": "Noche"
+    },
+    "season": {
+      "spring": "Primavera",
+      "summer": "Verano",
+      "autumn": "Otoño",
+      "winter": "Invierno"
+    },
+    "weekday": [
+      "Domingo",
+      "Lunes",
+      "Martes",
+      "Miércoles",
+      "Jueves",
+      "Viernes",
+      "Sábado"
+    ],
+    "month": [
+      "enero",
+      "febrero",
+      "marzo",
+      "abril",
+      "mayo",
+      "junio",
+      "julio",
+      "agosto",
+      "septiembre",
+      "octubre",
+      "noviembre",
+      "diciembre"
+    ],
+    "weekday_short": ["D", "L", "M", "X", "J", "V", "S"],
+    "date_hud": "{dow}, {day} de {month} de {year}",
+    "date_cal": "{day} de {month} de {year}"
+  },
+  "sidebar": {
+    "store": "Tienda",
+    "store_title": "Tienda — compra todo para tu granja",
+    "animals": "Animales",
+    "animals_hint": "Población y estado",
+    "veterinary": "Veterinario",
+    "veterinary_hint": "Salud y tratamientos",
+    "crops": "Cultivos",
+    "crops_hint": "Parcelas y cosechas",
+    "upgrades": "Mejoras",
+    "upgrades_hint": "Niveles y capacidades",
+    "inventory": "Inventario",
+    "inventory_hint": "Materiales y recursos",
+    "calendar": "Calendario",
+    "calendar_hint": "Fecha real y estación",
+    "language": "Idioma",
+    "language_hint": "Cambia el idioma de la interfaz"
+  },
+  "language": {
+    "title": "Idioma",
+    "subtitle": "Elige el idioma de la interfaz",
+    "es": "Español",
+    "en": "English"
+  },
+  "hud": {
+    "level": "Nivel {level}",
+    "building_sub": "{name} · Nivel {level}",
+    "exit_building": "🚪 Salir del {name}",
+    "help_title": "Controles",
+    "help_move": "Mover cámara",
+    "help_boost": "Acelerar",
+    "help_rotate": "Rotar vista",
+    "help_zoom": "Zoom",
+    "help_select": "Seleccionar",
+    "help_close": "Cerrar panel",
+    "help_rmb": "Botón der.",
+    "state": "Estado",
+    "mood": "Ánimo",
+    "health": "Salud",
+    "pending": "Producción pendiente",
+    "prod_unit": {
+      "cow": "L leche",
+      "chicken": "huevos",
+      "rooster": "huevos",
+      "pig": "kg carne"
+    },
+    "prod_hint": "Los animales producen a lo largo del día. Su producción se vende automáticamente cada pocos segundos.",
+    "enter_building": "🚪 Entrar al {name}",
+    "enter_hint": "Entra para inspeccionar el interior. Usa el botón «Salir» para volver a la granja.",
+    "no_interior": "Edificio existente de la granja. Gestiona la infraestructura desde el panel lateral."
+  },
+  "animalState": {
+    "rest": "Descansando",
+    "wander": "Paseando",
+    "eating": "Paciendo",
+    "sleep": "Durmiendo"
+  },
+  "crop": {
+    "wheat": "Trigo",
+    "corn": "Maíz",
+    "carrot": "Zanahoria",
+    "potato": "Papa"
+  },
+  "animal": {
+    "chicken": "Gallina",
+    "rooster": "Gallo",
+    "cow": "Vaca",
+    "pig": "Cerdo",
+    "production": {
+      "chicken": "1 huevo cada 5 h",
+      "rooster": "1 huevo fertilizado cada 24 h",
+      "cow": "1 leche cada 8 h",
+      "pig": "Engorde 7 días · 60 kg de carne"
+    }
+  },
+  "species": {
+    "chicken": "Gallinas",
+    "rooster": "Gallos",
+    "cow": "Vacas",
+    "pig": "Cerdos"
+  },
+  "kind": {
+    "cow": "Vaca lechera",
+    "chicken": "Gallina ponedora",
+    "rooster": "Gallo reproductor",
+    "pig": "Cerdo de engorde"
+  },
+  "product": {
+    "egg": "Huevo",
+    "eggs": "Huevos",
+    "milk": "Leche",
+    "meat": "Carne",
+    "honey": "Miel",
+    "cheese": "Queso",
+    "boiled-egg": "Huevo hervido"
+  },
+  "building": {
+    "generic": "edificio",
+    "barn": "Granero",
+    "house": "Casa",
+    "cowPen": "Corral de vacas",
+    "chickenPen": "Corral de pollos",
+    "warehouse": "Almacén",
+    "greenhouse": "Invernadero",
+    "workshop": "Taller",
+    "coop": "Gallinero",
+    "stable": "Establo",
+    "pigPen": "Pocilga"
+  },
+  "enclosure": {
+    "cow-pen": "Corral de vacas",
+    "chicken-pen": "Corral de aves",
+    "pig-pen": "Pocilga"
+  },
+  "feedPeriod": {
+    "day": "día",
+    "cycle": "ciclo"
+  },
+  "upgrade": {
+    "coop": "Gallinero",
+    "stable": "Establo",
+    "pigPen": "Pocilga",
+    "incubator": "Incubadora",
+    "granary": "Granero",
+    "processing": "Procesadora",
+    "special": {
+      "stable-speed": "Producción rápida",
+      "stable-speed.desc": "Producción cada 7 h en vez de 8 h.",
+      "pig-engorde-1": "Engorde I",
+      "pig-engorde-1.desc": "Ciclo de engorde de 7 a 6 días.",
+      "pig-engorde-2": "Engorde II",
+      "pig-engorde-2.desc": "Ciclo de engorde de 7 a 5 días."
+    }
+  },
+  "unit": {
+    "hens": "gallinas",
+    "cows": "vacas",
+    "pigs": "cerdos",
+    "eggs": "huevos",
+    "units": "u.",
+    "machines": "máquinas"
+  },
+  "offer": {
+    "seedpack": { "name": "Lote de Semillas", "desc": "Trigo + Maíz + Zanahoria + Papa, 100 de cada." },
+    "beginner": { "name": "Combo Principiante", "desc": "Semillas para arrancar y un par de gallinas." },
+    "farmer": { "name": "Combo Agricultor", "desc": "Cultivos variados y tu primera vaca." },
+    "poultry": { "name": "Combo Gallinero", "desc": "Aves de corral para producción de huevos." },
+    "dairy": { "name": "Combo Lechero", "desc": "Vacas lecheras y forraje de zanahoria." },
+    "swine": { "name": "Combo Porcicultor", "desc": "Cerdos de engorde para producción de carne." },
+    "repro": { "name": "Combo Reproducción", "desc": "Gallos y gallinas listos para la incubadora." },
+    "granjero": { "name": "Granjero $300", "desc": "Gran lote de semillas y ganado para crecer de golpe." },
+    "advanced": { "name": "Granja Avanzada", "desc": "Ganado variado y semillas premium para granjas en marcha." },
+    "mega": { "name": "Mega Granja", "desc": "El paquete definitivo: mucho ganado y toneladas de semillas." }
+  },
+  "process": {
+    "machine": "Procesadora",
+    "egg-boiled.title": "PROCESO: HUEVO HERVIDO",
+    "info_title": "PROCESADORA",
+    "info_1": "La máquina procesadora convierte productos de la granja en productos con más valor de venta.",
+    "info_2": "Se desbloquea mejorando la infraestructura en la categoría MEJORAS.",
+    "conversion": "{in} → {out} unidad|{in} → {out} unidades"
+  },
+  "store": {
+    "tienda": "TIENDA",
+    "de_la_granja": "DE LA GRANJA",
+    "monedas": "MONEDAS",
+    "diamantes": "DIAMANTES",
+    "buy_coins": "Comprar monedas",
+    "buy_diamonds": "Comprar diamantes",
+    "close_store": "Cerrar tienda",
+    "tabs_aria": "Categorías de la tienda",
+    "category": {
+      "crops": "Cultivos",
+      "animals": "Animales",
+      "products": "Productos",
+      "process": "Procesamiento",
+      "infra": "Infraestructura",
+      "expansions": "Expansiones",
+      "feed": "Alimentación",
+      "offers": "Ofertas limitadas"
+    },
+    "info_title": "ℹ️ INFORMACIÓN",
+    "info_1": "Los costos de alimentación y mantenimiento se cobran al finalizar cada ciclo.",
+    "info_2": "Los tiempos pueden variar según mejoras.",
+    "info_3": "Más producción = Más ganancias",
+    "coming_soon": "💎 PRÓXIMAMENTE",
+    "coming_soon_detail": "El paquete de diamantes estará disponible pronto.",
+    "special_ribbon": "OFERTA ESPECIAL!",
+    "ahorras": "AHORRAS {money}",
+    "comprar": "COMPRAR",
+    "combo_blocked_title": "Mejora tus edificios para albergar este combo.",
+    "combo_warn": "Requiere mejorar edificios.",
+    "view_all": "Ver todas las ofertas →",
+    "diamond_panel_text": "Con diamantes puedes acelerar tiempos y obtener beneficios.",
+    "ver_ofertas": "VER OFERTAS",
+    "qty_decrease_aria": "Reducir cantidad",
+    "qty_increase_aria": "Aumentar cantidad",
+    "buy": "COMPRAR",
+    "crop": {
+      "seed": "Semilla",
+      "growth": "⏱️ Crecimiento {hours} h",
+      "profit": "Ganancia {profit}/ud"
+    },
+    "animal": {
+      "info_aria": "Más información de {name}",
+      "info_title": "Información adicional",
+      "feed": "Alimentación",
+      "info_box": "Precio de compra {price}. Tratamiento veterinario {treat}. El mantenimiento se cobra al finalizar cada ciclo.",
+      "building_fill": "{building}: {used}/{capacity}",
+      "full": "🚧 Edificio lleno — mejóralo en INFRAESTRUCTURA."
+    },
+    "product": {
+      "source_default": "Producción",
+      "market_default": "Almacén",
+      "market": "Venta: {market}",
+      "price": "Precio de venta",
+      "ref": "(referencia {money})",
+      "note": "Se vende automáticamente desde la granja o el almacén."
+    },
+    "source": {
+      "egg": "Gallinas",
+      "milk": "Vacas",
+      "meat": "Cerdos",
+      "boiled-egg": "Procesadora",
+      "honey": "Colmenas",
+      "cheese": "Procesadora"
+    },
+    "offer": {
+      "saving": "AHORRO {money}",
+      "buy_combo": "COMPRAR COMBO"
+    },
+    "expansion": {
+      "plots_title": "NUEVAS PARCELAS",
+      "plots_desc": "Amplía tus campos de cultivo desbloqueando nuevas parcelas al norte de la granja.",
+      "sheep_title": "CORRAL DE OVEJAS",
+      "sheep_desc": "Nueva especie para el oeste: produce lana, que podrás vender o procesar.",
+      "pond_title": "ESTANQUE DE PECES",
+      "pond_desc": "Cría peces en el estanque de la granja y cógelos cuando estén listos.",
+      "soon": "Próximamente"
+    },
+    "feed": {
+      "feed": "🌾 Alimentación",
+      "cost": "Coste:",
+      "note": "El costo de alimentación y mantenimiento se cobra al finalizar cada ciclo.",
+      "how_title": "CÓMO FUNCIONA",
+      "how_1": "Cada animal consume forraje según su especie. Los cerdos pagan su alimentación por ciclo de engorde (7 días); el resto, por día.",
+      "how_2": "Más producción = más ganancias. Mantén a tus animales sanos y alimentados."
+    },
+    "upgrade": {
+      "benefit_capacity": "Capacidad {a} → {b} {unit}",
+      "benefit_speed": "Reduce el tiempo de producción",
+      "benefit_efficiency": "Reduce los costos de producción",
+      "level": "Nivel {level}",
+      "next": "Siguiente: Nivel {level}",
+      "max": "Máximo",
+      "completed": "COMPLETADO",
+      "price": "Precio:",
+      "mejorar": "MEJORAR",
+      "owned": "✓ ADQUIRIDA",
+      "buy_special": "COMPRAR {price}",
+      "msg_upgraded": "✓ {name} MEJORADO",
+      "msg_level": "Nivel {level}",
+      "msg_insufficient": "❌ SALDO INSUFICIENTE",
+      "msg_insufficient_detail": "Necesitas {money} para esta mejora."
+    },
+    "process": {
+      "margin": "Margen +{margin}"
+    }
+  },
+  "shop": {
+    "invalid_qty": "⚠️ CANTIDAD INVÁLIDA",
+    "invalid_qty_detail": "Solo cantidades enteras positivas.",
+    "unavailable": "⚠️ PRODUCTO NO DISPONIBLE",
+    "insufficient": "❌ SALDO INSUFICIENTE",
+    "insufficient_detail": "Necesitas: {need} · Disponible: {have}",
+    "capacity": "🚧 CAPACIDAD LLENA",
+    "capacity_detail": "Solo caben {free} en el {building}. Mejora el edificio para más espacio.",
+    "seeds_bought": "✓ SEMILLAS COMPRADAS",
+    "seeds_bought_detail": "{qty} × {name} añadidas al inventario.",
+    "animal_bought": "✓ {name} COMPRAD{suffix}",
+    "animal_bought_detail": "{qty} × {money} descontados de tu saldo.",
+    "offer_unavailable": "⚠️ OFERTA NO DISPONIBLE",
+    "offer_bought": "✓ {name} COMPRADO",
+    "offer_bought_detail": "{pct}% OFF · ahorraste {money}.",
+    "kind": {
+      "cow": "VACA",
+      "chicken": "GALLINA",
+      "rooster": "GALLO",
+      "pig": "CERDO"
+    }
+  },
+  "panel": {
+    "close_aria": "Cerrar",
+    "animals": {
+      "title": "Animales",
+      "subtitle": "Población y estado de tu ganado",
+      "empty": "No hay animales en los corrales.",
+      "mood": "{pct}% ánimo",
+      "hint": "Las vacas viven en su corral, los cerdos en la pocilga y las aves en el corral de aves. Durante el día pasean y pastan dentro de su área; por la noche se echan a dormir."
+    },
+    "vet": {
+      "title": "Veterinario",
+      "subtitle": "Salud de tu ganado y tratamientos",
+      "sick": "Enfermos",
+      "recovering": "Recuperándose",
+      "population": "Población",
+      "pending": "Tratamientos pend.",
+      "empty": "No hay animales enfermos.",
+      "empty_ok": "Los corrales están sanos. 🎉",
+      "sick_badge": "Enfermo",
+      "recovering_badge": "En recuperación · {time}",
+      "treatment": "Tratamiento {price} · Recuperación {hours} h",
+      "treat_btn": "⚠️ Tratar",
+      "cured": "🩹 Curado",
+      "treat": "Tratar",
+      "in_progress": "En curso",
+      "hint": "En una granja de referencia (~20 animales) enferma 1 animal cada 9 días aproximadamente; cada animal solo puede enfermar como mínimo cada 14 días. Solo pagas el tratamiento cuando lo decides, no necesitas saldo reservado, y ningún animal se elimina por estar enfermo."
+    },
+    "crops": {
+      "title": "Cultivos",
+      "subtitle": "Siembra, crecimiento y venta",
+      "plots": "Parcelas",
+      "seeds": "Semillas",
+      "harvest": "Cosecha",
+      "detail": "Semilla {seed} · Crecimiento {hours} h · Venta {sell} · Ganancia {profit}",
+      "harvested": "{n} cosechada",
+      "buy_seed": "Comprar semilla",
+      "plant": "Sembrar",
+      "harvest_btn": "Cosechar",
+      "sell_1": "Vender 1",
+      "sell_all": "Vender todo",
+      "seed_note": "Cada semilla cuesta {price} (se descuenta al comprar).",
+      "growth": "Crecimiento",
+      "plot_empty": "Vacía — clic en la parcela para sembrar",
+      "ready": "Lista para cosechar",
+      "growing_left": "Creciendo · quedan {time}",
+      "plot_of": "Parcela de {name}",
+      "ready_short": "¡Lista!",
+      "summary": "{ready} lista|{ready} listas · {growing} en crecimiento.",
+      "hint": "En 3D: clic en la parcela para sembrar, clic sobre el cultivo listo para cosechar. Semillas y cosechas en inventario no cuentan como USD hasta venderlas."
+    },
+    "upgrades": {
+      "title": "Mejoras",
+      "subtitle": "Niveles, capacidades y eficiencia de tus edificios",
+      "balance": "Saldo disponible",
+      "upgradeable": "Edificios mejorables",
+      "bought": "Mejoras compradas",
+      "type": {
+        "capacity": "🟢 Capacidad",
+        "speed": "🔵 Velocidad",
+        "efficiency": "🟡 Eficiencia"
+      },
+      "free": "GRATIS",
+      "owned_chip": "Comprada",
+      "roi": "Recuperación estimada: ≈ {days} día|Recuperación estimada: ≈ {days} días",
+      "missing": "faltan {money}",
+      "buy": "MEJORAR",
+      "bought_btn": "✓ Comprada",
+      "confirm": "✓ Compra realizada: {name} Nivel {level}",
+      "level_range": "NIVEL {a} → {b}",
+      "level_max": "NIVEL {a} · MÁXIMO",
+      "capacity_line": "Capacidad {a} → {b} {unit}",
+      "max_reached": "Máximo nivel alcanzado.",
+      "benefit": "Beneficio: +{delta} {unit} de capacidad.",
+      "max": "MÁXIMO",
+      "hint_1": "Las mejoras no generan dinero directamente: aumentan capacidad, velocidad o eficiencia. El costo se descuenta de tu saldo al instante y solo puedes comprar en orden (nivel a nivel).",
+      "hint_2": "Los tiempos de recuperación son orientativos y no garantizan rentabilidad: dependen del uso real que hagas de cada mejora."
+    },
+    "inventory": {
+      "title": "Inventario",
+      "subtitle": "Productos guardados en el Almacén",
+      "harvests": "Cosechas",
+      "seeds": "Semillas",
+      "crops": "Cultivos",
+      "harvests_title": "Cosechas almacenadas",
+      "harvests_hint": "Las cosechas se guardan en el Almacén y aparecen como cajas en los estantes. Haz clic en una caja para ver la cantidad y venderla.",
+      "seeds_title": "Semillas",
+      "seeds_of": "Semillas de {name}",
+      "resources": "Recursos",
+      "hint": "El inventario refleja en tiempo real lo que se recoge en la granja y lo que se almacena en el Almacén."
+    },
+    "calendar": {
+      "title": "Calendario",
+      "subtitle": "El tiempo de la granja sigue la hora real",
+      "moment": "Momento",
+      "season": "Estación",
+      "day_progress": "Avance del día",
+      "events": "Eventos de la estación",
+      "ev": {
+        "summer": "Verano: los días son largos y los animales pastan más. Cosecha temprana para evitar el calor.",
+        "spring": "Primavera: época ideal de siembra y cría.",
+        "autumn": "Otoño: tiempo de recolección y preparación del granero.",
+        "winter": "Invierno: las noches son largas; la granja descansa."
+      },
+      "hint": "El reloj del juego está sincronizado con la hora del sistema. El día y la estación cambian de forma automática a medianoche y con el paso de los meses."
+    }
+  },
+  "crate": {
+    "goods_sub": "Almacén · producto elaborado",
+    "crop_sub": "Almacén · cosecha guardada",
+    "quantity": "Cantidad",
+    "sale_price": "Precio venta",
+    "total_value": "Valor total",
+    "sell_1": "Vender 1",
+    "sell_all": "Vender todo",
+    "close": "Cerrar",
+    "balance": "Saldo USD: {gold}"
+  },
+  "transition": {
+    "entering": "Entrando al {name}…",
+    "leaving": "Saliendo…"
+  }
+}

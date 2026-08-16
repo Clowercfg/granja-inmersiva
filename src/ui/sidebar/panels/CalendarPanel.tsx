@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useWorldStore } from "../../../store/worldStore";
-import { DAY_PHASE_LABEL, SEASON_LABEL } from "../../../systems/time/TimeManager";
+import { useT } from "../../../store/languageStore";
 import { PanelShell, StatCell, PanelSection } from "./PanelShell";
 
 const SEASON_ICON: Record<string, string> = {
@@ -26,12 +26,11 @@ function useNowMs() {
 }
 
 export function CalendarPanel() {
+  const t = useT();
   const d = useNowMs();
   const year = useWorldStore((s) => s.year);
   const month = useWorldStore((s) => s.month);
   const dayOfMonth = useWorldStore((s) => s.dayOfMonth);
-  const dayOfWeek = useWorldStore((s) => s.dayOfWeek);
-  const monthName = useWorldStore((s) => s.monthName);
   const season = useWorldStore((s) => s.season);
   const dayPhase = useWorldStore((s) => s.dayPhase);
 
@@ -45,23 +44,27 @@ export function CalendarPanel() {
   }, [firstWeekday, daysInMonth]);
 
   const dayProgress = ((d.getHours() * 60 + d.getMinutes()) / (24 * 60)) * 100;
+  const dow = t(`time.weekday.${d.getDay()}`);
+  const monthName = t(`time.month.${d.getMonth()}`);
+  const shortWeek = useMemo(
+    () => Array.from({ length: 7 }, (_, i) => t(`time.weekday_short.${i}`)),
+    [t]
+  );
 
   return (
-    <PanelShell icon="📅" title="Calendario" subtitle="El tiempo de la granja sigue la hora real">
+    <PanelShell icon="📅" title={t("panel.calendar.title")} subtitle={t("panel.calendar.subtitle")}>
       <div className="calendar-today">
-        <div className="calendar-date">{dayOfWeek}</div>
-        <div className="calendar-day">
-          {dayOfMonth} de {monthName} de {year}
-        </div>
+        <div className="calendar-date">{dow}</div>
+        <div className="calendar-day">{t("time.date_cal", { day: dayOfMonth, month: monthName, year })}</div>
       </div>
 
       <div className="panel-grid">
-        <StatCell icon={PHASE_ICON[dayPhase]} label="Momento" value={DAY_PHASE_LABEL[dayPhase]} />
-        <StatCell icon={SEASON_ICON[season]} label="Estación" value={SEASON_LABEL[season]} />
+        <StatCell icon={PHASE_ICON[dayPhase]} label={t("panel.calendar.moment")} value={t(`time.dayphase.${dayPhase}`)} />
+        <StatCell icon={SEASON_ICON[season]} label={t("panel.calendar.season")} value={t(`time.season.${season}`)} />
       </div>
 
       <div className="calendar-progress">
-        <div className="calendar-progress-label">Avance del día</div>
+        <div className="calendar-progress-label">{t("panel.calendar.day_progress")}</div>
         <div className="bar good" style={{ width: "100%" }}>
           <div style={{ width: `${dayProgress}%` }} />
         </div>
@@ -69,7 +72,7 @@ export function CalendarPanel() {
 
       <PanelSection icon="🗓️" title={`${monthName} ${year}`}>
         <div className="calendar-grid">
-          {["D", "L", "M", "X", "J", "V", "S"].map((wd, i) => (
+          {shortWeek.map((wd, i) => (
             <div className="calendar-grid-head" key={i}>
               {wd}
             </div>
@@ -89,20 +92,11 @@ export function CalendarPanel() {
         </div>
       </PanelSection>
 
-      <PanelSection icon="⭐" title="Eventos de la estación">
-        <div className="empty">
-          {season === "summer" &&
-            "Verano: los días son largos y los animales pastan más. Cosecha temprana para evitar el calor."}
-          {season === "spring" && "Primavera: época ideal de siembra y cría."}
-          {season === "autumn" && "Otoño: tiempo de recolección y preparación del granero."}
-          {season === "winter" && "Invierno: las noches son largas; la granja descansa."}
-        </div>
+      <PanelSection icon="⭐" title={t("panel.calendar.events")}>
+        <div className="empty">{t(`panel.calendar.ev.${season}`)}</div>
       </PanelSection>
 
-      <div className="hint">
-        El reloj del juego está sincronizado con la hora del sistema. El día y la estación cambian
-        de forma automática a medianoche y con el paso de los meses.
-      </div>
+      <div className="hint">{t("panel.calendar.hint")}</div>
     </PanelShell>
   );
 }

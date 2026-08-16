@@ -514,6 +514,48 @@ canvas {
   gap: 8px;
 }
 
+.lang-grid {
+  grid-template-columns: 1fr;
+}
+
+.lang-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(14, 30, 42, 0.6);
+  border: 1px solid rgba(140, 200, 150, 0.15);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: inherit;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.lang-btn:hover {
+  border-color: rgba(140, 200, 150, 0.45);
+}
+
+.lang-btn.active {
+  border-color: #4db26a;
+  background: rgba(77, 178, 106, 0.15);
+}
+
+.lang-flag {
+  font-size: 20px;
+}
+
+.lang-name {
+  flex: 1;
+  text-align: left;
+}
+
+.lang-check {
+  color: #4db26a;
+  font-weight: 800;
+}
+
 .statcell {
   display: flex;
   flex-direction: column;

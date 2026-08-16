@@ -3,6 +3,7 @@ import { useFarmStore } from "../../../store/farmStore";
 import { useVetStore } from "../../../store/vetStore";
 import { useEconomyStore } from "../../../store/economyStore";
 import { getAnimalEconomy } from "../../../config/economy";
+import { useT } from "../../../store/languageStore";
 import { PanelShell, StatCell } from "./PanelShell";
 
 const fmtPrice = (v: number) =>
@@ -15,6 +16,7 @@ function remainingHm(ms: number) {
 }
 
 export function VetPanel() {
+  const t = useT();
   const animals = useFarmStore((s) => s.animals);
   const sick = useVetStore((s) => s.sick);
   const gold = useEconomyStore((s) => s.gold);
@@ -40,17 +42,17 @@ export function VetPanel() {
   );
 
   return (
-    <PanelShell icon="🩺" title="Veterinario" subtitle="Salud de tu ganado y tratamientos">
+    <PanelShell icon="🩺" title={t("panel.vet.title")} subtitle={t("panel.vet.subtitle")}>
       <div className="panel-grid">
-        <StatCell icon="🤒" label="Enfermos" value={rows.filter((r) => status(r.entry.id) === "sick").length} />
-        <StatCell icon="⏳" label="Recuperándose" value={rows.filter((r) => status(r.entry.id) === "recovering").length} />
-        <StatCell icon="🐾" label="Población" value={animals.length} />
-        <StatCell icon="💰" label="Tratamientos pend." value={fmtPrice(costePendiente)} />
+        <StatCell icon="🤒" label={t("panel.vet.sick")} value={rows.filter((r) => status(r.entry.id) === "sick").length} />
+        <StatCell icon="⏳" label={t("panel.vet.recovering")} value={rows.filter((r) => status(r.entry.id) === "recovering").length} />
+        <StatCell icon="🐾" label={t("panel.vet.population")} value={animals.length} />
+        <StatCell icon="💰" label={t("panel.vet.pending")} value={fmtPrice(costePendiente)} />
       </div>
 
       {rows.length === 0 && (
         <div className="empty">
-          No hay animales enfermos. <span className="muted">Los corrales están sanos. 🎉</span>
+          {t("panel.vet.empty")} <span className="muted">{t("panel.vet.empty_ok")}</span>
         </div>
       )}
 
@@ -64,23 +66,26 @@ export function VetPanel() {
             <div className="panelrow-icon">{def.icon}</div>
             <div className="panelrow-main">
               <div className="panelrow-title">
-                {animal.name} <span className="muted">· {def.name}</span>
+                {animal.name} <span className="muted">· {t(`animal.${animal.kind}`)}</span>
               </div>
               <div className="panelrow-sub">
                 {st === "sick" ? (
-                  <span className="badge-warn">Enfermo</span>
+                  <span className="badge-warn">{t("panel.vet.sick_badge")}</span>
                 ) : (
                   <span className="badge-info">
-                    En recuperación · {remainingHm((entry.recoverAt ?? now) - now)}
+                    {t("panel.vet.recovering_badge", { time: remainingHm((entry.recoverAt ?? now) - now) })}
                   </span>
                 )}
               </div>
               <div className="panelrow-sub muted">
-                Tratamiento {fmtPrice(def.treatmentCost)} · Recuperación {def.recoveryHours} h
+                {t("panel.vet.treatment", {
+                  price: fmtPrice(def.treatmentCost),
+                  hours: def.recoveryHours,
+                })}
               </div>
             </div>
             <div className="panelrow-side">
-              <b>{st === "sick" ? "⚠️ Tratar" : "🩹 Curado"}</b>
+              <b>{st === "sick" ? t("panel.vet.treat_btn") : t("panel.vet.cured")}</b>
               <span className="muted">{fmtPrice(def.treatmentCost)}</span>
             </div>
             <div className="panelrow-actions">
@@ -89,18 +94,14 @@ export function VetPanel() {
                 disabled={st !== "sick" || !canPay}
                 onClick={() => useVetStore.getState().treat(entry.id)}
               >
-                {st === "sick" ? "Tratar" : "En curso"}
+                {st === "sick" ? t("panel.vet.treat") : t("panel.vet.in_progress")}
               </button>
             </div>
           </div>
         );
       })}
 
-      <div className="hint">
-        En una granja de referencia (~20 animales) enferma 1 animal cada 9 días aproximadamente; cada
-        animal solo puede enfermar como mínimo cada 14 días. Solo pagas el tratamiento cuando lo decides,
-        no necesitas saldo reservado, y ningún animal se elimina por estar enfermo.
-      </div>
+      <div className="hint">{t("panel.vet.hint")}</div>
     </PanelShell>
   );
 }

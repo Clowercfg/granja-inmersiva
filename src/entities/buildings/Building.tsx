@@ -1,11 +1,10 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 import type { BuildingType } from "../../config/world";
-import { BUILDING_CONFIG } from "../../config/world";
-import { BUILDING_LABEL } from "../../config/layout";
 import { buildBarn, buildHouse, buildWarehouse, buildGreenhouse, buildWorkshop } from "./buildingFactory";
 import { useSelectionStore } from "../../store/selectionStore";
 import { useInteriorStore } from "../../store/interiorStore";
+import { useT } from "../../store/languageStore";
 import { terrainHeight } from "../../utils/terrain";
 import { SelectionRing } from "../common/SelectionRing";
 import { useAsset } from "../../core/assets/useAsset";
@@ -44,7 +43,8 @@ export function Building({ uid, type, position, rotation, level }: BuildingProps
   const selected = useSelectionStore((s) => s.selected?.uid === uid);
   const hovered = useSelectionStore((s) => s.hovered?.uid === uid);
   const hiddenUid = useInteriorStore((s) => s.hiddenUid);
-  const cfg = BUILDING_CONFIG[type];
+  const t = useT();
+  const name = t(`building.${type}`);
 
   if (hiddenUid === uid) return null;
 
@@ -59,8 +59,8 @@ export function Building({ uid, type, position, rotation, level }: BuildingProps
           select({
             kind: "building",
             uid,
-            title: cfg.name,
-            subtitle: `${BUILDING_LABEL[type]} · Nivel ${level}`,
+            title: name,
+            subtitle: t("hud.building_sub", { name, level }),
           });
         }}
         onPointerOver={(e: { stopPropagation: () => void }) => {
@@ -68,8 +68,8 @@ export function Building({ uid, type, position, rotation, level }: BuildingProps
           setHover({
             kind: "building",
             uid,
-            title: cfg.name,
-            subtitle: BUILDING_LABEL[type],
+            title: name,
+            subtitle: name,
           });
           document.body.style.cursor = "pointer";
         }}

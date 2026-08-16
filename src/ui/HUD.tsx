@@ -4,27 +4,11 @@ import { useEconomyStore } from "../store/economyStore";
 import { useSelectionStore } from "../store/selectionStore";
 import { useInteriorStore } from "../store/interiorStore";
 import { useUiStore } from "../store/uiStore";
+import { useT } from "../store/languageStore";
 import { animalRegistry } from "../store/farmStore";
-import { WEATHER } from "../config/world";
 import { PRODUCTION_PRICE } from "../config/economy";
-import type { AnimalKind, AnimalState } from "../types";
 import { getBuildingTypeByUid, getInteriorDef, hasInterior } from "../config/interiors";
-import { DAY_PHASE_LABEL, SEASON_LABEL } from "../systems/time/TimeManager";
 import type { DayPhase, Season } from "../systems/time/TimeManager";
-
-const STATE_LABEL: Record<AnimalState, string> = {
-  rest: "Descansando",
-  wander: "Paseando",
-  eating: "Paciendo",
-  sleep: "Durmiendo",
-};
-
-const PRODUCTION_UNIT: Record<AnimalKind, string> = {
-  cow: "L leche",
-  chicken: "huevos",
-  rooster: "huevos",
-  pig: "kg carne",
-};
 
 const PHASE_ICON: Record<DayPhase, string> = {
   dawn: "🌅",
@@ -47,13 +31,12 @@ function pad(n: number): string {
 }
 
 export function HUD() {
+  const t = useT();
   const booted = useWorldStore((s) => s.booted);
   const hour = useWorldStore((s) => s.hour);
   const minute = useWorldStore((s) => s.minute);
   const second = useWorldStore((s) => s.second);
-  const dayOfWeek = useWorldStore((s) => s.dayOfWeek);
   const dayOfMonth = useWorldStore((s) => s.dayOfMonth);
-  const monthName = useWorldStore((s) => s.monthName);
   const year = useWorldStore((s) => s.year);
   const season = useWorldStore((s) => s.season);
   const dayPhase = useWorldStore((s) => s.dayPhase);
@@ -93,21 +76,25 @@ export function HUD() {
   if (!booted) {
     return (
       <div className="loading">
-        <h1>IMMERSIVE FARM 3D</h1>
+        <h1>{t("app.brand")}</h1>
         <div className="barwrap">
           <div />
         </div>
-        <span>{mode === "webgpu" ? "Iniciando motor WebGPU…" : "Iniciando motor WebGL2…"}</span>
+        <span>{mode === "webgpu" ? t("app.loading.webgpu") : t("app.loading.webgl")}</span>
       </div>
     );
   }
+
+  const nowD = new Date();
+  const dow = t(`time.weekday.${nowD.getDay()}`);
+  const mon = t(`time.month.${nowD.getMonth()}`);
 
   return (
     <div className="hud">
       <div className="topbar">
         <div className="brand">
-          <h1>IMMERSIVE FARM 3D</h1>
-          <span>SIMULADOR DE GRANJA</span>
+          <h1>{t("app.brand")}</h1>
+          <span>{t("app.tagline")}</span>
         </div>
         <div className="timeblock">
           <span className="clock">
@@ -117,14 +104,13 @@ export function HUD() {
             <span className="clock-sec">:{pad(second)}</span>
           </span>
           <span>
-            <b>
-              {dayOfWeek}, {dayOfMonth} de {monthName} de {year}
-            </b>
+            <b>{t("time.date_hud", { dow, day: dayOfMonth, month: mon, year })}</b>
           </span>
           <span>
-            {PHASE_ICON[dayPhase]} {DAY_PHASE_LABEL[dayPhase]} · {SEASON_ICON[season]} {SEASON_LABEL[season]}
+            {PHASE_ICON[dayPhase]} {t(`time.dayphase.${dayPhase}`)} · {SEASON_ICON[season]}{" "}
+            {t(`time.season.${season}`)}
           </span>
-          <span>{WEATHER[weather].label}</span>
+          <span>{t(`weather.${weather}`)}</span>
           <span>{mode === "webgpu" ? "WebGPU" : "WebGL2"}</span>
         </div>
         <div className="rightbar">
@@ -139,36 +125,36 @@ export function HUD() {
 
       {interiorPhase === "inside" && interiorType && (
         <button className="exitbutton" onClick={() => useInteriorStore.getState().requestExit()}>
-          🚪 Salir del {getInteriorDef(interiorType)?.name ?? "edificio"}
+          {t("hud.exit_building", { name: t(`building.${interiorType}`) })}
         </button>
       )}
 
       {showHelp && (
         <div className="helppanel">
-          <h3>Controles</h3>
+          <h3>{t("hud.help_title")}</h3>
           <div className="krow">
             <span className="k">W A S D</span>
-            <span>Mover cámara</span>
+            <span>{t("hud.help_move")}</span>
           </div>
           <div className="krow">
             <span className="k">Shift</span>
-            <span>Acelerar</span>
+            <span>{t("hud.help_boost")}</span>
           </div>
           <div className="krow">
-            <span className="k">Botón der.</span>
-            <span>Rotar vista</span>
+            <span className="k">{t("hud.help_rmb")}</span>
+            <span>{t("hud.help_rotate")}</span>
           </div>
           <div className="krow">
-            <span className="k">Rueda</span>
-            <span>Zoom</span>
+            <span className="k">Scroll</span>
+            <span>{t("hud.help_zoom")}</span>
           </div>
           <div className="krow">
-            <span className="k">Clic</span>
-            <span>Seleccionar</span>
+            <span className="k">Click</span>
+            <span>{t("hud.help_select")}</span>
           </div>
           <div className="krow">
             <span className="k">Esc</span>
-            <span>Cerrar panel</span>
+            <span>{t("hud.help_close")}</span>
           </div>
         </div>
       )}
@@ -177,6 +163,7 @@ export function HUD() {
 }
 
 function SelectionPanel() {
+  const t = useT();
   const selected = useSelectionStore((s) => s.selected);
   const [, setTick] = useState(0);
 
@@ -198,35 +185,31 @@ function SelectionPanel() {
       {agent && (
         <>
           <div className="statrow">
-            <span>Estado</span>
-            <b>{STATE_LABEL[agent.state]}</b>
+            <span>{t("hud.state")}</span>
+            <b>{t(`animalState.${agent.state}`)}</b>
           </div>
           <div className="statrow">
-            <span>Ánimo</span>
+            <span>{t("hud.mood")}</span>
             <b>{Math.round(agent.mood * 100)}%</b>
           </div>
           <div className="bar warn" style={{ width: "100%" }}>
             <div style={{ width: `${Math.round(agent.mood * 100)}%` }} />
           </div>
           <div className="statrow">
-            <span>Salud</span>
+            <span>{t("hud.health")}</span>
             <b>{Math.round(agent.health)}%</b>
           </div>
           <div className="bar good" style={{ width: "100%" }}>
             <div style={{ width: `${Math.round(agent.health)}%` }} />
           </div>
           <div className="statrow">
-            <span>Producción pendiente</span>
+            <span>{t("hud.pending")}</span>
             <b>
-              {agent.pendingProduction.toFixed(1)}{" "}
-              {PRODUCTION_UNIT[agent.kind]} · $
+              {agent.pendingProduction.toFixed(1)} {t(`hud.prod_unit.${agent.kind}`)} · $
               {(agent.pendingProduction * PRODUCTION_PRICE[agent.kind]).toFixed(2)}
             </b>
           </div>
-          <div className="hint">
-            Los animales producen a lo largo del día. Su producción se vende automáticamente cada
-            pocos segundos.
-          </div>
+          <div className="hint">{t("hud.prod_hint")}</div>
         </>
       )}
 
@@ -245,19 +228,13 @@ function SelectionPanel() {
                       useInteriorStore.getState().requestEnter(selected.uid, btype);
                     }}
                   >
-                    🚪 Entrar al {def.name}
+                    {t("hud.enter_building", { name: t(`building.${btype}`) })}
                   </button>
-                  <div className="hint">
-                    Entra para inspeccionar el interior. Usa el botón «Salir» para volver a la granja.
-                  </div>
+                  <div className="hint">{t("hud.enter_hint")}</div>
                 </div>
               );
             }
-            return (
-              <div className="hint">
-                Edificio existente de la granja. Gestiona la infraestructura desde el panel lateral.
-              </div>
-            );
+            return <div className="hint">{t("hud.no_interior")}</div>;
           })()}
         </>
       )}

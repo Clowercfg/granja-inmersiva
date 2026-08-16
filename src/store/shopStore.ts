@@ -26,12 +26,20 @@ import { useEconomyStore } from "./economyStore";
 import { useUpgradesStore } from "./upgradesStore";
 import { useFarmStore } from "./farmStore";
 import { useCropStore } from "./cropStore";
+import { useLanguageStore } from "./languageStore";
 import { createAnimalAgent } from "../entities/animals/spawn";
 
 export interface ShopResult {
   ok: boolean;
   message: string;
   detail?: string;
+  /** Nombre corto del producto para la animación de compra (fx). */
+  fxLabel?: string;
+}
+
+/** Traducción global (el idioma se lee en el momento de la llamada). */
+function tr(key: string, params?: Record<string, string | number>): string {
+  return useLanguageStore.getState().t(key, params);
 }
 
 /** Edificio de mejoras que aloja cada especie (gallinero/establo/pocilga). */
@@ -40,12 +48,6 @@ const BUILDING_OF_KIND: Record<AnimalKind, string> = {
   chicken: "coop",
   rooster: "coop",
   pig: "pigPen",
-};
-
-const BUILDING_LABEL: Record<string, string> = {
-  coop: "Gallinero",
-  stable: "Establo",
-  pigPen: "Pocilga",
 };
 
 const KIND_NAME: Record<AnimalKind, string> = {
@@ -80,16 +82,22 @@ function insufficient(cost: number): ShopResult {
   const available = useEconomyStore.getState().gold;
   return {
     ok: false,
-    message: "❌ SALDO INSUFICIENTE",
-    detail: `Necesitas: $${cost.toFixed(2)} · Disponible: $${available.toFixed(2)}`,
+    message: tr("shop.insufficient"),
+    detail: tr("shop.insufficient_detail", {
+      need: `$${cost.toFixed(2)}`,
+      have: `$${available.toFixed(2)}`,
+    }),
   };
 }
 
 function noCapacity(building: string, capacity: number, needed: number): ShopResult {
   return {
     ok: false,
-    message: "🚧 CAPACIDAD LLENA",
-    detail: `Solo caben ${capacity - needed < 0 ? 0 : capacity - needed} en el ${building}. Mejora el edificio para más espacio.`,
+    message: tr("shop.capacity"),
+    detail: tr("shop.capacity_detail", {
+      free: capacity - needed < 0 ? 0 : capacity - needed,
+      building: tr(`building.${building}`),
+    }),
   };
 }
 
@@ -108,7 +116,7 @@ export function validateAnimalCapacity(items: OfferDef["items"]): ShopResult | n
     if (!anyKind) continue;
     const cap = capacityFor(anyKind);
     if (cap.used + needed > cap.capacity) {
-      return noCapacity(BUILDING_LABEL[building] ?? building, cap.capacity, needed);
+      return noCapacity(building, cap.capacity, needed);
     }
   }
   return null;
@@ -123,38 +131,47 @@ interface ShopStore {
 export const useShopStore = create<ShopStore>((_set, _get) => ({
   buySeed: (cropId, qty) => {
     if (invalidQty(qty)) {
-      return { ok: false, message: "⚠️ CANTIDAD INVÁLIDA", detail: "Solo cantidades enteras positivas." };
+      return { ok: false, message: tr("shop.invalid_qty"), detail: tr("shop.invalid_qty_detail") };
     }
     const def = getCropEconomy(cropId);
-    if (!def) return { ok: false, message: "⚠️ PRODUCTO NO DISPONIBLE" };
+    if (!def) return { ok: false, message: tr("shop.unavailable") };
     const cost = def.seedPrice * qty;
     const ok = useCropStore.getState().buySeed(cropId, qty);
     if (!ok) return insufficient(cost);
-    return { ok: true, message: "✓ SEMILLAS COMPRADAS", detail: `${qty} × ${def.name} añadidas al inventario.` };
+    return {
+      ok: true,
+      message: tr("shop.seeds_bought"),
+      detail: tr("shop.seeds_bought_detail", { qty, name: tr(`crop.${cropId}`) }),
+      fxLabel: tr(`crop.${cropId}`),
+    };
   },
 
   buyAnimal: (kind, qty) => {
     if (invalidQty(qty)) {
-      return { ok: false, message: "⚠️ CANTIDAD INVÁLIDA", detail: "Solo cantidades enteras positivas." };
+      return { ok: false, message: tr("shop.invalid_qty"), detail: tr("shop.invalid_qty_detail") };
     }
     const def = getAnimalEconomy(kind);
-    if (!def) return { ok: false, message: "⚠️ PRODUCTO NO DISPONIBLE" };
+    if (!def) return { ok: false, message: tr("shop.unavailable") };
     const cap = capacityFor(kind);
-    if (cap.used + qty > cap.capacity) return noCapacity(BUILDING_LABEL[cap.building] ?? cap.building, cap.capacity, qty);
+    if (cap.used + qty > cap.capacity) return noCapacity(cap.building, cap.capacity, qty);
     const cost = def.price * qty;
     if (!useEconomyStore.getState().spendGold(cost)) return insufficient(cost);
     const farm = useFarmStore.getState();
     for (let i = 0; i < qty; i++) farm.registerAnimal(createAnimalAgent(kind, animalName(kind)));
     return {
       ok: true,
-      message: `✓ ${def.name.toUpperCase()} COMPRAD${kind === "cow" ? "A" : "O"}`,
-      detail: `${qty} × $${(def.price * qty).toFixed(2)} descontados de tu saldo.`,
+      message: tr("shop.animal_bought", {
+        name: tr(`animal.${kind}`).toUpperCase(),
+        suffix: kind === "cow" ? "A" : "O",
+      }),
+      detail: tr("shop.animal_bought_detail", { qty, money: `$${(def.price * qty).toFixed(2)}` }),
+      fxLabel: tr(`animal.${kind}`),
     };
   },
 
   buyCombo: (comboId) => {
     const def = getOffer(comboId);
-    if (!def) return { ok: false, message: "⚠️ OFERTA NO DISPONIBLE" };
+    if (!def) return { ok: false, message: tr("shop.offer_unavailable") };
     const sale = offerSalePrice(def);
     const normal = offerNormalPrice(def);
     const discount = effectiveDiscount(def);
@@ -186,8 +203,12 @@ export const useShopStore = create<ShopStore>((_set, _get) => ({
     const saved = normal - sale;
     return {
       ok: true,
-      message: `✓ ${def.name.toUpperCase()} COMPRADO`,
-      detail: `${Math.round(discount * 100)}% OFF · ahorraste $${saved.toFixed(2)}.`,
+      message: tr("shop.offer_bought", { name: tr(`offer.${comboId}.name`).toUpperCase() }),
+      detail: tr("shop.offer_bought_detail", {
+        pct: Math.round(discount * 100),
+        money: `$${saved.toFixed(2)}`,
+      }),
+      fxLabel: tr(`offer.${comboId}.name`),
     };
   },
 }));

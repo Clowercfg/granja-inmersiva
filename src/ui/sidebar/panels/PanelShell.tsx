@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useUiStore } from "../../../store/uiStore";
+import { useT } from "../../../store/languageStore";
 
 export function PanelShell({
   icon,
@@ -12,6 +13,7 @@ export function PanelShell({
   subtitle?: string;
   children: ReactNode;
 }) {
+  const t = useT();
   return (
     <>
       <div className="sidepanel-head">
@@ -21,7 +23,7 @@ export function PanelShell({
         <button
           className="sidepanel-close"
           onClick={() => useUiStore.getState().closeSection()}
-          aria-label="Cerrar"
+          aria-label={t("panel.close_aria")}
         >
           ✕
         </button>

@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import { useInteriorStore } from "../store/interiorStore";
 import { getInteriorDef } from "../config/interiors";
+import { useT } from "../store/languageStore";
 
 const FADE_MS = 450;
 
 export function TransitionOverlay() {
+  const t = useT();
   const phase = useInteriorStore((s) => s.phase);
   const type = useInteriorStore((s) => s.type);
   const def = getInteriorDef(type);
@@ -25,7 +27,8 @@ export function TransitionOverlay() {
   }, [phase]);
 
   const visible = phase === "fadeIn" || phase === "fadeOut";
-  const label = phase === "fadeIn" ? `Entrando al ${def?.name ?? "edificio"}…` : "Saliendo…";
+  const buildingName = def ? t(`building.${type}`) : t("building.generic");
+  const label = phase === "fadeIn" ? t("transition.entering", { name: buildingName }) : t("transition.leaving");
 
   return (
     <div className={`transitionoverlay ${visible ? "visible" : ""}`}>

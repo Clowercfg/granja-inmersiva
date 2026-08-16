@@ -4,6 +4,7 @@ import { useEconomyStore } from "../../../store/economyStore";
 import { CROP_ECONOMY } from "../../../config/economy";
 import { PLOT_ECONOMY } from "../../../config/crops";
 import { PLOTS } from "../../../utils/terrain";
+import { useT } from "../../../store/languageStore";
 import { PanelShell, PanelSection, StatCell } from "./PanelShell";
 
 const CROP_ICON: Record<string, string> = { wheat: "🌾", carrot: "🥕", potato: "🥔" };
@@ -20,6 +21,7 @@ function formatRemaining(ms: number): string {
 }
 
 export function CropsPanel() {
+  const t = useT();
   const [, setTick] = useState(0);
   useEffect(() => {
     const iv = setInterval(() => setTick((t) => t + 1), 500);
@@ -41,11 +43,11 @@ export function CropsPanel() {
   const ready = planted.filter((p) => p.state === "ready").length;
 
   return (
-    <PanelShell icon="🌾" title="Cultivos" subtitle="Siembra, crecimiento y venta">
+    <PanelShell icon="🌾" title={t("panel.crops.title")} subtitle={t("panel.crops.subtitle")}>
       <div className="panel-grid">
-        <StatCell icon="🧱" label="Parcelas" value={PLOTS.length} />
-        <StatCell icon="🌱" label="Semillas" value={totalSeeds} />
-        <StatCell icon="🧺" label="Cosecha" value={totalHarvest} />
+        <StatCell icon="🧱" label={t("panel.crops.plots")} value={PLOTS.length} />
+        <StatCell icon="🌱" label={t("panel.crops.seeds")} value={totalSeeds} />
+        <StatCell icon="🧺" label={t("panel.crops.harvest")} value={totalHarvest} />
         <StatCell icon="💵" label="USD" value={gold.toFixed(2)} />
       </div>
 
@@ -58,65 +60,68 @@ export function CropsPanel() {
         const canBuy = gold >= econ.seedPrice;
         const canPlant = !plantedCrop && inv.seeds > 0;
         const icon = CROP_ICON[cropId] ?? "🌱";
+        const cropName = t(`crop.${cropId}`);
 
         return (
-          <PanelSection key={cropId} icon={icon} title={econ.name}>
+          <PanelSection key={cropId} icon={icon} title={cropName}>
             <div className="panelrow">
               <div className="panelrow-icon">{icon}</div>
               <div className="panelrow-main">
-                <div className="panelrow-title">{econ.name}</div>
+                <div className="panelrow-title">{cropName}</div>
                 <div className="panelrow-sub">
-                  Semilla ${fmtPrice(econ.seedPrice)} · Crecimiento {econ.growthHours} h · Venta $
-                  {fmtPrice(econ.sellPrice)} · Ganancia ${fmtPrice(econ.profitPerUnit)}
+                  {t("panel.crops.detail", {
+                    seed: `$${fmtPrice(econ.seedPrice)}`,
+                    hours: econ.growthHours,
+                    sell: `$${fmtPrice(econ.sellPrice)}`,
+                    profit: `$${fmtPrice(econ.profitPerUnit)}`,
+                  })}
                 </div>
               </div>
               <div className="panelrow-side">
                 <b>{inv.seeds}</b>
-                <span className="muted">{inv.harvest} cosechada</span>
+                <span className="muted">{t("panel.crops.harvested", { n: inv.harvest })}</span>
               </div>
             </div>
 
             <div className="panelrow-actions">
               <button className="btn small" disabled={!canBuy} onClick={() => buySeed(cropId)}>
-                Comprar semilla
+                {t("panel.crops.buy_seed")}
               </button>
               <button
                 className="btn small primary"
                 disabled={!canPlant}
                 onClick={() => plotIndex !== undefined && plantCrop(cropId, plotIndex)}
               >
-                Sembrar
+                {t("panel.crops.plant")}
               </button>
               <button
                 className="btn small"
                 disabled={plantedCrop?.state !== "ready"}
                 onClick={() => plantedCrop && harvestCrop(plantedCrop.id)}
               >
-                Cosechar
+                {t("panel.crops.harvest_btn")}
               </button>
               <button
                 className="btn small"
                 disabled={inv.harvest < 1}
                 onClick={() => sellHarvest(cropId, 1)}
               >
-                Vender 1
+                {t("panel.crops.sell_1")}
               </button>
               <button
                 className="btn small"
                 disabled={inv.harvest < 1}
                 onClick={() => sellHarvest(cropId, inv.harvest)}
               >
-                Vender todo
+                {t("panel.crops.sell_all")}
               </button>
             </div>
-            <div className="muted">
-              Cada semilla cuesta ${fmtPrice(econ.seedPrice)} (se descuenta al comprar).
-            </div>
+            <div className="muted">{t("panel.crops.seed_note", { price: `$${fmtPrice(econ.seedPrice)}` })}</div>
           </PanelSection>
         );
       })}
 
-      <PanelSection icon="🌿" title="Crecimiento">
+      <PanelSection icon="🌿" title={t("panel.crops.growth")}>
         {PLOT_ECONOMY.map(({ plotIndex, cropId }) => {
           const econ = CROP_ECONOMY[cropId];
           const plantedCrop = planted.find((p) => p.plotIndex === plotIndex) ?? null;
@@ -126,17 +131,17 @@ export function CropsPanel() {
               ? Math.max(0, growthMsOf(plantedCrop) - (Date.now() - plantedCrop.plantedAt))
               : 0;
           const status = !plantedCrop
-            ? "Vacía — clic en la parcela para sembrar"
+            ? t("panel.crops.plot_empty")
             : plantedCrop.state === "ready"
-              ? "Lista para cosechar"
-              : `Creciendo · quedan ${formatRemaining(remainingMs)}`;
+              ? t("panel.crops.ready")
+              : t("panel.crops.growing_left", { time: formatRemaining(remainingMs) });
           const icon = CROP_ICON[cropId] ?? "🌱";
 
           return (
             <div className="panelrow" key={cropId}>
               <div className="panelrow-icon">{plantedCrop ? icon : "🟫"}</div>
               <div className="panelrow-main">
-                <div className="panelrow-title">Parcela de {econ.name.toLowerCase()}</div>
+                <div className="panelrow-title">{t("panel.crops.plot_of", { name: t(`crop.${cropId}`).toLowerCase() })}</div>
                 <div className="panelrow-sub">{status}</div>
                 <div className={`bar ${plantedCrop?.state === "ready" ? "good" : "warn"}`} style={{ width: "100%" }}>
                   <div style={{ width: `${Math.round(progress * 100)}%` }} />
@@ -145,7 +150,7 @@ export function CropsPanel() {
               <div className="panelrow-side">
                 <b>
                   {plantedCrop?.state === "ready"
-                    ? "¡Lista!"
+                    ? t("panel.crops.ready_short")
                     : plantedCrop
                       ? formatRemaining(remainingMs)
                       : "—"}
@@ -154,15 +159,10 @@ export function CropsPanel() {
             </div>
           );
         })}
-        <div className="empty">
-          {ready} lista{ready === 1 ? "" : "s"} · {growing} en crecimiento.
-        </div>
+        <div className="empty">{t("panel.crops.summary", { ready, growing })}</div>
       </PanelSection>
 
-      <div className="hint">
-        En 3D: clic en la parcela para sembrar, clic sobre el cultivo listo para cosechar. Semillas y
-        cosechas en inventario no cuentan como USD hasta venderlas.
-      </div>
+      <div className="hint">{t("panel.crops.hint")}</div>
     </PanelShell>
   );
 }

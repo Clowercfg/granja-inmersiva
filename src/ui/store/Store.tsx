@@ -3,6 +3,7 @@ import { useUiStore } from "../../store/uiStore";
 import { useEconomyStore } from "../../store/economyStore";
 import { useShopStore, validateAnimalCapacity } from "../../store/shopStore";
 import type { ShopResult } from "../../store/shopStore";
+import { useT } from "../../store/languageStore";
 import { OFFER_LIST, offerNormalPrice, offerSalePrice, offerSavings, effectiveDiscount } from "../../config/offers";
 import { getCropEconomy, getAnimalEconomy } from "../../config/economy";
 import type { AnimalKind } from "../../types";
@@ -19,25 +20,17 @@ import { Farmer } from "./Farmer";
 
 type StoreCategory = "crops" | "animals" | "products" | "process" | "infra" | "expansions" | "feed" | "offers";
 
-const CATEGORIES: { id: StoreCategory; label: string; icon: string }[] = [
-  { id: "crops", label: "Cultivos", icon: "🌱" },
-  { id: "animals", label: "Animales", icon: "🐔" },
-  { id: "products", label: "Productos", icon: "🥛" },
-  { id: "process", label: "Procesamiento", icon: "⚙️" },
-  { id: "infra", label: "Infraestructura", icon: "🏠" },
-  { id: "expansions", label: "Expansiones", icon: "🗺️" },
-  { id: "feed", label: "Alimentación", icon: "🌾" },
-];
+const CATEGORY_ORDER: StoreCategory[] = ["crops", "animals", "products", "process", "infra", "expansions", "feed"];
 
-const CAT_TITLE: Record<StoreCategory, { icon: string; label: string }> = {
-  crops: { icon: "🌱", label: "Cultivos" },
-  animals: { icon: "🐔", label: "Animales" },
-  products: { icon: "🥛", label: "Productos" },
-  process: { icon: "⚙️", label: "Procesamiento" },
-  infra: { icon: "🏠", label: "Infraestructura" },
-  expansions: { icon: "🗺️", label: "Expansiones" },
-  feed: { icon: "🌾", label: "Alimentación" },
-  offers: { icon: "🎁", label: "Ofertas limitadas" },
+const CATEGORY_ICON: Record<StoreCategory, string> = {
+  crops: "🌱",
+  animals: "🐔",
+  products: "🥛",
+  process: "⚙️",
+  infra: "🏠",
+  expansions: "🗺️",
+  feed: "🌾",
+  offers: "🎁",
 };
 
 interface Toast {
@@ -55,17 +48,9 @@ interface Fx {
 
 let toastSeq = 1;
 
-function offerItemLabel(item: { type: "seed" | "animal"; cropId?: string; kind?: AnimalKind; qty: number }): string {
-  if (item.type === "seed") {
-    const def = getCropEconomy(item.cropId ?? "");
-    return `${item.qty}× ${def?.name ?? item.cropId}`;
-  }
-  const def = getAnimalEconomy(item.kind ?? "");
-  return `${item.qty}× ${def?.name ?? item.kind}`;
-}
-
 /** Overlay de la tienda: solo se renderiza cuando está abierta. */
 export function Store() {
+  const t = useT();
   const storeOpen = useUiStore((s) => s.storeOpen);
   const closeStore = useUiStore((s) => s.closeStore);
   const gold = useEconomyStore((s) => s.gold);
@@ -99,19 +84,26 @@ export function Store() {
 
   const notify: NotifyFn = (r: ShopResult, icon: string) => {
     const id = toastSeq++;
-    setToasts((t) => [...t, { id, ok: r.ok, message: r.message, detail: r.detail }]);
+    setToasts((prev) => [...prev, { id, ok: r.ok, message: r.message, detail: r.detail }]);
     if (r.ok) {
-      setFx((f) => [...f, { id, icon, label: r.message.replace(/^✓\s*/, "").replace(/ COMPRAD.*$/, "") }]);
-      window.setTimeout(() => setFx((f) => f.filter((x) => x.id !== id)), 1600);
+      setFx((prev) => [...prev, { id, icon, label: r.fxLabel ?? r.message }]);
+      window.setTimeout(() => setFx((prev) => prev.filter((x) => x.id !== id)), 1600);
     }
-    window.setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3600);
+    window.setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== id)), 3600);
+  };
+
+  const offerItemLabel = (item: { type: "seed" | "animal"; cropId?: string; kind?: AnimalKind; qty: number }): string => {
+    if (item.type === "seed") {
+      const def = getCropEconomy(item.cropId ?? "");
+      return `${item.qty}× ${def ? t(`crop.${item.cropId}`) : item.cropId}`;
+    }
+    const def = getAnimalEconomy(item.kind ?? "");
+    return `${item.qty}× ${def ? t(`animal.${item.kind}`) : item.kind}`;
   };
 
   const diamondHint = () => {
-    notify({ ok: false, message: "💎 PRÓXIMAMENTE", detail: "El paquete de diamantes estará disponible pronto." }, "💎");
+    notify({ ok: false, message: t("store.coming_soon"), detail: t("store.coming_soon_detail") }, "💎");
   };
-
-  const title = CAT_TITLE[cat];
 
   return (
     <div className="store-overlay">
@@ -125,9 +117,9 @@ export function Store() {
             <div className="sign-board">
               <div className="sign-brand">HARVEST VALLEY</div>
               <div className="sign-title">
-                TIENDA
+                {t("store.tienda")}
                 <br />
-                DE LA GRANJA
+                {t("store.de_la_granja")}
               </div>
             </div>
             <div className="sign-leaves">
@@ -141,38 +133,38 @@ export function Store() {
             <div className="res-panel res-coins">
               <span className="res-icon">🪙</span>
               <div className="res-meta">
-                <span className="res-label">MONEDAS</span>
+                <span className="res-label">{t("store.monedas")}</span>
                 <span className="res-value">{fmtMoney(displayGold)}</span>
               </div>
-              <button className="res-add" aria-label="Comprar monedas" title="Comprar monedas" onClick={diamondHint}>
+              <button className="res-add" aria-label={t("store.buy_coins")} title={t("store.buy_coins")} onClick={diamondHint}>
                 +
               </button>
             </div>
             <div className="res-panel res-diamonds">
               <span className="res-icon">💎</span>
               <div className="res-meta">
-                <span className="res-label">DIAMANTES</span>
+                <span className="res-label">{t("store.diamantes")}</span>
                 <span className="res-value">{diamonds}</span>
               </div>
-              <button className="res-add" aria-label="Comprar diamantes" title="Comprar diamantes" onClick={diamondHint}>
+              <button className="res-add" aria-label={t("store.buy_diamonds")} title={t("store.buy_diamonds")} onClick={diamondHint}>
                 +
               </button>
             </div>
-            <button className="store-close" aria-label="Cerrar tienda" onClick={closeStore}>
+            <button className="store-close" aria-label={t("store.close_store")} onClick={closeStore}>
               ✕
             </button>
           </div>
         </header>
 
-        <nav className="store-tabs" aria-label="Categorías de la tienda">
-          {CATEGORIES.map((c) => (
+        <nav className="store-tabs" aria-label={t("store.tabs_aria")}>
+          {CATEGORY_ORDER.map((id) => (
             <button
-              key={c.id}
-              className={`store-tab ${cat === c.id ? "active" : ""}`}
-              onClick={() => setCat(c.id)}
+              key={id}
+              className={`store-tab ${cat === id ? "active" : ""}`}
+              onClick={() => setCat(id)}
             >
-              <span className="store-tab-icon">{c.icon}</span>
-              <span className="store-tab-label">{c.label}</span>
+              <span className="store-tab-icon">{CATEGORY_ICON[id]}</span>
+              <span className="store-tab-label">{t(`store.category.${id}`)}</span>
             </button>
           ))}
         </nav>
@@ -181,11 +173,11 @@ export function Store() {
           <aside className="store-left">
             <Farmer />
             <div className="info-panel">
-              <div className="info-panel-head">ℹ️ INFORMACIÓN</div>
-              <p>Los costos de alimentación y mantenimiento se cobran al finalizar cada ciclo.</p>
-              <p>Los tiempos pueden variar según mejoras.</p>
+              <div className="info-panel-head">{t("store.info_title")}</div>
+              <p>{t("store.info_1")}</p>
+              <p>{t("store.info_2")}</p>
               <p>
-                <b>Más producción = Más ganancias</b>
+                <b>{t("store.info_3")}</b>
               </p>
             </div>
             <div className="decor-crate" aria-hidden="true">
@@ -207,8 +199,8 @@ export function Store() {
 
           <main className="store-main">
             <div className="panel-head">
-              <span className="panel-head-icon">{title.icon}</span>
-              <span className="panel-head-title">{title.label.toUpperCase()}</span>
+              <span className="panel-head-icon">{CATEGORY_ICON[cat]}</span>
+              <span className="panel-head-title">{t(`store.category.${cat}`).toUpperCase()}</span>
               <span className="panel-head-deco">❦</span>
             </div>
             <div className="panel-body">
@@ -226,10 +218,10 @@ export function Store() {
           <aside className="store-right">
             {featured && (
               <div className="offer-special">
-                <div className="ribbon">OFERTA ESPECIAL!</div>
+                <div className="ribbon">{t("store.special_ribbon")}</div>
                 <div className="offer-special-head">
                   <span className="offer-special-icon">{featured.icon}</span>
-                  <span className="offer-special-title">{featured.name.toUpperCase()}</span>
+                  <span className="offer-special-title">{t(`offer.${featured.id}.name`).toUpperCase()}</span>
                 </div>
                 <div className="offer-special-items">
                   {featured.items.map((item, i) => (
@@ -248,7 +240,7 @@ export function Store() {
                   <span className="offer-discount">
                     -{Math.round(effectiveDiscount(featured) * 100)}%
                   </span>
-                  <span className="offer-savings">AHORRAS {fmtMoney(offerSavings(featured))}</span>
+                  <span className="offer-savings">{t("store.ahorras", { money: fmtMoney(offerSavings(featured)) })}</span>
                 </div>
                 <button
                   className="buybtn buybtn-offer"
@@ -257,28 +249,28 @@ export function Store() {
                   }
                   title={
                     featuredBlocked
-                      ? "Mejora tus edificios para albergar este combo."
+                      ? t("store.combo_blocked_title")
                       : undefined
                   }
                   onClick={() => notify(useShopStore.getState().buyCombo(featured.id), featured.icon)}
                 >
-                  COMPRAR
+                  {t("store.comprar")}
                 </button>
                 {featuredBlocked && (
-                  <div className="offer-special-warn">Requiere mejorar edificios.</div>
+                  <div className="offer-special-warn">{t("store.combo_warn")}</div>
                 )}
                 <button className="textbtn" onClick={() => setCat("offers")}>
-                  Ver todas las ofertas →
+                  {t("store.view_all")}
                 </button>
               </div>
             )}
 
             <div className="diamond-panel">
               <div className="diamond-panel-gems">💎💠💎</div>
-              <div className="diamond-panel-title">DIAMANTES</div>
-              <p>Con diamantes puedes acelerar tiempos y obtener beneficios.</p>
+              <div className="diamond-panel-title">{t("store.diamantes")}</div>
+              <p>{t("store.diamond_panel_text")}</p>
               <button className="diamond-btn" onClick={() => setCat("offers")}>
-                VER OFERTAS
+                {t("store.ver_ofertas")}
               </button>
             </div>
           </aside>

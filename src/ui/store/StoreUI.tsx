@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { ShopResult } from "../../store/shopStore";
+import { useT } from "../../store/languageStore";
 
 /** Notificación de resultado de compra: resultado + icono del producto. */
 export type NotifyFn = (r: ShopResult, icon: string) => void;
@@ -62,13 +63,14 @@ export function QtyStepper({
   max?: number;
 }) {
   const clamp = (v: number) => Math.max(min, Math.min(max, v));
+  const t = useT();
   return (
     <div className="qty">
-      <button className="qty-btn" disabled={value <= min} onClick={() => onChange(clamp(value - 1))} aria-label="Reducir cantidad">
+      <button className="qty-btn" disabled={value <= min} onClick={() => onChange(clamp(value - 1))} aria-label={t("store.qty_decrease_aria")}>
         −
       </button>
       <span className="qty-value">{value}</span>
-      <button className="qty-btn" disabled={value >= max} onClick={() => onChange(clamp(value + 1))} aria-label="Aumentar cantidad">
+      <button className="qty-btn" disabled={value >= max} onClick={() => onChange(clamp(value + 1))} aria-label={t("store.qty_increase_aria")}>
         +
       </button>
     </div>

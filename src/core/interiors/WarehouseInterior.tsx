@@ -4,17 +4,17 @@ import type { InteriorDef } from "../../config/interiors";
 import { useCropStore } from "../../store/cropStore";
 import { useGoodsStore } from "../../store/goodsStore";
 import { useStorageStore } from "../../store/storageStore";
+import { useT } from "../../store/languageStore";
 import { STORAGE_SHELVES, GOODS_SHELVES, BOARDS_Y, crateSpots, MAX_CRATES } from "./storageLayout";
 import { buildWarehouseShell } from "./warehouseShell";
 
 const CROP_ICON: Record<string, string> = { wheat: "🌾", carrot: "🥕", potato: "🥔" };
-const CROP_LABEL: Record<string, string> = { wheat: "Trigo", carrot: "Zanahoria", potato: "Papa" };
 const CRATE_BG: Record<string, string> = { wheat: "#8a6a2c", carrot: "#8a4a20", potato: "#6b4a26" };
 const BAG_COLOR: Record<string, string> = { wheat: "#c8a24a", carrot: "#c66a22", potato: "#8f6a3c" };
 
 const MAX_BAGS = 4;
 
-function makeCrateTexture(cropId: string): THREE.CanvasTexture {
+function makeCrateTexture(cropId: string, label: string): THREE.CanvasTexture {
   const size = 256;
   const canvas = document.createElement("canvas");
   canvas.width = size;
@@ -31,15 +31,15 @@ function makeCrateTexture(cropId: string): THREE.CanvasTexture {
   ctx.fillText(CROP_ICON[cropId] ?? "📦", size / 2, size / 2 - 12);
   ctx.font = "bold 40px sans-serif";
   ctx.fillStyle = "#fff7e6";
-  ctx.fillText(CROP_LABEL[cropId] ?? cropId, size / 2, size - 36);
+  ctx.fillText(label, size / 2, size - 36);
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;
   return tex;
 }
 
-function crateMaterials(cropId: string): THREE.Material[] {
-  const tex = makeCrateTexture(cropId);
+function crateMaterials(cropId: string, label: string): THREE.Material[] {
+  const tex = makeCrateTexture(cropId, label);
   const base = new THREE.MeshStandardMaterial({
     color: "#5a4524",
     roughness: 0.9,
@@ -103,11 +103,11 @@ function ShelfFrame({
   );
 }
 
-function StorageShelf({ id, harvest, seeds }: { id: string; harvest: number; seeds: number }) {
+function StorageShelf({ id, harvest, seeds, label }: { id: string; harvest: number; seeds: number; label: string }) {
   const [hovered, setHovered] = useState(false);
   const crateGeo = useMemo(() => new THREE.BoxGeometry(0.34, 0.24, 0.3), []);
   const bagGeo = useMemo(() => new THREE.CylinderGeometry(0.09, 0.12, 0.16, 10), []);
-  const mats = useMemo(() => crateMaterials(id), [id]);
+  const mats = useMemo(() => crateMaterials(id, label), [id, label]);
   const crates = useMemo(() => crateSpots(harvest), [harvest]);
   const bags = Math.min(seeds, MAX_BAGS);
 
@@ -297,6 +297,7 @@ function GoodsShelf({ id, count }: { id: string; count: number }) {
 }
 
 export function WarehouseInterior({ def }: { def: InteriorDef }) {
+  const t = useT();
   const shell = useMemo(() => buildWarehouseShell(def), [def]);
   const cropInventory = useCropStore((s) => s.inventory);
   const goodsInventory = useGoodsStore((s) => s.inventory);
@@ -310,6 +311,7 @@ export function WarehouseInterior({ def }: { def: InteriorDef }) {
             id={s.id}
             harvest={cropInventory[s.id]?.harvest ?? 0}
             seeds={cropInventory[s.id]?.seeds ?? 0}
+            label={t(`crop.${s.id}`)}
           />
         </group>
       ))}

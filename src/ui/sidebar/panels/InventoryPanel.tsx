@@ -1,11 +1,13 @@
 import { useCropStore } from "../../../store/cropStore";
 import { useEconomyStore } from "../../../store/economyStore";
 import { CROP_ECONOMY } from "../../../config/economy";
+import { useT } from "../../../store/languageStore";
 import { PanelShell, PanelSection, StatCell } from "./PanelShell";
 
 const CROP_ICON: Record<string, string> = { wheat: "🌾", carrot: "🥕", potato: "🥔" };
 
 export function InventoryPanel() {
+  const t = useT();
   const inventory = useCropStore((s) => s.inventory);
   const gold = useEconomyStore((s) => s.gold);
 
@@ -14,51 +16,45 @@ export function InventoryPanel() {
   const totalSeeds = cropIds.reduce((acc, id) => acc + (inventory[id]?.seeds ?? 0), 0);
 
   return (
-    <PanelShell icon="📦" title="Inventario" subtitle="Productos guardados en el Almacén">
+    <PanelShell icon="📦" title={t("panel.inventory.title")} subtitle={t("panel.inventory.subtitle")}>
       <div className="panel-grid">
-        <StatCell icon="🧺" label="Cosechas" value={totalHarvest} />
-        <StatCell icon="🌱" label="Semillas" value={totalSeeds} />
-        <StatCell icon="📦" label="Cultivos" value={cropIds.length} />
+        <StatCell icon="🧺" label={t("panel.inventory.harvests")} value={totalHarvest} />
+        <StatCell icon="🌱" label={t("panel.inventory.seeds")} value={totalSeeds} />
+        <StatCell icon="📦" label={t("panel.inventory.crops")} value={cropIds.length} />
         <StatCell icon="💵" label="USD" value={gold.toFixed(2)} />
       </div>
 
-      <PanelSection icon="🧺" title="Cosechas almacenadas">
+      <PanelSection icon="🧺" title={t("panel.inventory.harvests_title")}>
         {cropIds.map((id) => (
           <div className="inventory-row" key={id}>
             <span>
-              {CROP_ICON[id] ?? "🌱"} {CROP_ECONOMY[id].name}
+              {CROP_ICON[id] ?? "🌱"} {t(`crop.${id}`)}
             </span>
             <span className="inventory-count">{inventory[id]?.harvest ?? 0}</span>
           </div>
         ))}
-        <div className="empty">
-          Las cosechas se guardan en el Almacén y aparecen como cajas en los estantes. Haz clic en una
-          caja para ver la cantidad y venderla.
-        </div>
+        <div className="empty">{t("panel.inventory.harvests_hint")}</div>
       </PanelSection>
 
-      <PanelSection icon="🌱" title="Semillas">
+      <PanelSection icon="🌱" title={t("panel.inventory.seeds_title")}>
         {cropIds.map((id) => (
           <div className="inventory-row" key={id}>
             <span>
-              {CROP_ICON[id] ?? "🌱"} Semillas de {CROP_ECONOMY[id].name.toLowerCase()}
+              {CROP_ICON[id] ?? "🌱"} {t("panel.inventory.seeds_of", { name: t(`crop.${id}`).toLowerCase() })}
             </span>
             <span className="inventory-count">{inventory[id]?.seeds ?? 0}</span>
           </div>
         ))}
       </PanelSection>
 
-      <PanelSection icon="💰" title="Recursos">
+      <PanelSection icon="💰" title={t("panel.inventory.resources")}>
         <div className="inventory-row">
           <span>USD</span>
           <span className="inventory-count">${gold.toFixed(2)}</span>
         </div>
       </PanelSection>
 
-      <div className="hint">
-        El inventario refleja en tiempo real lo que se recoge en la granja y lo que se almacena en el
-        Almacén.
-      </div>
+      <div className="hint">{t("panel.inventory.hint")}</div>
     </PanelShell>
   );
 }
