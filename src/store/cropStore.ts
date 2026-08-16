@@ -41,12 +41,17 @@ interface CropStore {
   harvestCrop: (id: number) => boolean;
   /** Vende cosecha del inventario: añade qty * sellPrice al saldo. */
   sellHarvest: (cropId: string, qty: number) => boolean;
+  /** Añade cosecha al inventario (herramienta de prueba/depuración). */
+  addHarvest: (cropId: string, qty?: number) => boolean;
 }
 
 const emptyInventory = (): CropInventory => ({ seeds: 0, harvest: 0 });
 
 /** Semillas iniciales por cultivo (configurable). */
 const STARTING_SEEDS: Record<string, number> = { wheat: 3, carrot: 3, potato: 3 };
+
+/** Cosecha inicial por cultivo (configurable). Solo para pruebas/ajustes. */
+const STARTING_HARVEST: Record<string, number> = { wheat: 5, carrot: 4, potato: 3 };
 
 /** Milisegundos totales de crecimiento de un cultivo. */
 export function growthMsOf(planted: Pick<PlantedCrop, "cropId">): number {
@@ -62,7 +67,7 @@ export function growthProgressOf(planted: PlantedCrop): number {
 
 export const useCropStore = create<CropStore>((set, get) => ({
   inventory: Object.fromEntries(
-    Object.entries(STARTING_SEEDS).map(([id, seeds]) => [id, { seeds, harvest: 0 }])
+    Object.entries(STARTING_SEEDS).map(([id, seeds]) => [id, { seeds, harvest: STARTING_HARVEST[id] ?? 0 }])
   ),
   planted: [],
   nextId: 1,
@@ -141,6 +146,17 @@ export const useCropStore = create<CropStore>((set, get) => ({
       inventory: {
         ...s.inventory,
         [cropId]: { ...(s.inventory[cropId] ?? emptyInventory()), harvest: (s.inventory[cropId]?.harvest ?? 0) - qty },
+      },
+    }));
+    return true;
+  },
+
+  addHarvest: (cropId, qty = 1) => {
+    if (qty <= 0) return false;
+    set((s) => ({
+      inventory: {
+        ...s.inventory,
+        [cropId]: { ...(s.inventory[cropId] ?? emptyInventory()), harvest: (s.inventory[cropId]?.harvest ?? 0) + qty },
       },
     }));
     return true;

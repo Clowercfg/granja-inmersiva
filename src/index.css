@@ -904,3 +904,100 @@ canvas {
     opacity: 1;
   }
 }
+
+/* ============ CRATE OVERLAY ============ */
+
+.crateoverlay {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 16;
+  pointer-events: auto;
+  animation: crateup 0.22s ease;
+}
+
+@keyframes crateup {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.crateoverlay-card {
+  background: rgba(8, 18, 28, 0.92);
+  border: 1px solid rgba(140, 200, 150, 0.25);
+  border-radius: 14px;
+  padding: 12px 16px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  min-width: 320px;
+}
+
+.crateoverlay-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.crateoverlay-icon {
+  font-size: 34px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+.crateoverlay-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #eaffdc;
+}
+
+.crateoverlay-sub {
+  font-size: 11px;
+  color: #8fa89a;
+}
+
+.crateoverlay-stats {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.crateoverlay-stat {
+  display: flex;
+  flex-direction: column;
+  background: rgba(14, 30, 42, 0.6);
+  border: 1px solid rgba(140, 200, 150, 0.15);
+  border-radius: 10px;
+  padding: 6px 10px;
+  flex: 1;
+}
+
+.crateoverlay-stat span {
+  font-size: 10px;
+  color: #8fa89a;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.crateoverlay-stat b {
+  font-size: 15px;
+  color: #ffd977;
+  font-variant-numeric: tabular-nums;
+}
+
+.crateoverlay-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.crateoverlay-hint {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #7d9488;
+  text-align: right;
+}

@@ -6,6 +6,7 @@ import { geometryFromObject, ensureWhiteVertexColors } from "../../core/assets/a
 import { CROP_TYPES, PLOT_CROPS, PLOT_ECONOMY, type CropTypeDef } from "../../config/crops";
 import { PLOTS, type PlotRect } from "../../utils/terrain";
 import { terrainHeight } from "../../utils/terrain";
+import { isInsideBuilding } from "../../config/layout";
 import { makeRng } from "../../utils/math";
 import { useCropStore, growthProgressOf, type PlantedCrop } from "../../store/cropStore";
 import { SelectionRing } from "../common/SelectionRing";
@@ -60,6 +61,7 @@ function cropInstanceList(
       const tz = (r + 0.5) / crop.rows;
       const x = plot.cx + (tx - 0.5) * (plot.w - 0.8) + (rng() - 0.5) * 0.25;
       const z = plot.cz + (tz - 0.5) * (plot.d - 0.8) + (rng() - 0.5) * 0.25;
+      if (isInsideBuilding(x, z)) continue;
       list.push([x, z, terrainHeight(x, z), rng() * Math.PI * 2]);
     }
   }

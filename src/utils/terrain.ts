@@ -1,9 +1,10 @@
 import * as THREE from "three";
 import { WORLD } from "../config/world";
+import { ENCLOSURES } from "../config/enclosures";
 import { fbm } from "./noise";
 import { lerp, smoothstep, clamp } from "./math";
 
-export const POND = { x: -44, z: -32, radius: 11.5, depth: 2.2 };
+export const POND = { x: 12, z: -24, radius: 11.5, depth: 2.2 };
 export const WATER_Y = 1.0;
 
 export interface PlotRect {
@@ -14,10 +15,24 @@ export interface PlotRect {
 }
 
 export const PLOTS: PlotRect[] = [
-  { cx: -24, cz: 21, w: 21, d: 11 },
-  { cx: 23, cz: 3, w: 15, d: 15 },
-  { cx: -23, cz: 2, w: 15, d: 13 },
-  { cx: 19, cz: 23, w: 15, d: 11 },
+  { cx: -36, cz: 20, w: 21, d: 11 },
+  { cx: -34, cz: 6, w: 15, d: 15 },
+  { cx: -34, cz: -8, w: 15, d: 13 },
+  { cx: -34, cz: -22, w: 15, d: 11 },
+];
+
+/**
+ * Rectángulos que deben quedar con el terreno totalmente plano: parcelas de
+ * cultivo y corrales de animales. Sus planos de suelo se colocan a +0.03 del
+ * centro; si el terreno conservara pendiente, la lámina se hundiría en las
+ * zonas altas y se vería "transparente" (el pasto asoma entre medias).
+ */
+const FLAT_RECTS: PlotRect[] = [
+  ...PLOTS,
+  ...ENCLOSURES.map((e) => {
+    const b = e.bounds;
+    return { cx: (b.minX + b.maxX) / 2, cz: (b.minZ + b.maxZ) / 2, w: b.maxX - b.minX, d: b.maxZ - b.minZ };
+  }),
 ];
 
 export interface PathPoint {
@@ -28,40 +43,45 @@ export interface PathPoint {
 export const PATHS: PathPoint[][] = [
   [
     { x: 0, z: 0 },
-    { x: 8, z: 6 },
-    { x: 20, z: 10 },
+    { x: -10, z: 14 },
+    { x: -16, z: 20 },
   ],
   [
     { x: 0, z: 0 },
-    { x: 12, z: -8 },
-    { x: 22, z: -15 },
+    { x: 0, z: 16 },
+    { x: 2, z: 22 },
   ],
   [
     { x: 0, z: 0 },
-    { x: -6, z: 4 },
-    { x: -13, z: 11 },
+    { x: -10, z: 4 },
+    { x: -16, z: 4 },
   ],
   [
     { x: 0, z: 0 },
-    { x: -10, z: -8 },
-    { x: -19, z: -17 },
+    { x: 2, z: 4 },
   ],
   [
     { x: 0, z: 0 },
-    { x: -18, z: -20 },
-    { x: -34, z: -28 },
-    { x: -44, z: -32 },
+    { x: -10, z: -4 },
+    { x: -16, z: -8 },
+  ],
+  [
+    { x: 0, z: 0 },
+    { x: 4, z: -10 },
+    { x: 6, z: -12 },
+  ],
+  [
+    { x: 0, z: 0 },
+    { x: 12, z: 4 },
+    { x: 24, z: 12 },
+    { x: 36, z: 20 },
+    { x: 49, z: 26 },
   ],
   [
     { x: 0, z: 0 },
     { x: 30, z: 0 },
     { x: 62, z: 0 },
     { x: 95, z: 0 },
-  ],
-  [
-    { x: 0, z: 0 },
-    { x: 0, z: -30 },
-    { x: 0, z: -72 },
   ],
 ];
 
@@ -82,6 +102,18 @@ function baseHeight(x: number, z: number): number {
 
 export function terrainHeight(x: number, z: number): number {
   let h = baseHeight(x, z);
+
+  let flatMask = 0;
+  let flatTarget = h;
+  for (const r of FLAT_RECTS) {
+    const m = pointInRect(x, z, r, 2.6);
+    if (m > flatMask) {
+      flatMask = m;
+      flatTarget = baseHeight(r.cx, r.cz);
+    }
+  }
+  h = h + (flatTarget - h) * flatMask;
+
   const pd = Math.hypot(x - POND.x, z - POND.z);
   const carve = 1 - smoothstep(POND.radius - POND.depth, POND.radius, pd);
   h -= POND.depth * carve;

@@ -1,6 +1,14 @@
+import type { ReactNode } from "react";
 import { useInteriorStore } from "../../store/interiorStore";
 import { getBuildingTransform, getInteriorDef } from "../../config/interiors";
+import type { BuildingType } from "../../config/world";
 import { BarnInterior } from "./BarnInterior";
+import { WarehouseInterior } from "./WarehouseInterior";
+
+const INTERIOR_VIEWS: Partial<Record<BuildingType, (def: NonNullable<ReturnType<typeof getInteriorDef>>) => ReactNode>> = {
+  barn: (def) => <BarnInterior def={def} />,
+  warehouse: (def) => <WarehouseInterior def={def} />,
+};
 
 /** Mounts the active building interior on demand inside the shared world. */
 export function InteriorGroup() {
@@ -17,9 +25,12 @@ export function InteriorGroup() {
   const t = getBuildingTransform(activeUid);
   if (!t) return null;
 
+  const view = INTERIOR_VIEWS[type];
+  if (!view) return null;
+
   return (
     <group position={[t.position[0], t.groundY, t.position[2]]} rotation={[0, t.rotation, 0]}>
-      <BarnInterior def={def} />
+      {view(def)}
     </group>
   );
 }

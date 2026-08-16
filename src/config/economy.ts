@@ -45,6 +45,29 @@ export function getCropEconomy(cropId: string): CropEconomyDef | null {
 }
 
 /**
+ * Economía de productos del Almacén (leche, huevos, miel, queso).
+ * - name:      nombre mostrado.
+ * - icon:      emoji del producto (textura/overlay).
+ * - sellPrice: precio de venta por unidad.
+ */
+export interface GoodsEconomyDef {
+  name: string;
+  icon: string;
+  sellPrice: number;
+}
+
+export const GOODS_ECONOMY: Record<string, GoodsEconomyDef> = {
+  milk: { name: "Leche", icon: "🥛", sellPrice: 0.9 },
+  eggs: { name: "Huevos", icon: "🥚", sellPrice: 0.55 },
+  honey: { name: "Miel", icon: "🍯", sellPrice: 1.4 },
+  cheese: { name: "Queso", icon: "🧀", sellPrice: 1.8 },
+};
+
+export function getGoodsEconomy(goodId: string): GoodsEconomyDef | null {
+  return GOODS_ECONOMY[goodId] ?? null;
+}
+
+/**
  * Economía veterinaria. Todo configurable aquí:
  * - price:          precio de compra del animal (referencia, aún sin tienda).
  * - treatmentCost:  coste del tratamiento que paga el jugador al tratarlo.

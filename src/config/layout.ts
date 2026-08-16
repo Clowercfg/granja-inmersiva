@@ -1,4 +1,4 @@
-import type { BuildingType } from "./world";
+import { BUILDING_CONFIG, type BuildingType } from "./world";
 
 export interface StaticBuilding {
   uid: string;
@@ -15,23 +15,25 @@ export interface Obstacle {
 }
 
 export const STATIC_BUILDINGS: StaticBuilding[] = [
-  { uid: "barn-1", type: "barn", position: [24, 0, 12], rotation: -Math.PI / 2, level: 2 },
-  { uid: "house-1", type: "house", position: [-10, 0, 10], rotation: 0.35, level: 1 },
-  { uid: "warehouse-1", type: "warehouse", position: [-30, 0, 30], rotation: 0.6, level: 1 },
-  { uid: "greenhouse-1", type: "greenhouse", position: [24, 0, -14], rotation: 0, level: 1 },
-  { uid: "workshop-1", type: "workshop", position: [-34, 0, -4], rotation: -0.5, level: 1 },
+  { uid: "house-1", type: "house", position: [-18, 0, 28], rotation: 0.3, level: 1 },
+  { uid: "barn-1", type: "barn", position: [2, 0, 28], rotation: 0, level: 2 },
+  { uid: "workshop-1", type: "workshop", position: [-18, 0, 10], rotation: 0, level: 1 },
+  { uid: "warehouse-1", type: "warehouse", position: [2, 0, 10], rotation: 0, level: 1 },
+  { uid: "greenhouse-1", type: "greenhouse", position: [-18, 0, -8], rotation: 0, level: 1 },
 ];
 
-export const POND = { x: -44, z: -32, radius: 11.5 } as const;
+export const POND = { x: 12, z: -24, radius: 11.5 } as const;
 
 export const FENCE_SEGMENTS: Array<[number, number, number]> = [
-  [-26, -6, 0],
-  [-32, -12, 0],
-  [-38, -18, 0],
-  [-30, -22, Math.PI / 2],
-  [-22, -28, Math.PI / 2],
-  [-14, -22, 0],
-  [-8, -16, 0],
+  [-24, 24, 0],
+  [-24, 12, 0],
+  [-24, 0, 0],
+  [-24, -12, 0],
+  [-24, -24, 0],
+  [12, -13, 0],
+  [12, -35, 0],
+  [-0.5, -24, Math.PI / 2],
+  [24.5, -24, Math.PI / 2],
 ];
 
 export const OBSTACLES: Obstacle[] = STATIC_BUILDINGS.map((b) => {
@@ -50,6 +52,23 @@ export const OBSTACLES: Obstacle[] = STATIC_BUILDINGS.map((b) => {
 export function isNearObstacle(x: number, z: number, margin = 0): boolean {
   for (const o of OBSTACLES) {
     if (Math.hypot(x - o.x, z - o.z) < o.radius + margin) return true;
+  }
+  return false;
+}
+
+/** ¿Está el punto (x, z) dentro de la huella de algún edificio (con margen)? */
+export function isInsideBuilding(x: number, z: number, margin = 0.5): boolean {
+  for (const b of STATIC_BUILDINGS) {
+    const size = BUILDING_CONFIG[b.type].size;
+    const hw = size[0] / 2 + margin;
+    const hd = size[1] / 2 + margin;
+    const cos = Math.cos(b.rotation);
+    const sin = Math.sin(b.rotation);
+    const dx = x - b.position[0];
+    const dz = z - b.position[2];
+    const lx = dx * cos - dz * sin;
+    const lz = dx * sin + dz * cos;
+    if (Math.abs(lx) < hw && Math.abs(lz) < hd) return true;
   }
   return false;
 }
