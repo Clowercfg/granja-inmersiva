@@ -118,7 +118,7 @@
     "potato": "Potato"
   },
   "animal": {
-    "chicken": "Hen",
+    "chicken": "Chicken",
     "rooster": "Rooster",
     "cow": "Cow",
     "pig": "Pig",
@@ -130,14 +130,14 @@
     }
   },
   "species": {
-    "chicken": "Hens",
+    "chicken": "Chickens",
     "rooster": "Roosters",
     "cow": "Cows",
     "pig": "Pigs"
   },
   "kind": {
     "cow": "Dairy cow",
-    "chicken": "Laying hen",
+    "chicken": "Laying chicken",
     "rooster": "Breeding rooster",
     "pig": "Fattening pig"
   },
@@ -189,7 +189,7 @@
     }
   },
   "unit": {
-    "hens": "hens",
+    "hens": "chickens",
     "cows": "cows",
     "pigs": "pigs",
     "eggs": "eggs",
@@ -198,12 +198,12 @@
   },
   "offer": {
     "seedpack": { "name": "Seed Bundle", "desc": "Wheat + Corn + Carrot + Potato, 100 of each." },
-    "beginner": { "name": "Beginner Combo", "desc": "Seeds to get started and a couple of hens." },
+    "beginner": { "name": "Beginner Combo", "desc": "Seeds to get started and a couple of chickens." },
     "farmer": { "name": "Farmer Combo", "desc": "Varied crops and your first cow." },
     "poultry": { "name": "Coop Combo", "desc": "Poultry for egg production." },
     "dairy": { "name": "Dairy Combo", "desc": "Dairy cows and carrot fodder." },
     "swine": { "name": "Pig Farmer Combo", "desc": "Fattening pigs for meat production." },
-    "repro": { "name": "Breeding Combo", "desc": "Roosters and hens ready for the incubator." },
+    "repro": { "name": "Breeding Combo", "desc": "Roosters and chickens ready for the incubator." },
     "granjero": { "name": "Farmer $300", "desc": "A large lot of seeds and livestock to grow fast." },
     "advanced": { "name": "Advanced Farm", "desc": "Varied livestock and premium seeds for established farms." },
     "mega": { "name": "Mega Farm", "desc": "The ultimate package: plenty of livestock and tons of seeds." }
@@ -274,7 +274,7 @@
       "note": "Sold automatically from the farm or the warehouse."
     },
     "source": {
-      "egg": "Hens",
+      "egg": "Chickens",
       "milk": "Cows",
       "meat": "Pigs",
       "boiled-egg": "Processor",
