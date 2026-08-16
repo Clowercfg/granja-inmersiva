@@ -1992,12 +1992,18 @@ body.store-open .hud {
 
 .scard-special {
   display: flex;
-  align-items: center;
-  gap: 9px;
+  flex-direction: column;
+  gap: 8px;
   background: rgba(178, 122, 62, 0.12);
   border: 1px solid #cfa668;
   border-radius: 10px;
-  padding: 8px 10px;
+  padding: 10px;
+}
+
+.sp-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
 }
 
 .sp-icon {
@@ -2105,7 +2111,7 @@ body.store-open .hud {
 }
 
 .buybtn-sm {
-  width: auto;
+  width: 100%;
   padding: 8px 12px;
   font-size: 10px;
 }

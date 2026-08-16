@@ -93,11 +93,13 @@ function SpecialRow({ special, notify }: { special: SpecialUpgradeDef; notify: N
 
   return (
     <div className="scard-special">
-      <span className="sp-icon">{special.icon}</span>
-      <span className="sp-info">
-        <span className="sp-name">{special.name}</span>
-        <span className="sp-desc">{special.description}</span>
-      </span>
+      <div className="sp-row">
+        <span className="sp-icon">{special.icon}</span>
+        <span className="sp-info">
+          <span className="sp-name">{special.name}</span>
+          <span className="sp-desc">{special.description}</span>
+        </span>
+      </div>
       <button
         className="buybtn buybtn-sm"
         disabled={owned || gold < special.price}

@@ -124,7 +124,7 @@ export const useUpgradesStore = create<UpgradesStore>((set, get) => ({
     if (kind === "pig") {
       const normal = PIG_CYCLE_DAYS.normalDays;
       const current = get().cycleDaysOf();
-      return normal / current;
+      return current / normal;
     }
     return 1;
   },
