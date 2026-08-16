@@ -125,7 +125,7 @@ export interface ProductEconomyDef {
 export const PRODUCT_ECONOMY: Record<string, ProductEconomyDef> = {
   egg: { name: "Huevo", icon: "🥚", price: 0.0479 },
   milk: { name: "Leche", icon: "🥛", price: 2.4 },
-  meat: { name: "Carne", icon: "🍖", price: 2.0 },
+  meat: { name: "Carne", icon: "🍖", price: 0.6 },
   "boiled-egg": { name: "Huevo hervido", icon: "🍳", price: 1.35 },
 };
 

@@ -19,14 +19,18 @@ const PRODUCT_MARKET: Record<string, string> = {
   cheese: "Almacén",
 };
 
+/** Productos ocultos del catálogo (la economía central los conserva). */
+const HIDDEN_PRODUCTS = new Set(["milk", "boiled-egg", "cheese"]);
+
 /** Productos de la granja (solo los disponibles en cada economía). */
 function productList(): Array<{ id: string; name: string; icon: string; price: number }> {
   const list: Array<{ id: string; name: string; icon: string; price: number }> = [];
   for (const [id, def] of Object.entries(PRODUCT_ECONOMY)) {
+    if (HIDDEN_PRODUCTS.has(id)) continue;
     list.push({ id, name: def.name, icon: def.icon, price: def.price });
   }
   for (const [id, def] of Object.entries(GOODS_ECONOMY)) {
-    if (PRODUCT_ECONOMY[id] || id === "eggs") continue;
+    if (PRODUCT_ECONOMY[id] || id === "eggs" || HIDDEN_PRODUCTS.has(id)) continue;
     list.push({ id, name: def.name, icon: def.icon, price: def.sellPrice });
   }
   return list;
@@ -57,18 +61,6 @@ export function ProductCards() {
           </StoreCard>
         );
       })}
-
-      <StoreCard className="scard-info">
-        <div className="scard-icon">🐣</div>
-        <div className="scard-title">REPRODUCCIÓN</div>
-        <div className="scard-detail">
-          Los gallos producen <b>huevos fertilizados</b> mientras haya gallinas en el corral.
-        </div>
-        <div className="scard-detail">
-          Un huevo fertilizado eclosiona tras <b>72 h</b> en la incubadora y el pollito se cría
-          otras <b>72 h</b> hasta ser adulto (70% sin resultado · 25% gallina · 5% gallo).
-        </div>
-      </StoreCard>
     </div>
   );
 }
