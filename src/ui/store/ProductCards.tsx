@@ -20,7 +20,7 @@ const PRODUCT_MARKET: Record<string, string> = {
 };
 
 /** Productos ocultos del catálogo (la economía central los conserva). */
-const HIDDEN_PRODUCTS = new Set(["milk", "boiled-egg", "cheese"]);
+const HIDDEN_PRODUCTS = new Set(["milk", "boiled-egg", "cheese", "honey"]);
 
 /** Productos de la granja (solo los disponibles en cada economía). */
 function productList(): Array<{ id: string; name: string; icon: string; price: number }> {
