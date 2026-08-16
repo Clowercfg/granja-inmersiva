@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useWorldStore } from "../store/worldStore";
 import { useEconomyStore } from "../store/economyStore";
 import { useSelectionStore } from "../store/selectionStore";
@@ -9,6 +9,7 @@ import { animalRegistry } from "../store/farmStore";
 import { PRODUCTION_PRICE } from "../config/economy";
 import { getBuildingTypeByUid, getInteriorDef, hasInterior } from "../config/interiors";
 import type { DayPhase, Season } from "../systems/time/TimeManager";
+import { readSession } from "./auth/authStore";
 
 const PHASE_ICON: Record<DayPhase, string> = {
   dawn: "🌅",
@@ -30,7 +31,7 @@ function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-export function HUD() {
+export function HUD({ onLogout }: { onLogout: () => void }) {
   const t = useT();
   const booted = useWorldStore((s) => s.booted);
   const hour = useWorldStore((s) => s.hour);
@@ -45,7 +46,14 @@ export function HUD() {
   const gold = useEconomyStore((s) => s.gold);
   const interiorPhase = useInteriorStore((s) => s.phase);
   const interiorType = useInteriorStore((s) => s.type);
+  const [session] = useState(() => readSession());
   const [showHelp, setShowHelp] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const profileOpen = useRef(false);
+
+  useEffect(() => {
+    profileOpen.current = showProfile;
+  }, [showProfile]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -53,6 +61,10 @@ export function HUD() {
         const ui = useUiStore.getState();
         if (ui.storeOpen) {
           ui.closeStore();
+          return;
+        }
+        if (profileOpen.current) {
+          setShowProfile(false);
           return;
         }
         const it = useInteriorStore.getState();
@@ -72,6 +84,13 @@ export function HUD() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  const initials = (session?.name ?? "A")
+    .split(/\s+/)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   if (!booted) {
     return (
@@ -115,11 +134,78 @@ export function HUD() {
         </div>
         <div className="rightbar">
           <div className="pill gold">USD {Math.round(gold).toLocaleString()}</div>
-          <button className="btn" onClick={() => setShowHelp((h) => !h)}>
+          <button
+            className={`btn profilebar${showProfile ? " active" : ""}`}
+            onClick={() => {
+              setShowProfile((p) => !p);
+              setShowHelp(false);
+            }}
+            title="Abrir perfil"
+          >
+            👤 <span className="profilebar-name">{session?.name ?? "Perfil"}</span>
+          </button>
+          <button
+            className="btn"
+            onClick={() => {
+              setShowHelp((h) => !h);
+              setShowProfile(false);
+            }}
+          >
             ?
           </button>
         </div>
       </div>
+
+      {showProfile && (
+        <div className="profilepanel">
+          <div className="profile-head">
+            <div className="profile-avatar">{initials}</div>
+            <div>
+              <b className="profile-name">{session?.name ?? "Agricultor"}</b>
+              <span className="profile-mail">{session?.email ?? "sin sesión"}</span>
+            </div>
+          </div>
+          <button
+            className="profile-opt"
+            onClick={() => {
+              setShowProfile(false);
+              useUiStore.getState().openSection("inventory");
+            }}
+          >
+            📦 Inventario
+          </button>
+          <button
+            className="profile-opt"
+            onClick={() => {
+              setShowProfile(false);
+              useUiStore.getState().openSection("calendar");
+            }}
+          >
+            📅 Calendario
+          </button>
+          <button
+            className="profile-opt"
+            onClick={() => {
+              setShowProfile(false);
+              useUiStore.getState().openSection("upgrades");
+            }}
+          >
+            📈 Mejoras
+          </button>
+          <button
+            className="profile-opt"
+            onClick={() => {
+              setShowProfile(false);
+              setShowHelp(true);
+            }}
+          >
+            ❓ Ayuda y controles
+          </button>
+          <button className="profile-opt danger" onClick={onLogout}>
+            🚪 Cerrar sesión
+          </button>
+        </div>
+      )}
 
       <SelectionPanel />
 
