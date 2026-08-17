@@ -2,7 +2,7 @@
  * Detecta el motor gráfico solicitado via query string.
  *
  * - Sin parámetro o `?engine=legacy` → motor actual (Three.js / R3F)
- * - `?engine=babylon` → motor Babylon.js (escena de prueba)
+ * - `?engine=babylon` → motor Babylon.js
  *
  * Legacy es siempre el modo por defecto.
  */

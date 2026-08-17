@@ -1,139 +1,129 @@
-/**
- * BABYLON CANVAS — PRUEBA MÍNIMA
- *
- * Auto-contenido. NO importa ningún módulo Babylon propio.
- * Solo importa directamente de @babylonjs/core.
- * Objetivo: demostrar que Babylon renderiza una escena básica.
- */
-
 import { useEffect, useRef, useState } from "react";
-import {
-  Engine,
-  Scene,
-  ArcRotateCamera,
-  HemisphericLight,
-  MeshBuilder,
-  Vector3,
-  Color4,
-} from "@babylonjs/core";
+import { BabylonLifecycle } from "./core/BabylonLifecycle";
+import { initGameAdapter, disposeGameAdapter } from "./core/GameAdapter";
+import { resetTimeSync } from "./core/TimeSync";
+import { LightingSystem } from "./lighting/LightingSystem";
+import { DayNightCycle } from "./lighting/DayNightCycle";
+import { TerrainSystem } from "./world/TerrainSystem";
+import { WaterSystem } from "./world/WaterSystem";
+import { RoadSystem } from "./world/RoadSystem";
+import { EnvironmentSystem } from "./world/EnvironmentSystem";
+import { TreeSystem } from "./vegetation/TreeSystem";
+import { GrassSystem } from "./vegetation/GrassSystem";
+import { RockSystem } from "./vegetation/RockSystem";
+import { FlowerSystem } from "./vegetation/FlowerSystem";
+import { BushSystem } from "./vegetation/BushSystem";
+import { BuildingSystem } from "./buildings/BuildingSystem";
+import { EnclosureSystem } from "./buildings/EnclosureSystem";
+import { AnimalSystem } from "./animals/AnimalSystem";
+import { CropSystem } from "./crops/CropSystem";
+import { WeatherSystem } from "./weather/WeatherSystem";
+import { PickingSystem } from "./interaction/PickingSystem";
+import { FarmCamera } from "./camera/FarmCamera";
+import { BabylonDebugPanel } from "./debug/BabylonDebugPanel";
 import { useWorldStore } from "../../store/worldStore";
-
-console.log("[BABYLON] Module loaded — timestamp:", Date.now());
+import { useFarmStore } from "../../store/farmStore";
+import { useCropStore } from "../../store/cropStore";
+import { STATIC_BUILDINGS } from "../../config/layout";
 
 export function BabylonCanvas() {
-  console.count("[BABYLON] Component render");
-
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState("component rendered — waiting for useEffect");
+  const disposedRef = useRef(false);
 
   useEffect(() => {
-    console.log("[BABYLON] 1 - useEffect fired");
-    setStatus("1 - useEffect fired");
-
     const canvas = canvasRef.current;
-    if (!canvas) {
-      console.error("[BABYLON] ERROR: canvas ref is null");
-      setError("canvas ref is null");
-      return;
-    }
+    if (!canvas) return;
 
-    console.log("[BABYLON] 2 - Canvas found");
-    console.log("[BABYLON]    canvas:", canvas);
-    console.log("[BABYLON]    clientWidth:", canvas.clientWidth);
-    console.log("[BABYLON]    clientHeight:", canvas.clientHeight);
-    console.log("[BABYLON]    width:", canvas.width);
-    console.log("[BABYLON]    height:", canvas.height);
+    disposedRef.current = false;
 
-    if (canvas.clientWidth === 0 || canvas.clientHeight === 0) {
-      const msg = `Canvas has zero dimensions: ${canvas.clientWidth}x${canvas.clientHeight}`;
-      console.error("[BABYLON] ERROR:", msg);
-      setError(msg);
-      return;
-    }
-    setStatus("2 - Canvas OK");
+    let lifecycle: BabylonLifecycle | null = null;
+    let safetyTimer: number | undefined;
 
-    let engine: Engine | null = null;
-    let scene: Scene | null = null;
+    const timer = setTimeout(() => {
+      if (disposedRef.current) return;
+      try {
+        console.log("[BabylonCanvas] init start, canvas:", canvas.clientWidth, "x", canvas.clientHeight);
 
-    try {
-      console.log("[BABYLON] 3 - Creating Engine...");
-      setStatus("3 - Creating Engine...");
-      console.count("[BABYLON] Engine creation");
+        lifecycle = new BabylonLifecycle(canvas);
+        console.log("[BabylonCanvas] Engine+Scene OK");
 
-      engine = new Engine(canvas, true);
-      console.log("[BABYLON] 4 - Engine created:", engine);
-      setStatus("4 - Engine created");
+        const lighting = new LightingSystem();
+        lifecycle.addSystem(lighting);
+        lifecycle.shadows = lighting.getShadowGenerator();
+        console.log("[BabylonCanvas] Lighting OK");
 
-      console.log("[BABYLON] 5 - Creating Scene...");
-      setStatus("5 - Creating Scene...");
-      scene = new Scene(engine);
-      scene.clearColor = new Color4(0.4, 0.7, 0.9, 1);
-      console.log("[BABYLON] 6 - Scene created:", scene);
-      setStatus("6 - Scene created");
+        lifecycle
+          .addSystem(new TerrainSystem())
+          .addSystem(new WaterSystem())
+          .addSystem(new RoadSystem())
+          .addSystem(new DayNightCycle())
+          .addSystem(new EnvironmentSystem())
+          .addSystem(new FarmCamera())
+          .addSystem(new TreeSystem())
+          .addSystem(new GrassSystem())
+          .addSystem(new RockSystem())
+          .addSystem(new FlowerSystem())
+          .addSystem(new BushSystem())
+          .addSystem(new BuildingSystem())
+          .addSystem(new EnclosureSystem())
+          .addSystem(new AnimalSystem())
+          .addSystem(new CropSystem())
+          .addSystem(new WeatherSystem())
+          .addSystem(new PickingSystem())
+          .addSystem(new BabylonDebugPanel());
+        console.log("[BabylonCanvas] All systems OK");
 
-      console.log("[BABYLON] 7 - Creating Camera...");
-      setStatus("7 - Creating Camera...");
-      const camera = new ArcRotateCamera(
-        "camera",
-        -Math.PI / 4,
-        Math.PI / 3,
-        12,
-        Vector3.Zero(),
-        scene
-      );
-      camera.attachControl(canvas, true);
-      console.log("[BABYLON] 8 - Camera created");
-      setStatus("8 - Camera created");
+        initGameAdapter();
+        resetTimeSync();
+        console.log("[BabylonCanvas] GameAdapter OK");
 
-      console.log("[BABYLON] 9 - Creating Light...");
-      setStatus("9 - Creating Light...");
-      new HemisphericLight("light", new Vector3(0, 1, 0), scene);
-      console.log("[BABYLON] 10 - Light created");
-      setStatus("10 - Light created");
+        const buildingCount = STATIC_BUILDINGS.length;
+        const animalCount = useFarmStore.getState().animals.length;
+        const cropCount = useCropStore.getState().planted.length;
+        console.log(`[BABYLON SYNC] Config buildings: ${buildingCount} | Animals: ${animalCount} | Crops: ${cropCount}`);
+        console.log(`[BABYLON SYNC] Time source: worldStore → hour=${useWorldStore.getState().hour} weather=${useWorldStore.getState().weather} season=${useWorldStore.getState().season}`);
 
-      MeshBuilder.CreateBox("testBox", { size: 2 }, scene);
-      console.log("[BABYLON] 11 - Box created");
-      setStatus("11 - Box created");
+        lifecycle
+          .onFirstFrame(() => {
+            if (disposedRef.current) return;
+            console.log("[BabylonCanvas] FIRST FRAME → setBooted(true)");
+            useWorldStore.getState().setBooted(true);
+          })
+          .start();
+        console.log("[BabylonCanvas] Render loop started");
 
-      MeshBuilder.CreateGround("ground", { width: 20, height: 20 }, scene);
-      console.log("[BABYLON] 12 - Ground created");
-      setStatus("12 - Ground created");
-
-      let firstFrame = true;
-      engine.runRenderLoop(() => {
-        if (firstFrame) {
-          console.log("[BABYLON] 13 - FIRST FRAME RENDERED");
-          setStatus("13 - FIRST FRAME RENDERED");
-          firstFrame = false;
+        safetyTimer = window.setTimeout(() => {
+          if (!disposedRef.current && !useWorldStore.getState().booted) {
+            console.warn("[BabylonCanvas] SAFETY: force setBooted(true) after 8s");
+            useWorldStore.getState().setBooted(true);
+          }
+        }, 8000);
+      } catch (err) {
+        console.error("[BabylonCanvas] INIT FAILED:", err);
+        if (!disposedRef.current) {
           useWorldStore.getState().setBooted(true);
+          setError(String(err));
         }
-        scene!.render();
-      });
-      console.log("[BABYLON] 14 - Render loop started");
-      setStatus("14 - Render loop started — scene should be visible");
+      }
+    }, 50);
 
-      const onResize = () => engine!.resize();
-      window.addEventListener("resize", onResize);
-
-      return () => {
-        console.log("[BABYLON] Disposing...");
-        useWorldStore.getState().setBooted(false);
-        window.removeEventListener("resize", onResize);
-        engine!.stopRenderLoop();
-        scene!.dispose();
-        engine!.dispose();
-      };
-    } catch (err) {
-      console.error("[BABYLON ERROR]", err);
-      setError(String(err));
-    }
+    return () => {
+      disposedRef.current = true;
+      clearTimeout(timer);
+      clearTimeout(safetyTimer);
+      console.log("[BabylonCanvas] cleanup");
+      useWorldStore.getState().setBooted(false);
+      disposeGameAdapter();
+      lifecycle?.dispose();
+    };
   }, []);
 
   if (error) {
     return (
       <div style={{
-        position: "fixed", inset: 0, background: "#1a0a0a", color: "#ff6b6b",
+        position: "fixed", inset: 0, zIndex: 99999,
+        background: "#1a0a0a", color: "#ff6b6b",
         display: "flex", flexDirection: "column", alignItems: "center",
         justifyContent: "center", fontFamily: "monospace", fontSize: 14, padding: 40,
       }}>
@@ -145,13 +135,6 @@ export function BabylonCanvas() {
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 0 }}>
-      <div style={{
-        position: "absolute", bottom: 8, left: 8, padding: "4px 10px",
-        background: "rgba(0,0,0,0.75)", color: "#0f0",
-        fontFamily: "monospace", fontSize: 11, zIndex: 9999, borderRadius: 4,
-      }}>
-        {status}
-      </div>
       <canvas
         ref={canvasRef}
         style={{ width: "100%", height: "100%", display: "block", outline: "none" }}
