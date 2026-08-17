@@ -1,0 +1,43 @@
+name = "harvest-valley-api"
+main = "worker/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# ─── D1 Database ───
+[[d1_databases]]
+binding = "DB"
+database_name = "harvest_valley_db"
+database_id = "YOUR_D1_DATABASE_ID"
+
+# ─── R2 Bucket (assets) ───
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "harvest-valley-assets"
+
+# ─── KV (config cache) ───
+[[kv_namespaces]]
+binding = "KV"
+id = "YOUR_KV_NAMESPACE_ID"
+
+# ─── Environment Variables ───
+[vars]
+WALLET_ADDRESS = "TU_DIRECCION_AQUI"
+WALLET_NETWORK = "USDT (TRC20)"
+TELEGRAM = "@TuUsuarioTelegram"
+R2_PUBLIC_URL = "https://harvest-valley-assets.YOUR_SUBDOMAIN.r2.dev"
+
+# ─── Production (deploy with --env production) ───
+[env.production]
+[env.production.vars]
+WALLET_ADDRESS = "TU_DIRECCION_AQUI"
+WALLET_NETWORK = "USDT (TRC20)"
+TELEGRAM = "@TuUsuarioTelegram"
+R2_PUBLIC_URL = "https://harvest-valley-assets.YOUR_SUBDOMAIN.r2.dev"
+
+# ─── Development (local wrangler dev) ───
+[env.development]
+[env.development.vars]
+WALLET_ADDRESS = "TU_DIRECCION_AQUI"
+WALLET_NETWORK = "USDT (TRC20)"
+TELEGRAM = "@TuUsuarioTelegram"
+R2_PUBLIC_URL = ""
