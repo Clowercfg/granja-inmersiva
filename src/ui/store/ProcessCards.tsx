@@ -1,5 +1,7 @@
 import { PROCESS_LIST, type ProcessDef } from "../../config/processing";
 import { getProductEconomy } from "../../config/economy";
+import { useUpgradesStore } from "../../store/upgradesStore";
+import { getProcessorLevelDef } from "../../config/upgrades";
 import { useT } from "../../store/languageStore";
 import { StoreCard, fmtMoney } from "./StoreUI";
 
@@ -28,6 +30,8 @@ function ProcessCard({ def }: { def: ProcessDef }) {
   const t = useT();
   const input = getProductEconomy(def.input.productId);
   const output = getProductEconomy(def.output.productId);
+  const level = useUpgradesStore((s) => s.capacityOf("processing"));
+  const processorDef = getProcessorLevelDef(level > 0 ? level : 1);
   if (!input || !output) return null;
 
   return (
@@ -42,7 +46,7 @@ function ProcessCard({ def }: { def: ProcessDef }) {
         <div className="proc-mid">
           <span className="proc-arrow">→</span>
           <span className="proc-meta">
-            {def.processHours} h · {fmtMoney(def.cost)}
+            {processorDef.processHours} h · {fmtMoney(processorDef.costPerEgg)}
           </span>
           <span className="proc-machine">🏭 {t("process.machine")}</span>
         </div>
@@ -53,7 +57,7 @@ function ProcessCard({ def }: { def: ProcessDef }) {
         </div>
       </div>
       <div className="scard-tags">
-        <span className="scard-tag">{t("store.process.margin", { margin: fmtMoney(output.price - input.price) })}</span>
+        <span className="scard-tag">{t("store.process.margin", { margin: fmtMoney(output.price - input.price - processorDef.costPerEgg) })}</span>
         <span className="scard-tag">
           {t("process.conversion", { in: def.input.qty, out: def.output.qty, n: def.output.qty })}
         </span>

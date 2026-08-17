@@ -63,6 +63,8 @@
     "veterinary_hint": "Salud y tratamientos",
     "crops": "Cultivos",
     "crops_hint": "Parcelas y cosechas",
+    "processing": "Procesamiento",
+    "processing_hint": "Huevo hervido y mejoras",
     "upgrades": "Mejoras",
     "upgrades_hint": "Niveles y capacidades",
     "inventory": "Inventario",
@@ -148,7 +150,8 @@
     "meat": "Carne",
     "honey": "Miel",
     "cheese": "Queso",
-    "boiled-egg": "Huevo hervido"
+    "boiled-egg": "Huevo hervido",
+    "boiled-eggs": "Huevos hervidos"
   },
   "building": {
     "generic": "edificio",
@@ -377,7 +380,9 @@
       "subtitle": "Siembra, crecimiento y venta",
       "plots": "Parcelas",
       "seeds": "Semillas",
+      "planted": "Sembrados",
       "harvest": "Cosecha",
+      "capacity": "Capacidad",
       "detail": "Semilla {seed} · Crecimiento {hours} h · Venta {sell} · Ganancia {profit}",
       "harvested": "{n} cosechada",
       "buy_seed": "Comprar semilla",
@@ -391,6 +396,7 @@
       "ready": "Lista para cosechar",
       "growing_left": "Creciendo · quedan {time}",
       "plot_of": "Parcela de {name}",
+      "plot_number": "Parcela {n}",
       "ready_short": "¡Lista!",
       "summary": "{ready} lista|{ready} listas · {growing} en crecimiento.",
       "hint": "En 3D: clic en la parcela para sembrar, clic sobre el cultivo listo para cosechar. Semillas y cosechas en inventario no cuentan como USD hasta venderlas."
@@ -449,6 +455,39 @@
         "winter": "Invierno: las noches son largas; la granja descansa."
       },
       "hint": "El reloj del juego está sincronizado con la hora del sistema. El día y la estación cambian de forma automática a medianoche y con el paso de los meses."
+    },
+    "processing": {
+      "title": "Procesadora",
+      "subtitle": "Convierte productos en productos de mayor valor",
+      "level": "Nivel {level}",
+      "capacity_label": "Capacidad",
+      "capacity": "Capacidad: {qty} huevos",
+      "time": "Tiempo",
+      "cost_per_egg": "Costo",
+      "sale_value": "Valor venta",
+      "profit": "Beneficio",
+      "start": "PROCESAR",
+      "active": "Procesando",
+      "remaining": "restante",
+      "completed": "¡Completado!",
+      "no_eggs": "No tienes huevos",
+      "no_balance": "Saldo insuficiente",
+      "at_capacity": "Capacidad máxima alcanzada",
+      "locked": "Procesadora bloqueada",
+      "locked_desc": "Compra el nivel 1 para desbloquear la procesadora.",
+      "unlock": "DESBLOQUEAR",
+      "upgrade": "Mejora Procesadora",
+      "buy": "MEJORAR",
+      "next_level": "Siguiente nivel",
+      "benefit_capacity": "Capacidad: {a} → {b} huevos",
+      "benefit_time": "Tiempo: {a} → {b}",
+      "benefit_cost": "Costo: {a} → {b}/huevo",
+      "info_title": "Información económica",
+      "info_egg": "Valor del huevo",
+      "info_cost": "Costo de procesamiento",
+      "info_boiled": "Valor del huevo hervido",
+      "info_profit": "Beneficio adicional",
+      "hint": "Selecciona la cantidad de huevos a procesar. El costo se descuenta al iniciar. Los huevos hervidos aparecen en el almacén para vender."
     }
   },
   "crate": {
@@ -465,5 +504,54 @@
   "transition": {
     "entering": "Entrando al {name}…",
     "leaving": "Saliendo…"
+  },
+  "diamond": {
+    "title": "COMPRAR DIAMANTES",
+    "subtitle": "Acelera tu granja y ahorra tiempo.",
+    "buy": "COMPRAR",
+    "processing": "PROCESANDO…",
+    "close": "Cerrar",
+    "back": "Volver",
+    "footer": "Los diamantes son una moneda premium. Los pagos se procesan de forma segura.",
+    "purchase_completed": "Compra realizada",
+    "payment_pending": "Pago pendiente",
+    "payment_confirmed": "Pago confirmado",
+    "payment_cancelled": "Pago cancelado",
+    "payment_error": "Error en el pago",
+    "pay_for": "Pagar por",
+    "select_crypto": "Selecciona tu criptomoneda",
+    "sandbox": "MODO SANDBOX — Pago de prueba, sin cobro real",
+    "address": "Dirección de pago",
+    "amount": "Monto a enviar",
+    "network": "Red",
+    "payment_hint": "Envía el monto exacto a la dirección mostrada. El pago se confirma automáticamente.",
+    "cancel_payment": "Cancelar pago",
+    "payment_success": "¡Pago exitoso!",
+    "payment_success_desc": "Tus diamantes han sido acreditados en tu cuenta.",
+    "payment_failed": "Pago no completado",
+    "payment_failed_desc": "El pago no fue procesado. Puedes intentar de nuevo.",
+    "error_create": "Error al crear el pago. Intenta de nuevo.",
+    "try_again": "Intentar de nuevo",
+    "payment_window_opened": "Se abrió la página de pago de NOWPayments en una nueva pestaña.",
+    "open_payment_page": "Abrir página de pago",
+    "status": {
+      "created": "Creado",
+      "waiting": "Esperando pago",
+      "confirming": "Confirmando en la red",
+      "confirmed": "Confirmado",
+      "finished": "Completado",
+      "failed": "Fallido",
+      "expired": "Expirado",
+      "cancelled": "Cancelado",
+      "error": "Error"
+    }
+  },
+  "diamond_pkg": {
+    "initial": "Inicial",
+    "basic": "Básico",
+    "farmer": "Granjero",
+    "big": "Grande",
+    "premium": "Premium",
+    "mega": "Mega"
   }
 }

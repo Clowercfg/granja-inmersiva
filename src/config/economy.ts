@@ -65,9 +65,10 @@ export interface GoodsEconomyDef {
 
 export const GOODS_ECONOMY: Record<string, GoodsEconomyDef> = {
   milk: { name: "Leche", icon: "🥛", sellPrice: 0.9 },
-  eggs: { name: "Huevos", icon: "🥚", sellPrice: 0.55 },
+  eggs: { name: "Huevos", icon: "🥚", sellPrice: 0.05 },
   honey: { name: "Miel", icon: "🍯", sellPrice: 1.4 },
   cheese: { name: "Queso", icon: "🧀", sellPrice: 1.8 },
+  "boiled-eggs": { name: "Huevos hervidos", icon: "🍳", sellPrice: 0.07 },
 };
 
 export function getGoodsEconomy(goodId: string): GoodsEconomyDef | null {
@@ -123,10 +124,10 @@ export interface ProductEconomyDef {
 }
 
 export const PRODUCT_ECONOMY: Record<string, ProductEconomyDef> = {
-  egg: { name: "Huevo", icon: "🥚", price: 0.0479 },
+  egg: { name: "Huevo", icon: "🥚", price: 0.05 },
   milk: { name: "Leche", icon: "🥛", price: 2.4 },
   meat: { name: "Carne", icon: "🍖", price: 0.6 },
-  "boiled-egg": { name: "Huevo hervido", icon: "🍳", price: 1.35 },
+  "boiled-egg": { name: "Huevo hervido", icon: "🍳", price: 0.07 },
 };
 
 export function getProductEconomy(productId: string): ProductEconomyDef | null {
@@ -157,3 +158,48 @@ export const SICKNESS_ECONOMY = {
   minSickIntervalDays: 14,
   checkIntervalSeconds: 10,
 };
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   💎 DIAMANTES — Paquetes de compra con dinero real
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+export interface DiamondPackage {
+  id: string;
+  diamonds: number;
+  price: number;
+  currency: string;
+  nameKey: string;
+  badge?: string;
+}
+
+export const DIAMOND_PACKAGES: DiamondPackage[] = [
+  { id: "initial",   diamonds: 80,    price: 0.99,  currency: "USD", nameKey: "diamond_pkg.initial",   badge: undefined },
+  { id: "basic",     diamonds: 420,   price: 4.99,  currency: "USD", nameKey: "diamond_pkg.basic",     badge: undefined },
+  { id: "farmer",    diamonds: 900,   price: 9.99,  currency: "USD", nameKey: "diamond_pkg.farmer",    badge: "⭐ MÁS POPULAR" },
+  { id: "big",       diamonds: 2000,  price: 19.99, currency: "USD", nameKey: "diamond_pkg.big",       badge: undefined },
+  { id: "premium",   diamonds: 5500,  price: 49.99, currency: "USD", nameKey: "diamond_pkg.premium",   badge: "🏆 MEJOR VALOR" },
+  { id: "mega",      diamonds: 12000, price: 99.99, currency: "USD", nameKey: "diamond_pkg.mega",      badge: "💎 PREMIUM" },
+];
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ⚡ PRECIOS DE ACELERACIÓN (diamantes por horas ahorradas)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+export interface AccelerationTier {
+  label: string;
+  hours: number;
+  diamonds: number;
+}
+
+export const ACCELERATION_TIERS: AccelerationTier[] = [
+  { label: "1h",       hours: 1,      diamonds: 12 },
+  { label: "2h",       hours: 2,      diamonds: 22 },
+  { label: "4h",       hours: 4,      diamonds: 40 },
+  { label: "8h",       hours: 8,      diamonds: 70 },
+  { label: "12h",      hours: 12,     diamonds: 95 },
+  { label: "24h",      hours: 24,     diamonds: 165 },
+  { label: "48h",      hours: 48,     diamonds: 290 },
+  { label: "72h",      hours: 72,     diamonds: 390 },
+  { label: "7d",       hours: 168,    diamonds: 750 },
+  { label: "14d",      hours: 336,    diamonds: 1300 },
+];

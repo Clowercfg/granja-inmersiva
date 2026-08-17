@@ -4,6 +4,7 @@ import { useT } from "../../store/languageStore";
 import { AnimalsPanel } from "./panels/AnimalsPanel";
 import { VetPanel } from "./panels/VetPanel";
 import { CropsPanel } from "./panels/CropsPanel";
+import { ProcessingPanel } from "./panels/ProcessingPanel";
 import { CalendarPanel } from "./panels/CalendarPanel";
 import { LanguagePanel } from "./panels/LanguagePanel";
 
@@ -11,6 +12,7 @@ const SECTIONS: Array<{ id: GameSectionId; labelKey: string; hintKey: string; ic
   { id: "animals", labelKey: "sidebar.animals", hintKey: "sidebar.animals_hint", icon: "🐄" },
   { id: "veterinary", labelKey: "sidebar.veterinary", hintKey: "sidebar.veterinary_hint", icon: "🩺" },
   { id: "crops", labelKey: "sidebar.crops", hintKey: "sidebar.crops_hint", icon: "🌾" },
+  { id: "processing", labelKey: "sidebar.processing", hintKey: "sidebar.processing_hint", icon: "🏭" },
   { id: "calendar", labelKey: "sidebar.calendar", hintKey: "sidebar.calendar_hint", icon: "📅" },
   { id: "language", labelKey: "sidebar.language", hintKey: "sidebar.language_hint", icon: "🌐" },
 ];
@@ -23,6 +25,8 @@ function PanelContent({ id }: { id: GameSectionId }) {
       return <VetPanel />;
     case "crops":
       return <CropsPanel />;
+    case "processing":
+      return <ProcessingPanel />;
     case "calendar":
       return <CalendarPanel />;
     case "language":

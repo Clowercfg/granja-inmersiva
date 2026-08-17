@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useCropStore, growthProgressOf, growthMsOf } from "../../../store/cropStore";
 import { useEconomyStore } from "../../../store/economyStore";
 import { CROP_ECONOMY } from "../../../config/economy";
-import { PLOT_ECONOMY } from "../../../config/crops";
 import { PLOTS } from "../../../utils/terrain";
 import { useUpgradesStore } from "../../../store/upgradesStore";
 import { useT } from "../../../store/languageStore";
@@ -35,6 +34,7 @@ export function CropsPanel() {
   const plantCrop = useCropStore((s) => s.plantCrop);
   const harvestCrop = useCropStore((s) => s.harvestCrop);
   const sellHarvest = useCropStore((s) => s.sellHarvest);
+  const findEmptyPlot = useCropStore((s) => s.findEmptyPlot);
   const gold = useEconomyStore((s) => s.gold);
   const granaryCapacity = useUpgradesStore((s) => s.capacityOf("granary"));
 
@@ -44,26 +44,35 @@ export function CropsPanel() {
   const totalPlanted = planted.reduce((acc, p) => acc + p.quantity, 0);
   const growing = planted.filter((p) => p.state === "growing").reduce((a, p) => a + p.quantity, 0);
   const ready = planted.filter((p) => p.state === "ready").reduce((a, p) => a + p.quantity, 0);
+  const emptyPlots = PLOTS.length - planted.length;
+
+  const handlePlant = (cropId: string) => {
+    const plotIndex = findEmptyPlot();
+    if (plotIndex < 0) return;
+    const result = plantCrop(cropId, plotIndex);
+    if (result && typeof result === "object" && "planted" in result) {
+      setTick((v) => v + 1);
+    }
+  };
 
   return (
     <PanelShell icon="🌾" title={t("panel.crops.title")} subtitle={t("panel.crops.subtitle")}>
       <div className="panel-grid">
-        <StatCell icon="🧱" label={t("panel.crops.plots")} value={PLOTS.length} />
+        <StatCell icon="🧱" label={t("panel.crops.plots")} value={`${PLOTS.length - emptyPlots}/${PLOTS.length}`} />
         <StatCell icon="🌱" label={t("panel.crops.seeds")} value={totalSeeds} />
-        <StatCell icon="🌿" label={t("panel.crops.planted") ?? "Sembrados"} value={totalPlanted} />
+        <StatCell icon="🌿" label={t("panel.crops.planted")} value={totalPlanted} />
         <StatCell icon="🧺" label={t("panel.crops.harvest")} value={totalHarvest} />
-        <StatCell icon="🏗️" label={t("panel.crops.capacity") ?? "Capacidad"} value={`${totalPlanted}/${granaryCapacity}`} />
+        <StatCell icon="🏗️" label={t("panel.crops.capacity")} value={`${totalPlanted}/${granaryCapacity}`} />
         <StatCell icon="💵" label="USD" value={gold.toFixed(2)} />
       </div>
 
       {cropIds.map((cropId) => {
         const econ = CROP_ECONOMY[cropId];
         const inv = inventory[cropId] ?? { seeds: 0, harvest: 0 };
-        const plotIndex = PLOT_ECONOMY.find((p) => p.cropId === cropId)?.plotIndex;
-        const plantedCrop =
-          plotIndex !== undefined ? (planted.find((p) => p.plotIndex === plotIndex) ?? null) : null;
+        const plantedCrop = planted.find((p) => p.cropId === cropId) ?? null;
+        const hasEmptyPlot = findEmptyPlot() >= 0;
         const canBuy = gold >= econ.seedPrice;
-        const canPlant = !plantedCrop && inv.seeds > 0 && totalPlanted < granaryCapacity;
+        const canPlant = inv.seeds > 0 && hasEmptyPlot && totalPlanted < granaryCapacity;
         const icon = CROP_ICON[cropId] ?? "🌱";
         const cropName = t(`crop.${cropId}`);
 
@@ -95,14 +104,7 @@ export function CropsPanel() {
               <button
                 className="btn small primary"
                 disabled={!canPlant}
-                onClick={() => {
-                  if (plotIndex !== undefined) {
-                    const result = plantCrop(cropId, plotIndex);
-                    if (result && typeof result === "object" && "planted" in result) {
-                      setTick((t) => t + 1);
-                    }
-                  }
-                }}
+                onClick={() => handlePlant(cropId)}
               >
                 {t("panel.crops.plant")} {inv.seeds > 0 ? `(${inv.seeds})` : ""}
               </button>
@@ -113,7 +115,7 @@ export function CropsPanel() {
                   if (plantedCrop) {
                     const result = harvestCrop(plantedCrop.id);
                     if (result && typeof result === "object" && "harvested" in result) {
-                      setTick((t) => t + 1);
+                      setTick((v) => v + 1);
                     }
                   }
                 }}
@@ -141,8 +143,7 @@ export function CropsPanel() {
       })}
 
       <PanelSection icon="🌿" title={t("panel.crops.growth")}>
-        {PLOT_ECONOMY.map(({ plotIndex, cropId }) => {
-          const econ = CROP_ECONOMY[cropId];
+        {PLOTS.map((plot, plotIndex) => {
           const plantedCrop = planted.find((p) => p.plotIndex === plotIndex) ?? null;
           const progress = plantedCrop ? growthProgressOf(plantedCrop) : 0;
           const remainingMs =
@@ -154,13 +155,18 @@ export function CropsPanel() {
             : plantedCrop.state === "ready"
               ? `${t("panel.crops.ready")} (${plantedCrop.quantity} u.)`
               : `${t("panel.crops.growing_left", { time: formatRemaining(remainingMs) })} (${plantedCrop.quantity} u.)`;
-          const icon = CROP_ICON[cropId] ?? "🌱";
+          const icon = plantedCrop ? (CROP_ICON[plantedCrop.cropId] ?? "🌱") : null;
+          const cropName = plantedCrop ? t(`crop.${plantedCrop.cropId}`) : null;
 
           return (
-            <div className="panelrow" key={cropId}>
-              <div className="panelrow-icon">{plantedCrop ? icon : "🟫"}</div>
+            <div className="panelrow" key={plotIndex}>
+              <div className="panelrow-icon">{icon ?? "🟫"}</div>
               <div className="panelrow-main">
-                <div className="panelrow-title">{t("panel.crops.plot_of", { name: t(`crop.${cropId}`).toLowerCase() })}</div>
+                <div className="panelrow-title">
+                  {cropName
+                    ? `${t("panel.crops.plot_of", { name: cropName.toLowerCase() })}`
+                    : `${t("panel.crops.plot_number", { n: plotIndex + 1 })}`}
+                </div>
                 <div className="panelrow-sub">{status}</div>
                 <div className={`bar ${plantedCrop?.state === "ready" ? "good" : "warn"}`} style={{ width: "100%" }}>
                   <div style={{ width: `${Math.round(progress * 100)}%` }} />

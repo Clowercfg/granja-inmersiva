@@ -20,6 +20,10 @@ export interface UpgradeLevelDef {
   price: number;
   /** Ganancia diaria ESTIMADA (informativa, provisional). */
   estDailyGain?: number;
+  /** Tiempo de procesamiento en horas (solo Procesadora). */
+  processHours?: number;
+  /** Costo por huevo en la Procesadora. */
+  costPerEgg?: number;
 }
 
 export interface SpecialUpgradeDef {
@@ -190,15 +194,15 @@ export const UPGRADES_ECONOMY: Record<string, BuildingUpgradeDef> = {
     name: "Procesadora",
     icon: "🏭",
     type: "capacity",
-    unit: "máquinas",
+    unit: "huevos",
     startLevel: 0,
-    estDailyGainPerUnit: 1.6,
+    estDailyGainPerUnit: 0.01,
     levels: [
-      { level: 1, capacity: 1, price: 20, estDailyGain: 1.6 },
-      { level: 2, capacity: 2, price: 50, estDailyGain: 4 },
-      { level: 3, capacity: 4, price: 120, estDailyGain: 9.6 },
-      { level: 4, capacity: 8, price: 275, estDailyGain: 22 },
-      { level: 5, capacity: 15, price: 600, estDailyGain: 48 },
+      { level: 1, capacity: 2, price: 5, processHours: 2, costPerEgg: 0.01 },
+      { level: 2, capacity: 4, price: 10, processHours: 1.75, costPerEgg: 0.009 },
+      { level: 3, capacity: 6, price: 20, processHours: 1.5, costPerEgg: 0.008 },
+      { level: 4, capacity: 10, price: 35, processHours: 1.25, costPerEgg: 0.007 },
+      { level: 5, capacity: 20, price: 60, processHours: 1, costPerEgg: 0.006 },
     ],
     specials: [],
   },
@@ -229,4 +233,19 @@ export function pigCycleDays(engorde1: boolean, engorde2: boolean): number {
   if (engorde1) days = Math.min(days, PIG_CYCLE_DAYS.engorde1Days);
   if (engorde2) days = Math.min(days, PIG_CYCLE_DAYS.engorde2Days);
   return days;
+}
+
+/** Obtiene los parámetros de procesamiento para un nivel dado de la Procesadora. */
+export function getProcessorLevelDef(level: number): { capacity: number; processHours: number; costPerEgg: number } {
+  const def = UPGRADES_ECONOMY.processing;
+  const lvl = def.levels.find((l) => l.level === level);
+  if (!lvl) {
+    const fallback = def.levels[0];
+    return { capacity: fallback.capacity ?? 2, processHours: fallback.processHours ?? 2, costPerEgg: fallback.costPerEgg ?? 0.01 };
+  }
+  return {
+    capacity: lvl.capacity ?? 2,
+    processHours: lvl.processHours ?? 2,
+    costPerEgg: lvl.costPerEgg ?? 0.01,
+  };
 }
