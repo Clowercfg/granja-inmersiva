@@ -37,6 +37,7 @@ import { WeatherSystem, Rain } from "../../systems/weather/WeatherSystem";
 import { EconomySystem } from "../../systems/economy/EconomySystem";
 import { CropSystem } from "../../systems/economy/CropSystem";
 import { VetSystem } from "../../systems/veterinary/VetSystem";
+import { ProcessingSystem } from "../../systems/processing/ProcessingSystem";
 import { PhysicsWorld } from "../../systems/physics/PhysicsWorld";
 import { InteriorCamera } from "../interiors/InteriorCamera";
 import { InteriorGroup } from "../interiors/InteriorGroup";
@@ -103,6 +104,7 @@ export function Experience() {
       <EconomySystem />
       <CropSystem />
       <VetSystem />
+      <ProcessingSystem />
       <PhysicsWorld />
       {booted && <PostFX />}
       </Canvas>

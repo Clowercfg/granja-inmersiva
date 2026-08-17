@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { getCropEconomy } from "../config/economy";
-import { PLOT_ECONOMY } from "../config/crops";
 import { useEconomyStore } from "./economyStore";
 import { useUpgradesStore } from "./upgradesStore";
+import { PLOTS } from "../utils/terrain";
 
 export type CropState = "growing" | "ready";
 
@@ -37,6 +37,8 @@ interface CropStore {
   buySeed: (cropId: string, qty?: number) => boolean;
   /** Siembra todas las semillas disponibles de un cultivo en una parcela (hasta capacidad granero). */
   plantCrop: (cropId: string, plotIndex: number) => { planted: number } | false;
+  /** Encuentra el primer índice de parcela vacía, o -1 si no hay ninguna libre. */
+  findEmptyPlot: () => number;
   /** Actualiza el estado de los cultivos según el tiempo transcurrido. */
   tick: () => void;
   /** Cosecha TODAS las unidades listas de una parcela. */
@@ -88,7 +90,7 @@ export const useCropStore = create<CropStore>((set, get) => ({
   plantCrop: (cropId, plotIndex) => {
     const econ = getCropEconomy(cropId);
     if (!econ) return false;
-    if (!PLOT_ECONOMY.some((p) => p.cropId === cropId && p.plotIndex === plotIndex)) return false;
+    if (plotIndex < 0 || plotIndex >= PLOTS.length) return false;
     if (get().planted.some((p) => p.plotIndex === plotIndex)) return false;
     const inv = get().inventory[cropId];
     if (!inv || inv.seeds < 1) return false;
@@ -109,6 +111,14 @@ export const useCropStore = create<CropStore>((set, get) => ({
       nextId: s.nextId + 1,
     }));
     return { planted: qtyToPlant };
+  },
+
+  findEmptyPlot: () => {
+    const occupied = new Set(get().planted.map((p) => p.plotIndex));
+    for (let i = 0; i < PLOTS.length; i++) {
+      if (!occupied.has(i)) return i;
+    }
+    return -1;
   },
 
   tick: () => {

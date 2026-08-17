@@ -18,6 +18,8 @@ import { FeedCards } from "./FeedCards";
 import { OfferCards } from "./OfferCards";
 import { Farmer } from "./Farmer";
 
+import { useDiamondStore } from "../../store/diamondStore";
+
 type StoreCategory = "crops" | "animals" | "products" | "process" | "infra" | "expansions" | "feed" | "offers";
 
 const CATEGORY_ORDER: StoreCategory[] = ["crops", "animals", "products", "process", "infra", "expansions", "feed"];
@@ -79,6 +81,7 @@ export function Store() {
   }, []);
 
   const featuredBlocked = featured ? !!validateAnimalCapacity(featured.items) : false;
+  const openDiamondModal = useDiamondStore((s) => s.openPurchaseModal);
 
   if (!storeOpen) return null;
 
@@ -99,10 +102,6 @@ export function Store() {
     }
     const def = getAnimalEconomy(item.kind ?? "");
     return `${item.qty}× ${def ? t(`animal.${item.kind}`) : item.kind}`;
-  };
-
-  const diamondHint = () => {
-    notify({ ok: false, message: t("store.coming_soon"), detail: t("store.coming_soon_detail") }, "💎");
   };
 
   return (
@@ -136,7 +135,7 @@ export function Store() {
                 <span className="res-label">{t("store.monedas")}</span>
                 <span className="res-value">{fmtMoney(displayGold)}</span>
               </div>
-              <button className="res-add" aria-label={t("store.buy_coins")} title={t("store.buy_coins")} onClick={diamondHint}>
+              <button className="res-add" aria-label={t("store.buy_coins")} title={t("store.buy_coins")} onClick={() => notify({ ok: false, message: t("store.coming_soon"), detail: t("store.coming_soon_detail") }, "🪙")}>
                 +
               </button>
             </div>
@@ -146,7 +145,7 @@ export function Store() {
                 <span className="res-label">{t("store.diamantes")}</span>
                 <span className="res-value">{diamonds}</span>
               </div>
-              <button className="res-add" aria-label={t("store.buy_diamonds")} title={t("store.buy_diamonds")} onClick={diamondHint}>
+              <button className="res-add" aria-label={t("store.buy_diamonds")} title={t("store.buy_diamonds")} onClick={openDiamondModal}>
                 +
               </button>
             </div>

@@ -63,6 +63,8 @@
     "veterinary_hint": "Health and treatments",
     "crops": "Crops",
     "crops_hint": "Plots and harvests",
+    "processing": "Processing",
+    "processing_hint": "Boiled egg and upgrades",
     "upgrades": "Upgrades",
     "upgrades_hint": "Levels and capacities",
     "inventory": "Inventory",
@@ -148,7 +150,8 @@
     "meat": "Meat",
     "honey": "Honey",
     "cheese": "Cheese",
-    "boiled-egg": "Boiled egg"
+    "boiled-egg": "Boiled egg",
+    "boiled-eggs": "Boiled eggs"
   },
   "building": {
     "generic": "building",
@@ -377,7 +380,9 @@
       "subtitle": "Planting, growth and sale",
       "plots": "Plots",
       "seeds": "Seeds",
+      "planted": "Planted",
       "harvest": "Harvest",
+      "capacity": "Capacity",
       "detail": "Seed {seed} · Growth {hours} h · Sale {sell} · Profit {profit}",
       "harvested": "{n} harvested",
       "buy_seed": "Buy seed",
@@ -391,6 +396,7 @@
       "ready": "Ready to harvest",
       "growing_left": "Growing · {time} left",
       "plot_of": "{name} plot",
+      "plot_number": "Plot {n}",
       "ready_short": "Ready!",
       "summary": "{ready} ready|{ready} ready · {growing} growing.",
       "hint": "In 3D: click the plot to plant, click the ready crop to harvest. Seeds and harvests in inventory don't count as USD until sold."
@@ -449,6 +455,39 @@
         "winter": "Winter: nights are long; the farm rests."
       },
       "hint": "The game clock is synced with the system time. The day and season change automatically at midnight and as months pass."
+    },
+    "processing": {
+      "title": "Processor",
+      "subtitle": "Converts products into higher-value products",
+      "level": "Level {level}",
+      "capacity_label": "Capacity",
+      "capacity": "Capacity: {qty} eggs",
+      "time": "Time",
+      "cost_per_egg": "Cost",
+      "sale_value": "Sale value",
+      "profit": "Profit",
+      "start": "PROCESS",
+      "active": "Processing",
+      "remaining": "remaining",
+      "completed": "Completed!",
+      "no_eggs": "You have no eggs",
+      "no_balance": "Insufficient balance",
+      "at_capacity": "Maximum capacity reached",
+      "locked": "Processor locked",
+      "locked_desc": "Buy level 1 to unlock the processor.",
+      "unlock": "UNLOCK",
+      "upgrade": "Upgrade Processor",
+      "buy": "UPGRADE",
+      "next_level": "Next level",
+      "benefit_capacity": "Capacity: {a} → {b} eggs",
+      "benefit_time": "Time: {a} → {b}",
+      "benefit_cost": "Cost: {a} → {b}/egg",
+      "info_title": "Economic info",
+      "info_egg": "Egg value",
+      "info_cost": "Processing cost",
+      "info_boiled": "Boiled egg value",
+      "info_profit": "Additional profit",
+      "hint": "Select the number of eggs to process. Cost is deducted when starting. Boiled eggs appear in the warehouse for selling."
     }
   },
   "crate": {
@@ -465,5 +504,54 @@
   "transition": {
     "entering": "Entering the {name}…",
     "leaving": "Leaving…"
+  },
+  "diamond": {
+    "title": "BUY DIAMONDS",
+    "subtitle": "Speed up your farm and save time.",
+    "buy": "BUY",
+    "processing": "PROCESSING…",
+    "close": "Close",
+    "back": "Back",
+    "footer": "Diamonds are a premium currency. Payments are processed securely.",
+    "purchase_completed": "Purchase completed",
+    "payment_pending": "Payment pending",
+    "payment_confirmed": "Payment confirmed",
+    "payment_cancelled": "Payment cancelled",
+    "payment_error": "Payment error",
+    "pay_for": "Pay for",
+    "select_crypto": "Select your cryptocurrency",
+    "sandbox": "SANDBOX MODE — Test payment, no real charge",
+    "address": "Payment address",
+    "amount": "Amount to send",
+    "network": "Network",
+    "payment_hint": "Send the exact amount to the shown address. Payment is confirmed automatically.",
+    "cancel_payment": "Cancel payment",
+    "payment_success": "Payment successful!",
+    "payment_success_desc": "Your diamonds have been credited to your account.",
+    "payment_failed": "Payment not completed",
+    "payment_failed_desc": "The payment was not processed. You can try again.",
+    "error_create": "Error creating payment. Please try again.",
+    "try_again": "Try again",
+    "payment_window_opened": "The NOWPayments page opened in a new tab.",
+    "open_payment_page": "Open payment page",
+    "status": {
+      "created": "Created",
+      "waiting": "Awaiting payment",
+      "confirming": "Confirming on network",
+      "confirmed": "Confirmed",
+      "finished": "Completed",
+      "failed": "Failed",
+      "expired": "Expired",
+      "cancelled": "Cancelled",
+      "error": "Error"
+    }
+  },
+  "diamond_pkg": {
+    "initial": "Starter",
+    "basic": "Basic",
+    "farmer": "Farmer",
+    "big": "Big",
+    "premium": "Premium",
+    "mega": "Mega"
   }
 }

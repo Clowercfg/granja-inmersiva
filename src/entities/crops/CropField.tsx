@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { useAsset } from "../../core/assets/useAsset";
 import { geometryFromObject, ensureWhiteVertexColors } from "../../core/assets/assetStore";
-import { CROP_TYPES, PLOT_CROPS, PLOT_ECONOMY, type CropTypeDef } from "../../config/crops";
+import { CROP_TYPES, PLOT_CROPS, type CropTypeDef } from "../../config/crops";
 import { PLOTS, type PlotRect } from "../../utils/terrain";
 import { terrainHeight } from "../../utils/terrain";
 import { isInsideBuilding } from "../../config/layout";
@@ -190,19 +190,18 @@ function GrowingCropRows({
   );
 }
 
-/** Parcela interactiva: clic para sembrar, clic en cultivo listo para cosechar. */
-function CropPlot({ cropId, plotIndex }: { cropId: string; plotIndex: number }) {
+/** Parcela interactiva: clic para sembrar (abre panel de cultivos), clic en cultivo listo para cosechar. */
+function CropPlot({ plotIndex }: { plotIndex: number }) {
   const planted = useCropStore((s) => s.planted.find((p) => p.plotIndex === plotIndex) ?? null);
   const [hovered, setHovered] = useState(false);
   const [harvestFlash, setHarvestFlash] = useState(false);
   const plot = PLOTS[plotIndex];
   const groundY = terrainHeight(plot.cx, plot.cz);
 
-  const cropDef = CROP_TYPES.find((c) => c.id === cropId) ?? CROP_TYPES[0];
+  const cropDef = planted ? (CROP_TYPES.find((c) => c.id === planted.cropId) ?? CROP_TYPES[0]) : null;
 
   const onPlotClick = () => {
     if (planted) return;
-    useCropStore.getState().plantCrop(cropId, plotIndex);
   };
   const onHarvest = () => {
     if (planted?.state !== "ready") return;
@@ -213,7 +212,7 @@ function CropPlot({ cropId, plotIndex }: { cropId: string; plotIndex: number }) 
 
   const onOver = () => {
     setHovered(true);
-    document.body.style.cursor = "pointer";
+    document.body.style.cursor = planted?.state === "ready" ? "pointer" : "default";
   };
   const onOut = () => {
     setHovered(false);
@@ -247,7 +246,7 @@ function CropPlot({ cropId, plotIndex }: { cropId: string; plotIndex: number }) 
           pulse={!!planted}
         />
       )}
-      {planted && <GrowingCropRows crop={cropDef} plot={plot} planted={planted} onHarvest={onHarvest} />}
+      {planted && cropDef && <GrowingCropRows crop={cropDef} plot={plot} planted={planted} onHarvest={onHarvest} />}
     </group>
   );
 }
@@ -255,7 +254,7 @@ function CropPlot({ cropId, plotIndex }: { cropId: string; plotIndex: number }) 
 export function CropField() {
   const rows = useMemo(
     () =>
-      PLOT_CROPS.filter((pc) => !PLOT_ECONOMY.some((p) => p.plotIndex === pc.plotIndex)).map((pc) => ({
+      PLOT_CROPS.filter((pc) => pc.plotIndex >= PLOTS.length || !PLOTS[pc.plotIndex]).map((pc) => ({
         crop: CROP_TYPES.find((c) => c.id === pc.cropId) ?? CROP_TYPES[0],
         plot: PLOTS[pc.plotIndex],
       })),
@@ -267,8 +266,8 @@ export function CropField() {
       {rows.map(({ crop, plot }) => (
         <CropFieldRows key={crop.id} crop={crop} plot={plot} />
       ))}
-      {PLOT_ECONOMY.map(({ cropId, plotIndex }) => (
-        <CropPlot key={cropId} cropId={cropId} plotIndex={plotIndex} />
+      {PLOTS.map((_, i) => (
+        <CropPlot key={i} plotIndex={i} />
       ))}
     </group>
   );
