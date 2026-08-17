@@ -11,6 +11,8 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
+    "@babylonjs/core": "^9.21.2",
+    "@babylonjs/loaders": "^9.21.2",
     "@react-spring/web": "^10.1.2",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",
