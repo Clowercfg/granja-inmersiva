@@ -222,7 +222,7 @@
   "store": {
     "tienda": "TIENDA",
     "de_la_granja": "DE LA GRANJA",
-    "monedas": "MONEDAS",
+    "monedas": "USDT",
     "deposit": "DEPOSITAR",
     "buy_coins": "Comprar monedas",
     "deposit_text": "Añade saldo mediante depósito crypto manual.",

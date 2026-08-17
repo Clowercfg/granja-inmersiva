@@ -222,7 +222,7 @@
   "store": {
     "tienda": "SHOP",
     "de_la_granja": "OF THE FARM",
-    "monedas": "COINS",
+    "monedas": "USDT",
     "deposit": "DEPOSIT",
     "buy_coins": "Buy coins",
     "deposit_text": "Add balance via manual crypto deposit.",

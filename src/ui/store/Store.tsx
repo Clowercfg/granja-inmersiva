@@ -135,9 +135,6 @@ export function Store() {
                 <span className="res-label">{t("store.monedas")}</span>
                 <span className="res-value">{fmtMoney(displayGold)}</span>
               </div>
-              <button className="res-add" aria-label={t("store.buy_coins")} title={t("store.buy_coins")} onClick={() => notify({ ok: false, message: t("store.coming_soon"), detail: t("store.coming_soon_detail") }, "🪙")}>
-                +
-              </button>
             </div>
             <div className="res-panel res-deposit">
               <span className="res-icon">💰</span>
