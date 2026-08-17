@@ -223,9 +223,10 @@
     "tienda": "SHOP",
     "de_la_granja": "OF THE FARM",
     "monedas": "COINS",
-    "diamantes": "DIAMONDS",
+    "deposit": "DEPOSIT",
     "buy_coins": "Buy coins",
-    "buy_diamonds": "Buy diamonds",
+    "deposit_text": "Add balance via manual crypto deposit.",
+    "deposit_button": "+ DEPOSIT",
     "close_store": "Close store",
     "tabs_aria": "Store categories",
     "category": {
@@ -503,5 +504,20 @@
   "transition": {
     "entering": "Entering the {name}…",
     "leaving": "Leaving…"
+  },
+  "deposit": {
+    "title": "DEPOSIT",
+    "subtitle": "To add balance you must make a crypto transfer and contact us on Telegram.",
+    "network": "Accepted network",
+    "wallet": "Wallet address",
+    "telegram_contact": "Telegram contact",
+    "contact_telegram": "CONTACT ON TELEGRAM",
+    "instructions": "After making the transfer, send us on Telegram:",
+    "instr_user": "Your Harvest Valley username",
+    "instr_amount": "Amount sent",
+    "instr_network": "Currency and network used",
+    "instr_tx": "TX Hash of the transfer",
+    "note": "Balance will be added manually after verifying the transaction on the blockchain.",
+    "history": "Confirmed deposits"
   }
 }

@@ -17,6 +17,7 @@ import { ExpansionCards } from "./ExpansionCards";
 import { FeedCards } from "./FeedCards";
 import { OfferCards } from "./OfferCards";
 import { Farmer } from "./Farmer";
+import { DepositPanel } from "./DepositPanel";
 
 type StoreCategory = "crops" | "animals" | "products" | "process" | "infra" | "expansions" | "feed" | "offers";
 
@@ -59,6 +60,7 @@ export function Store() {
   const [cat, setCat] = useState<StoreCategory>("crops");
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [fx, setFx] = useState<Fx[]>([]);
+  const [depositOpen, setDepositOpen] = useState(false);
 
   useEffect(() => {
     document.body.classList.toggle("store-open", storeOpen);
@@ -102,6 +104,7 @@ export function Store() {
   };
 
   return (
+    <>
     <div className="store-overlay">
       <div className="store-frame">
         <header className="store-top">
@@ -136,13 +139,12 @@ export function Store() {
                 +
               </button>
             </div>
-            <div className="res-panel res-diamonds">
-              <span className="res-icon">💎</span>
+            <div className="res-panel res-deposit">
+              <span className="res-icon">💰</span>
               <div className="res-meta">
-                <span className="res-label">{t("store.diamantes")}</span>
-                <span className="res-value">{diamonds}</span>
+                <span className="res-label">{t("store.deposit")}</span>
               </div>
-              <button className="res-add" aria-label={t("store.buy_diamonds")} title={t("store.buy_diamonds")} onClick={() => notify({ ok: false, message: t("store.coming_soon"), detail: t("store.coming_soon_detail") }, "💎")}>
+              <button className="res-add res-deposit-btn" aria-label={t("store.deposit")} title={t("store.deposit")} onClick={() => setDepositOpen(true)}>
                 +
               </button>
             </div>
@@ -261,11 +263,12 @@ export function Store() {
               </div>
             )}
 
-            <div className="diamond-panel">
-              <div className="diamond-panel-gems">💎💠💎</div>
-              <div className="diamond-panel-title">{t("store.diamantes")}</div>
-              <button className="diamond-btn" onClick={() => setCat("offers")}>
-                {t("store.ver_ofertas")}
+            <div className="deposit-sidebar">
+              <div className="deposit-sidebar-icon">💰</div>
+              <div className="deposit-sidebar-title">{t("store.deposit")}</div>
+              <p className="deposit-sidebar-text">{t("store.deposit_text")}</p>
+              <button className="deposit-sidebar-btn" onClick={() => setDepositOpen(true)}>
+                {t("store.deposit_button")}
               </button>
             </div>
           </aside>
@@ -288,6 +291,8 @@ export function Store() {
           </div>
         ))}
       </div>
-    </div>
+      </div>
+      {depositOpen && <DepositPanel onClose={() => setDepositOpen(false)} />}
+    </>
   );
 }

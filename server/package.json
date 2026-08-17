@@ -1,0 +1,16 @@
+{
+  "name": "harvest-valley-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Backend API for Harvest Valley — manual deposit system",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "sql.js": "^1.11.0"
+  }
+}

@@ -223,9 +223,10 @@
     "tienda": "TIENDA",
     "de_la_granja": "DE LA GRANJA",
     "monedas": "MONEDAS",
-    "diamantes": "DIAMANTES",
+    "deposit": "DEPOSITAR",
     "buy_coins": "Comprar monedas",
-    "buy_diamonds": "Comprar diamantes",
+    "deposit_text": "Añade saldo mediante depósito crypto manual.",
+    "deposit_button": "+ DEPOSITAR",
     "close_store": "Cerrar tienda",
     "tabs_aria": "Categorías de la tienda",
     "category": {
@@ -503,5 +504,20 @@
   "transition": {
     "entering": "Entrando al {name}…",
     "leaving": "Saliendo…"
+  },
+  "deposit": {
+    "title": "DEPÓSITO",
+    "subtitle": "Para añadir saldo debes realizar una transferencia crypto y contactarnos por Telegram.",
+    "network": "Red aceptada",
+    "wallet": "Dirección de wallet",
+    "telegram_contact": "Contacto Telegram",
+    "contact_telegram": "CONTACTAR POR TELEGRAM",
+    "instructions": "Después de realizar la transferencia, envíanos por Telegram:",
+    "instr_user": "Tu usuario de Harvest Valley",
+    "instr_amount": "Cantidad enviada",
+    "instr_network": "Moneda y red utilizada",
+    "instr_tx": "TX Hash de la transferencia",
+    "note": "El saldo será añadido manualmente después de verificar la transacción en la blockchain.",
+    "history": "Depósitos confirmados"
   }
 }
