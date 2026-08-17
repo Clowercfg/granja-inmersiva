@@ -75,13 +75,14 @@ export const useDiamondStore = create<DiamondStore>((set, get) => ({
         body: JSON.stringify({ userId: "guest", packageId, payCurrency }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        console.error("[Payment] create error:", err);
+        console.error("[Payment] create error:", data);
         return null;
       }
 
-      const order: PaymentOrder = await res.json();
+      const order: PaymentOrder = data;
       set({ activePayment: order });
 
       // Start polling

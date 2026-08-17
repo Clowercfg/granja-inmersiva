@@ -50,6 +50,13 @@ export async function createPayment({ priceAmount, priceCurrency, payCurrency, o
     };
   }
 
+  // Check if the currency is enabled before creating invoice
+  const enabled = await getEnabledCurrencies();
+  const normalizedCurrency = payCurrency.toLowerCase();
+  if (enabled.length > 0 && !enabled.includes(normalizedCurrency)) {
+    throw new Error(`Currency ${payCurrency.toUpperCase()} is not available. Available: ${enabled.map(c => c.toUpperCase()).join(", ")}`);
+  }
+
   const body = {
     price_amount: priceAmount,
     price_currency: priceCurrency.toLowerCase(),
@@ -114,6 +121,20 @@ export async function getMinAmount(payCurrency) {
   if (!res.ok) return null;
   const data = await res.json();
   return data.min_amount ?? null;
+}
+
+export async function getEnabledCurrencies() {
+  try {
+    const res = await fetch(`${getBaseUrl()}/v1/merchant/currencies`, {
+      headers: { "x-api-key": getApiKey() },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    // Response is array of {currency, enabled, ...}
+    return (data || []).filter((c) => c.enabled).map((c) => c.currency.toLowerCase());
+  } catch {
+    return [];
+  }
 }
 
 export { isSandbox, getBaseUrl };

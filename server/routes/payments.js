@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getDbSync, flushDb } from "../db.js";
-import { createPayment, verifyIpnSignature, isSandbox } from "../services/nowpayments.js";
+import { createPayment, verifyIpnSignature, isSandbox, getEnabledCurrencies } from "../services/nowpayments.js";
 import crypto from "crypto";
 
 const router = Router();
@@ -52,9 +52,15 @@ function generateOrderId() {
 /**
  * GET /api/payments/currencies
  */
-router.get("/currencies", (req, res) => {
-  const currencies = ["BTC", "ETH", "USDT", "USDC", "LTC", "BNB", "SOL", "DOGE", "XRP", "TRX", "MATIC", "DAI"];
-  res.json({ currencies });
+router.get("/currencies", async (req, res) => {
+  const enabled = await getEnabledCurrencies();
+  if (enabled.length > 0) {
+    // Return only uppercase enabled currencies
+    res.json({ currencies: enabled.map((c) => c.toUpperCase()) });
+  } else {
+    // Fallback if API fails
+    res.json({ currencies: ["BTC", "ETH", "USDC", "LTC", "BNB", "SOL", "DOGE", "XRP"] });
+  }
 });
 
 /**

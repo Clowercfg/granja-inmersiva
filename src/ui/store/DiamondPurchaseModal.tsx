@@ -4,7 +4,7 @@ import { useDiamondStore } from "../../store/diamondStore";
 import { useEconomyStore } from "../../store/economyStore";
 import { useT } from "../../store/languageStore";
 
-const CRYPTO_OPTIONS = ["BTC", "ETH", "USDT", "USDC", "LTC", "BNB", "SOL"];
+const DEFAULT_CRYPTOS = ["BTC", "ETH", "USDT", "USDC", "LTC", "BNB", "SOL"];
 
 type View = "packages" | "select-crypto" | "waiting" | "success" | "failed";
 
@@ -21,11 +21,23 @@ export function DiamondPurchaseModal() {
   const [selectedPkgId, setSelectedPkgId] = useState<string | null>(null);
   const [selectedCurrency, setSelectedCurrency] = useState("BTC");
   const [error, setError] = useState<string | null>(null);
+  const [cryptoOptions, setCryptoOptions] = useState<string[]>(DEFAULT_CRYPTOS);
 
   const selectedPkg = useMemo(
     () => DIAMOND_PACKAGES.find((p) => p.id === selectedPkgId) ?? null,
     [selectedPkgId]
   );
+
+  // Fetch real currencies from backend
+  useEffect(() => {
+    if (!isOpen) return;
+    fetch("/api/payments/currencies")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.currencies?.length > 0) setCryptoOptions(data.currencies);
+      })
+      .catch(() => {});
+  }, [isOpen]);
 
   // Reset view when modal opens/closes
   useEffect(() => {
@@ -160,7 +172,7 @@ export function DiamondPurchaseModal() {
             </div>
             <div className="diamond-crypto-label">{t("diamond.select_crypto")}</div>
             <div className="diamond-crypto-list">
-              {CRYPTO_OPTIONS.map((cur) => (
+              {cryptoOptions.map((cur) => (
                 <button
                   key={cur}
                   className={`diamond-crypto-option ${selectedCurrency === cur ? "diamond-crypto-option--active" : ""}`}
