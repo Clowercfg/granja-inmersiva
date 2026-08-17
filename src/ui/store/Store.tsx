@@ -18,8 +18,6 @@ import { FeedCards } from "./FeedCards";
 import { OfferCards } from "./OfferCards";
 import { Farmer } from "./Farmer";
 
-import { useDiamondStore } from "../../store/diamondStore";
-
 type StoreCategory = "crops" | "animals" | "products" | "process" | "infra" | "expansions" | "feed" | "offers";
 
 const CATEGORY_ORDER: StoreCategory[] = ["crops", "animals", "products", "process", "infra", "expansions", "feed"];
@@ -81,7 +79,6 @@ export function Store() {
   }, []);
 
   const featuredBlocked = featured ? !!validateAnimalCapacity(featured.items) : false;
-  const openDiamondModal = useDiamondStore((s) => s.openPurchaseModal);
 
   if (!storeOpen) return null;
 
@@ -145,7 +142,7 @@ export function Store() {
                 <span className="res-label">{t("store.diamantes")}</span>
                 <span className="res-value">{diamonds}</span>
               </div>
-              <button className="res-add" aria-label={t("store.buy_diamonds")} title={t("store.buy_diamonds")} onClick={openDiamondModal}>
+              <button className="res-add" aria-label={t("store.buy_diamonds")} title={t("store.buy_diamonds")} onClick={() => notify({ ok: false, message: t("store.coming_soon"), detail: t("store.coming_soon_detail") }, "💎")}>
                 +
               </button>
             </div>
@@ -267,7 +264,6 @@ export function Store() {
             <div className="diamond-panel">
               <div className="diamond-panel-gems">💎💠💎</div>
               <div className="diamond-panel-title">{t("store.diamantes")}</div>
-              <p>{t("store.diamond_panel_text")}</p>
               <button className="diamond-btn" onClick={() => setCat("offers")}>
                 {t("store.ver_ofertas")}
               </button>

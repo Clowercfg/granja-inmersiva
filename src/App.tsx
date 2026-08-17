@@ -5,7 +5,6 @@ import { Sidebar } from "./ui/sidebar/Sidebar";
 import { Store } from "./ui/store/Store";
 import { TransitionOverlay } from "./ui/TransitionOverlay";
 import { CrateOverlay } from "./ui/CrateOverlay";
-import { DiamondPurchaseModal } from "./ui/store/DiamondPurchaseModal";
 import { AuthPanel } from "./ui/auth/AuthPanel";
 import { clearSession, readSession } from "./ui/auth/authStore";
 import { getEngineMode } from "./engine/engineMode";
@@ -32,7 +31,6 @@ export default function App() {
         <HUD onLogout={() => { clearSession(); setUser(null); }} />
         <Sidebar />
         <Store />
-        <DiamondPurchaseModal />
         <TransitionOverlay />
         <CrateOverlay />
       </>
@@ -46,7 +44,6 @@ export default function App() {
       <HUD onLogout={() => { clearSession(); setUser(null); }} />
       <Sidebar />
       <Store />
-      <DiamondPurchaseModal />
       <TransitionOverlay />
       <CrateOverlay />
     </>
