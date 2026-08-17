@@ -5,8 +5,6 @@ export type GameSectionId =
   | "veterinary"
   | "crops"
   | "infrastructure"
-  | "upgrades"
-  | "inventory"
   | "calendar"
   | "language";
 

@@ -50,7 +50,7 @@ export function StoreCard({ children, className = "" }: { children: ReactNode; c
   return <div className={`scard ${className}`}>{children}</div>;
 }
 
-/** Selector de cantidad [- n +]. */
+/** Selector de cantidad [− n +] con campo editable. */
 export function QtyStepper({
   value,
   onChange,
@@ -62,14 +62,34 @@ export function QtyStepper({
   min?: number;
   max?: number;
 }) {
-  const clamp = (v: number) => Math.max(min, Math.min(max, v));
+  const clamp = (v: number) => Math.max(min, Math.min(max, Math.round(v)));
   const t = useT();
+  const [draft, setDraft] = useState(String(value));
+  const commit = () => {
+    const n = Number(draft);
+    if (!Number.isFinite(n)) { setDraft(String(value)); return; }
+    const clamped = clamp(n);
+    setDraft(String(clamped));
+    if (clamped !== value) onChange(clamped);
+  };
+  useEffect(() => { setDraft(String(value)); }, [value]);
   return (
     <div className="qty">
       <button className="qty-btn" disabled={value <= min} onClick={() => onChange(clamp(value - 1))} aria-label={t("store.qty_decrease_aria")}>
         −
       </button>
-      <span className="qty-value">{value}</span>
+      <input
+        className="qty-input"
+        type="number"
+        inputMode="numeric"
+        min={min}
+        max={max}
+        value={draft}
+        onFocus={(e) => e.target.select()}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+      />
       <button className="qty-btn" disabled={value >= max} onClick={() => onChange(clamp(value + 1))} aria-label={t("store.qty_increase_aria")}>
         +
       </button>

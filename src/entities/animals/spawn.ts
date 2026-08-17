@@ -40,13 +40,5 @@ export function createAnimalAgent(kind: AnimalKind, name: string, rng?: () => nu
 }
 
 export function spawnInitialAnimals(): void {
-  const rng = makeRng(987654321);
-  const store = useFarmStore.getState();
-
-  for (let i = 1; i <= 8; i++) {
-    store.registerAnimal(createAnimalAgent("cow", `VACA #${String(i).padStart(3, "0")}`, rng));
-  }
-  for (let i = 1; i <= 12; i++) {
-    store.registerAnimal(createAnimalAgent("chicken", `POLLO #${String(i).padStart(3, "0")}`, rng));
-  }
+  // Sin animales iniciales — el granjero empieza desde cero.
 }

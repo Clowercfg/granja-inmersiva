@@ -4,10 +4,11 @@ import { useEconomyStore } from "../../../store/economyStore";
 import { CROP_ECONOMY } from "../../../config/economy";
 import { PLOT_ECONOMY } from "../../../config/crops";
 import { PLOTS } from "../../../utils/terrain";
+import { useUpgradesStore } from "../../../store/upgradesStore";
 import { useT } from "../../../store/languageStore";
 import { PanelShell, PanelSection, StatCell } from "./PanelShell";
 
-const CROP_ICON: Record<string, string> = { wheat: "🌾", carrot: "🥕", potato: "🥔" };
+const CROP_ICON: Record<string, string> = { wheat: "🌾", carrot: "🥕", potato: "🥔", corn: "🌽" };
 
 function fmtPrice(n: number): string {
   return String(+n.toFixed(4));
@@ -35,19 +36,23 @@ export function CropsPanel() {
   const harvestCrop = useCropStore((s) => s.harvestCrop);
   const sellHarvest = useCropStore((s) => s.sellHarvest);
   const gold = useEconomyStore((s) => s.gold);
+  const granaryCapacity = useUpgradesStore((s) => s.capacityOf("granary"));
 
   const cropIds = Object.keys(CROP_ECONOMY);
   const totalSeeds = cropIds.reduce((acc, id) => acc + (inventory[id]?.seeds ?? 0), 0);
   const totalHarvest = cropIds.reduce((acc, id) => acc + (inventory[id]?.harvest ?? 0), 0);
-  const growing = planted.filter((p) => p.state === "growing").length;
-  const ready = planted.filter((p) => p.state === "ready").length;
+  const totalPlanted = planted.reduce((acc, p) => acc + p.quantity, 0);
+  const growing = planted.filter((p) => p.state === "growing").reduce((a, p) => a + p.quantity, 0);
+  const ready = planted.filter((p) => p.state === "ready").reduce((a, p) => a + p.quantity, 0);
 
   return (
     <PanelShell icon="🌾" title={t("panel.crops.title")} subtitle={t("panel.crops.subtitle")}>
       <div className="panel-grid">
         <StatCell icon="🧱" label={t("panel.crops.plots")} value={PLOTS.length} />
         <StatCell icon="🌱" label={t("panel.crops.seeds")} value={totalSeeds} />
+        <StatCell icon="🌿" label={t("panel.crops.planted") ?? "Sembrados"} value={totalPlanted} />
         <StatCell icon="🧺" label={t("panel.crops.harvest")} value={totalHarvest} />
+        <StatCell icon="🏗️" label={t("panel.crops.capacity") ?? "Capacidad"} value={`${totalPlanted}/${granaryCapacity}`} />
         <StatCell icon="💵" label="USD" value={gold.toFixed(2)} />
       </div>
 
@@ -58,7 +63,7 @@ export function CropsPanel() {
         const plantedCrop =
           plotIndex !== undefined ? (planted.find((p) => p.plotIndex === plotIndex) ?? null) : null;
         const canBuy = gold >= econ.seedPrice;
-        const canPlant = !plantedCrop && inv.seeds > 0;
+        const canPlant = !plantedCrop && inv.seeds > 0 && totalPlanted < granaryCapacity;
         const icon = CROP_ICON[cropId] ?? "🌱";
         const cropName = t(`crop.${cropId}`);
 
@@ -90,16 +95,30 @@ export function CropsPanel() {
               <button
                 className="btn small primary"
                 disabled={!canPlant}
-                onClick={() => plotIndex !== undefined && plantCrop(cropId, plotIndex)}
+                onClick={() => {
+                  if (plotIndex !== undefined) {
+                    const result = plantCrop(cropId, plotIndex);
+                    if (result && typeof result === "object" && "planted" in result) {
+                      setTick((t) => t + 1);
+                    }
+                  }
+                }}
               >
-                {t("panel.crops.plant")}
+                {t("panel.crops.plant")} {inv.seeds > 0 ? `(${inv.seeds})` : ""}
               </button>
               <button
                 className="btn small"
                 disabled={plantedCrop?.state !== "ready"}
-                onClick={() => plantedCrop && harvestCrop(plantedCrop.id)}
+                onClick={() => {
+                  if (plantedCrop) {
+                    const result = harvestCrop(plantedCrop.id);
+                    if (result && typeof result === "object" && "harvested" in result) {
+                      setTick((t) => t + 1);
+                    }
+                  }
+                }}
               >
-                {t("panel.crops.harvest_btn")}
+                {t("panel.crops.harvest_btn")} {plantedCrop?.state === "ready" && plantedCrop.quantity > 1 ? `(${plantedCrop.quantity})` : ""}
               </button>
               <button
                 className="btn small"
@@ -133,8 +152,8 @@ export function CropsPanel() {
           const status = !plantedCrop
             ? t("panel.crops.plot_empty")
             : plantedCrop.state === "ready"
-              ? t("panel.crops.ready")
-              : t("panel.crops.growing_left", { time: formatRemaining(remainingMs) });
+              ? `${t("panel.crops.ready")} (${plantedCrop.quantity} u.)`
+              : `${t("panel.crops.growing_left", { time: formatRemaining(remainingMs) })} (${plantedCrop.quantity} u.)`;
           const icon = CROP_ICON[cropId] ?? "🌱";
 
           return (
@@ -150,7 +169,7 @@ export function CropsPanel() {
               <div className="panelrow-side">
                 <b>
                   {plantedCrop?.state === "ready"
-                    ? t("panel.crops.ready_short")
+                    ? `${t("panel.crops.ready_short")} ×${plantedCrop.quantity}`
                     : plantedCrop
                       ? formatRemaining(remainingMs)
                       : "—"}

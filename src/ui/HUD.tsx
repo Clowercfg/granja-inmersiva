@@ -169,28 +169,10 @@ export function HUD({ onLogout }: { onLogout: () => void }) {
             className="profile-opt"
             onClick={() => {
               setShowProfile(false);
-              useUiStore.getState().openSection("inventory");
-            }}
-          >
-            📦 Inventario
-          </button>
-          <button
-            className="profile-opt"
-            onClick={() => {
-              setShowProfile(false);
               useUiStore.getState().openSection("calendar");
             }}
           >
             📅 Calendario
-          </button>
-          <button
-            className="profile-opt"
-            onClick={() => {
-              setShowProfile(false);
-              useUiStore.getState().openSection("upgrades");
-            }}
-          >
-            📈 Mejoras
           </button>
           <button
             className="profile-opt"

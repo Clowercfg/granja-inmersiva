@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { getCropEconomy } from "../config/economy";
 import { PLOT_ECONOMY } from "../config/crops";
 import { useEconomyStore } from "./economyStore";
+import { useUpgradesStore } from "./upgradesStore";
 
 export type CropState = "growing" | "ready";
 
@@ -11,6 +12,7 @@ export interface PlantedCrop {
   plotIndex: number;
   plantedAt: number;
   state: CropState;
+  quantity: number;
 }
 
 export interface CropInventory {
@@ -22,10 +24,10 @@ export interface CropInventory {
  * Economía de cultivos. Reglas:
  * - Comprar semillas descuenta su precio del saldo del jugador.
  * - La semilla se consume al sembrar (sin coste adicional).
- * - Tras `growthHours` (48 h para la zanahoria) el cultivo queda listo para cosechar.
+ * - Al sembrar se plantan TODAS las semillas disponibles de golpe (hasta capacidad del granero).
+ * - Tras `growthHours` el cultivo queda listo para cosechar.
+ * - Al cosechar se recogen TODAS las unidades listas de golpe.
  * - Al vender se añade el precio de venta por unidad al saldo.
- * - Semillas y cosechas en inventario NO se contabilizan como patrimonio monetario:
- *   solo se convierten en oro al vender.
  */
 interface CropStore {
   inventory: Record<string, CropInventory>;
@@ -33,12 +35,12 @@ interface CropStore {
   nextId: number;
   /** Compra semillas: descuenta qty * seedPrice del saldo y las añade al inventario. */
   buySeed: (cropId: string, qty?: number) => boolean;
-  /** Consume una semilla del inventario y registra la siembra (sin coste extra). */
-  plantCrop: (cropId: string, plotIndex: number) => boolean;
+  /** Siembra todas las semillas disponibles de un cultivo en una parcela (hasta capacidad granero). */
+  plantCrop: (cropId: string, plotIndex: number) => { planted: number } | false;
   /** Actualiza el estado de los cultivos según el tiempo transcurrido. */
   tick: () => void;
-  /** Si el cultivo está listo, lo mueve al inventario como cosecha. */
-  harvestCrop: (id: number) => boolean;
+  /** Cosecha TODAS las unidades listas de una parcela. */
+  harvestCrop: (id: number) => { harvested: number } | false;
   /** Vende cosecha del inventario: añade qty * sellPrice al saldo. */
   sellHarvest: (cropId: string, qty: number) => boolean;
   /** Añade cosecha al inventario (herramienta de prueba/depuración). */
@@ -90,18 +92,23 @@ export const useCropStore = create<CropStore>((set, get) => ({
     if (get().planted.some((p) => p.plotIndex === plotIndex)) return false;
     const inv = get().inventory[cropId];
     if (!inv || inv.seeds < 1) return false;
+    const granaryCapacity = useUpgradesStore.getState().capacityOf("granary");
+    const currentPlanted = get().planted.reduce((sum, p) => sum + p.quantity, 0);
+    const availableSpace = Math.max(0, granaryCapacity - currentPlanted);
+    const qtyToPlant = Math.min(inv.seeds, availableSpace);
+    if (qtyToPlant <= 0) return false;
     set((s) => ({
       inventory: {
         ...s.inventory,
-        [cropId]: { ...(s.inventory[cropId] ?? emptyInventory()), seeds: (s.inventory[cropId]?.seeds ?? 0) - 1 },
+        [cropId]: { ...(s.inventory[cropId] ?? emptyInventory()), seeds: (s.inventory[cropId]?.seeds ?? 0) - qtyToPlant },
       },
       planted: [
         ...s.planted,
-        { id: s.nextId, cropId, plotIndex, plantedAt: Date.now(), state: "growing" },
+        { id: s.nextId, cropId, plotIndex, plantedAt: Date.now(), state: "growing", quantity: qtyToPlant },
       ],
       nextId: s.nextId + 1,
     }));
-    return true;
+    return { planted: qtyToPlant };
   },
 
   tick: () => {
@@ -126,14 +133,15 @@ export const useCropStore = create<CropStore>((set, get) => ({
     const planted = get().planted;
     const crop = planted.find((p) => p.id === id);
     if (!crop || crop.state !== "ready") return false;
+    const qty = crop.quantity;
     set((s) => ({
       planted: s.planted.filter((p) => p.id !== id),
       inventory: {
         ...s.inventory,
-        [crop.cropId]: { ...(s.inventory[crop.cropId] ?? emptyInventory()), harvest: (s.inventory[crop.cropId]?.harvest ?? 0) + 1 },
+        [crop.cropId]: { ...(s.inventory[crop.cropId] ?? emptyInventory()), harvest: (s.inventory[crop.cropId]?.harvest ?? 0) + qty },
       },
     }));
-    return true;
+    return { harvested: qty };
   },
 
   sellHarvest: (cropId, qty) => {

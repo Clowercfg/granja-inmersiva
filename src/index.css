@@ -2203,13 +2203,33 @@ body.store-open .hud {
   cursor: not-allowed;
 }
 
-.qty-value {
+.qty-value,
+.qty-input {
   min-width: 42px;
+  width: 48px;
   text-align: center;
   font-weight: 900;
   font-size: 15px;
   font-variant-numeric: tabular-nums;
   color: #4a3520;
+}
+
+.qty-input {
+  background: transparent;
+  border: 1.5px solid transparent;
+  border-radius: 6px;
+  outline: none;
+  padding: 4px 2px;
+  -moz-appearance: textfield;
+}
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.qty-input:focus {
+  border-color: #b98a52;
+  background: #fdf6e8;
 }
 
 /* ============ BOTONES DE COMPRA ============ */

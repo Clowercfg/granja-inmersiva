@@ -194,6 +194,7 @@ function GrowingCropRows({
 function CropPlot({ cropId, plotIndex }: { cropId: string; plotIndex: number }) {
   const planted = useCropStore((s) => s.planted.find((p) => p.plotIndex === plotIndex) ?? null);
   const [hovered, setHovered] = useState(false);
+  const [harvestFlash, setHarvestFlash] = useState(false);
   const plot = PLOTS[plotIndex];
   const groundY = terrainHeight(plot.cx, plot.cz);
 
@@ -204,7 +205,10 @@ function CropPlot({ cropId, plotIndex }: { cropId: string; plotIndex: number }) 
     useCropStore.getState().plantCrop(cropId, plotIndex);
   };
   const onHarvest = () => {
-    if (planted?.state === "ready") useCropStore.getState().harvestCrop(planted.id);
+    if (planted?.state !== "ready") return;
+    useCropStore.getState().harvestCrop(planted.id);
+    setHarvestFlash(true);
+    setTimeout(() => setHarvestFlash(false), 600);
   };
 
   const onOver = () => {
@@ -216,7 +220,7 @@ function CropPlot({ cropId, plotIndex }: { cropId: string; plotIndex: number }) 
     document.body.style.cursor = "default";
   };
 
-  const ringColor = !planted ? "#7ac74f" : planted.state === "ready" ? "#ffd977" : "#ffffff";
+  const ringColor = harvestFlash ? "#7ac74f" : !planted ? "#7ac74f" : planted.state === "ready" ? "#ffd977" : "#ffffff";
 
   return (
     <group>
@@ -234,7 +238,7 @@ function CropPlot({ cropId, plotIndex }: { cropId: string; plotIndex: number }) 
         onPointerOut={onOut}
       >
         <planeGeometry args={[plot.w - 0.3, plot.d - 0.3]} />
-        <meshStandardMaterial color="#5e442e" roughness={1} metalness={0} />
+        <meshStandardMaterial color={harvestFlash ? "#3a7a1e" : "#5e442e"} roughness={1} metalness={0} />
       </mesh>
       {hovered && (
         <SelectionRing
