@@ -19,4 +19,5 @@ id = "ed0b35d0060a41fda7b43d36cb89980e"
 WALLET_ADDRESS = "TU_DIRECCION_AQUI"
 WALLET_NETWORK = "USDT (BEP20)"
 TELEGRAM = "@SerebryakovCuba"
+# PRODUCCION: usar `wrangler secret put ADMIN_SECRET` en vez de esto
 ADMIN_SECRET = "hv2026"

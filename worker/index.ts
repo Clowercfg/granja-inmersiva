@@ -1,7 +1,7 @@
 /**
  * Harvest Valley API — Cloudflare Worker
  * Uses D1 for database, KV for config.
- * Admin endpoints protected by bearer token.
+ * Admin endpoints protected by HMAC token with expiration.
  */
 
 export interface Env {
@@ -20,6 +20,13 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
+const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
+const MAX_DEPOSIT_AMOUNT = 1_000_000;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 10;
+
+const loginAttempts = new Map<string, { count: number; windowStart: number }>();
+
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -31,19 +38,51 @@ function error(msg: string, status = 400) {
   return json({ error: msg }, status);
 }
 
-async function hashPassword(secret: string): Promise<string> {
+async function hmacSign(secret: string, message: string): Promise<string> {
   const encoder = new TextEncoder();
-  const data = encoder.encode(secret);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+  const key = await crypto.subtle.importKey(
+    "raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(message));
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    loginAttempts.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+  entry.count++;
+  return entry.count > RATE_LIMIT_MAX;
 }
 
 async function verifyAdmin(request: Request, env: Env): Promise<boolean> {
   const auth = request.headers.get("Authorization");
   if (!auth?.startsWith("Bearer ")) return false;
   const token = auth.slice(7);
-  const expected = await hashPassword(env.ADMIN_SECRET);
-  return token === expected;
+
+  const now = Date.now();
+  const tsStr = token.slice(0, 13);
+  const receivedSig = token.slice(13);
+  const ts = parseInt(tsStr, 10);
+
+  if (isNaN(ts) || now - ts > SESSION_TTL_MS || ts > now) {
+    return false;
+  }
+
+  const expectedSig = await hmacSign(env.ADMIN_SECRET, tsStr);
+  return timingSafeEqual(receivedSig, expectedSig);
 }
 
 async function initDb(db: D1Database) {
@@ -67,35 +106,38 @@ export default {
     const path = url.pathname;
     const method = request.method;
 
-    // CORS preflight
     if (method === "OPTIONS") {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
 
-    // Ensure DB schema exists
-    try {
-      await initDb(env.DB);
-    } catch {}
+    try { await initDb(env.DB); } catch {}
 
     // ─── Health ───
     if (path === "/api/health" && method === "GET") {
       return json({ ok: true, timestamp: new Date().toISOString() });
     }
 
-    // ─── Admin: login (verify password, return token) ───
+    // ─── Admin: login ───
     if (path === "/api/admin/login" && method === "POST") {
+      const clientIP = request.headers.get("CF-Connecting-IP") || "unknown";
+      if (isRateLimited(clientIP)) {
+        return error("Demasiados intentos. Espera 1 minuto.", 429);
+      }
+
       const body = await request.json() as any;
       const { password } = body || {};
       if (!password) return error("Password required");
 
-      const inputHash = await hashPassword(password);
-      const expectedHash = await hashPassword(env.ADMIN_SECRET);
+      const inputHash = await hmacSign(env.ADMIN_SECRET, password);
+      const expectedHash = await hmacSign(env.ADMIN_SECRET, env.ADMIN_SECRET);
 
-      if (inputHash !== expectedHash) {
+      if (!timingSafeEqual(inputHash, expectedHash)) {
         return error("Invalid password", 401);
       }
 
-      return json({ ok: true, token: expectedHash });
+      const ts = Date.now().toString();
+      const sig = await hmacSign(env.ADMIN_SECRET, ts);
+      return json({ ok: true, token: ts + sig });
     }
 
     // ─── Deposit config (public) ───
@@ -148,24 +190,26 @@ export default {
       if (isNaN(numAmount) || numAmount <= 0) {
         return error("Cantidad inválida");
       }
+      if (numAmount > MAX_DEPOSIT_AMOUNT) {
+        return error(`Cantidad máxima: $${MAX_DEPOSIT_AMOUNT.toLocaleString()}`);
+      }
 
-      const finalCurrency = currency || "USDT";
-      const finalNetwork = network || "BEP20";
-      const finalAdmin = adminName || "admin";
-      const txHashClean = txHash?.trim() || `ADMIN-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const cleanName = playerName.trim().slice(0, 100);
+      const finalCurrency = (currency || "USDT").slice(0, 10);
+      const finalNetwork = (network || "BEP20").slice(0, 20);
+      const finalAdmin = (adminName || "admin").trim().slice(0, 100);
+      const txHashClean = txHash?.trim().slice(0, 200) || `ADMIN-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
       const existing = await env.DB.prepare("SELECT id FROM deposits WHERE tx_hash = ?1")
         .bind(txHashClean).first();
       if (existing) {
-        return error("Esta transacción ya fue registrada.", 409);
+        return error("Esta transaccion ya fue registrada.", 409);
       }
 
       await env.DB.prepare(
         `INSERT INTO deposits (player_name, amount, currency, network, tx_hash, status, confirmed_by, confirmed_at)
          VALUES (?1, ?2, ?3, ?4, ?5, 'completed', ?6, datetime('now'))`
-      ).bind(
-        playerName.trim(), numAmount, finalCurrency, finalNetwork, txHashClean, finalAdmin.trim()
-      ).run();
+      ).bind(cleanName, numAmount, finalCurrency, finalNetwork, txHashClean, finalAdmin).run();
 
       const deposit = await env.DB.prepare("SELECT * FROM deposits WHERE tx_hash = ?1")
         .bind(txHashClean).first();
@@ -222,7 +266,6 @@ export default {
       });
     }
 
-    // ─── 404 ───
     return error("Not found", 404);
   },
 };

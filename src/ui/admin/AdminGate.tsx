@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 const TOKEN_KEY = "hv_admin_token";
 
@@ -18,7 +18,18 @@ async function login(password: string): Promise<string | null> {
 }
 
 function getStoredToken(): string | null {
-  try { return sessionStorage.getItem(TOKEN_KEY); } catch { return null; }
+  try {
+    const token = sessionStorage.getItem(TOKEN_KEY);
+    if (!token) return null;
+    const ts = parseInt(token.slice(0, 13), 10);
+    if (isNaN(ts) || Date.now() - ts > 8 * 60 * 60 * 1000) {
+      sessionStorage.removeItem(TOKEN_KEY);
+      return null;
+    }
+    return token;
+  } catch {
+    return null;
+  }
 }
 
 function storeToken(token: string) {
@@ -30,6 +41,7 @@ export function AdminGate({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(getStoredToken);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [attempts, setAttempts] = useState(0);
 
   const handle = async () => {
     if (!input.trim()) return;
@@ -40,8 +52,10 @@ export function AdminGate({ children }: { children: ReactNode }) {
     if (result) {
       storeToken(result);
       setToken(result);
+      setAttempts(0);
     } else {
       setError(true);
+      setAttempts(a => a + 1);
     }
   };
 
@@ -73,6 +87,7 @@ export function AdminGate({ children }: { children: ReactNode }) {
           value={input}
           onChange={(e) => { setInput(e.target.value); setError(false); }}
           onKeyDown={(e) => e.key === "Enter" && handle()}
+          disabled={loading}
           style={{
             width: "100%",
             padding: "10px 12px",
@@ -87,10 +102,12 @@ export function AdminGate({ children }: { children: ReactNode }) {
             marginBottom: 12,
           }}
         />
-        {error && <div style={{ color: "#f44336", fontSize: 13, marginBottom: 8 }}>Contraseña incorrecta</div>}
+        {error && <div style={{ color: "#f44336", fontSize: 13, marginBottom: 8 }}>
+          {attempts >= 5 ? "Demasiados intentos. Espera." : "Contraseña incorrecta"}
+        </div>}
         <button
           onClick={handle}
-          disabled={loading}
+          disabled={loading || attempts >= 5}
           style={{
             width: "100%",
             padding: 10,
@@ -100,8 +117,8 @@ export function AdminGate({ children }: { children: ReactNode }) {
             color: "#fff",
             fontSize: 14,
             fontWeight: 700,
-            cursor: loading ? "not-allowed" : "pointer",
-            opacity: loading ? 0.6 : 1,
+            cursor: loading || attempts >= 5 ? "not-allowed" : "pointer",
+            opacity: loading || attempts >= 5 ? 0.6 : 1,
           }}
         >
           {loading ? "Verificando..." : "Entrar"}
