@@ -7,6 +7,7 @@ import { TransitionOverlay } from "./ui/TransitionOverlay";
 import { CrateOverlay } from "./ui/CrateOverlay";
 import { AuthPanel } from "./ui/auth/AuthPanel";
 import { AdminPanel } from "./ui/admin/AdminPanel";
+import { AdminGate } from "./ui/admin/AdminGate";
 import { clearSession, readSession } from "./ui/auth/authStore";
 import { getEngineMode } from "./engine/engineMode";
 
@@ -19,7 +20,7 @@ export default function App() {
   const engineMode = getEngineMode();
   const isAdmin = useMemo(() => window.location.pathname === "/admin", []);
 
-  if (isAdmin) return <AdminPanel />;
+  if (isAdmin) return <AdminGate><AdminPanel /></AdminGate>;
 
   if (!user) {
     return <AuthPanel onSuccess={(name) => setUser(name)} />;

@@ -3089,3 +3089,63 @@ body.store-open .hud {
   color: #4caf50;
   margin: 0 0 8px;
 }
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 600px;
+  margin: 0 auto 32px;
+}
+
+.admin-header h1 {
+  margin: 0;
+}
+
+.admin-refresh {
+  padding: 8px 16px;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 10px;
+  background: rgba(76, 175, 80, 0.1);
+  color: #c9e8c9;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.admin-refresh:hover {
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.admin-deposits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-deposit-item {
+  padding: 10px 12px;
+  background: rgba(76, 175, 80, 0.08);
+  border: 1px solid rgba(76, 175, 80, 0.15);
+  border-radius: 10px;
+}
+
+.admin-deposit-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.admin-deposit-amount {
+  color: #4caf50;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.admin-deposit-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #90b890;
+}

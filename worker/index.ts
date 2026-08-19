@@ -5,12 +5,11 @@
 
 export interface Env {
   DB: D1Database;
-  R2: R2Bucket;
+  R2?: R2Bucket;
   KV: KVNamespace;
   WALLET_ADDRESS: string;
   WALLET_NETWORK: string;
   TELEGRAM: string;
-  R2_PUBLIC_URL: string;
 }
 
 const CORS_HEADERS = {
@@ -103,16 +102,21 @@ export default {
       const body = await request.json() as any;
       const { playerName, amount, currency, network, txHash, adminName } = body || {};
 
-      if (!playerName || !amount || !currency || !network || !txHash || !adminName) {
-        return error("All fields are required");
+      if (!playerName || !amount) {
+        return error("Jugador y cantidad son requeridos");
       }
 
       const numAmount = parseFloat(amount);
       if (isNaN(numAmount) || numAmount <= 0) {
-        return error("Invalid amount");
+        return error("Cantidad inválida");
       }
 
-      const txHashClean = String(txHash).trim();
+      const finalCurrency = currency || "USDT";
+      const finalNetwork = network || "BEP20";
+      const finalAdmin = adminName || "admin";
+
+      // Auto-generate tx hash if not provided (manual credit)
+      const txHashClean = txHash?.trim() || `ADMIN-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
       // Check TX Hash uniqueness
       const existing = await env.DB.prepare("SELECT id FROM deposits WHERE tx_hash = ?1")
@@ -126,7 +130,7 @@ export default {
         `INSERT INTO deposits (player_name, amount, currency, network, tx_hash, status, confirmed_by, confirmed_at)
          VALUES (?1, ?2, ?3, ?4, ?5, 'completed', ?6, datetime('now'))`
       ).bind(
-        playerName.trim(), numAmount, currency, network, txHashClean, adminName.trim()
+        playerName.trim(), numAmount, finalCurrency, finalNetwork, txHashClean, finalAdmin.trim()
       ).run();
 
       // Get the inserted deposit
