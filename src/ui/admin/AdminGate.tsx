@@ -1,24 +1,51 @@
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 
-const ADMIN_KEY = "hv2026";
+const TOKEN_KEY = "hv_admin_token";
+
+async function login(password: string): Promise<string | null> {
+  try {
+    const res = await fetch("/api/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.token || null;
+  } catch {
+    return null;
+  }
+}
+
+function getStoredToken(): string | null {
+  try { return sessionStorage.getItem(TOKEN_KEY); } catch { return null; }
+}
+
+function storeToken(token: string) {
+  try { sessionStorage.setItem(TOKEN_KEY, token); } catch {}
+}
 
 export function AdminGate({ children }: { children: ReactNode }) {
   const [input, setInput] = useState("");
-  const [authed, setAuthed] = useState(() => {
-    try { return sessionStorage.getItem("hv_admin") === "1"; } catch { return false; }
-  });
+  const [token, setToken] = useState<string | null>(getStoredToken);
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  if (authed) return <>{children}</>;
-
-  const handle = () => {
-    if (input === ADMIN_KEY) {
-      try { sessionStorage.setItem("hv_admin", "1"); } catch {}
-      setAuthed(true);
+  const handle = async () => {
+    if (!input.trim()) return;
+    setLoading(true);
+    setError(false);
+    const result = await login(input);
+    setLoading(false);
+    if (result) {
+      storeToken(result);
+      setToken(result);
     } else {
       setError(true);
     }
   };
+
+  if (token) return <>{children}</>;
 
   return (
     <div style={{
@@ -63,6 +90,7 @@ export function AdminGate({ children }: { children: ReactNode }) {
         {error && <div style={{ color: "#f44336", fontSize: 13, marginBottom: 8 }}>Contraseña incorrecta</div>}
         <button
           onClick={handle}
+          disabled={loading}
           style={{
             width: "100%",
             padding: 10,
@@ -72,10 +100,11 @@ export function AdminGate({ children }: { children: ReactNode }) {
             color: "#fff",
             fontSize: 14,
             fontWeight: 700,
-            cursor: "pointer",
+            cursor: loading ? "not-allowed" : "pointer",
+            opacity: loading ? 0.6 : 1,
           }}
         >
-          Entrar
+          {loading ? "Verificando..." : "Entrar"}
         </button>
       </div>
     </div>

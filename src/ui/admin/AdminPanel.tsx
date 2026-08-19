@@ -27,6 +27,15 @@ interface RecentDeposit {
   confirmedAt: string;
 }
 
+function getAuthHeaders(): Record<string, string> {
+  try {
+    const token = sessionStorage.getItem("hv_admin_token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch {
+    return {};
+  }
+}
+
 export function AdminPanel() {
   const [playerName, setPlayerName] = useState("");
   const [playerInfo, setPlayerInfo] = useState<PlayerInfo | null>(null);
@@ -44,7 +53,10 @@ export function AdminPanel() {
     if (!playerName.trim()) return;
     setError(null);
     try {
-      const res = await fetch(`/api/admin/player/${encodeURIComponent(playerName.trim())}`);
+      const res = await fetch(`/api/admin/player/${encodeURIComponent(playerName.trim())}`, {
+        headers: getAuthHeaders(),
+      });
+      if (res.status === 401) { setError("Sesión expirada, recarga la página"); return; }
       if (res.ok) {
         setPlayerInfo(await res.json());
       }
@@ -55,7 +67,10 @@ export function AdminPanel() {
 
   const loadRecent = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/deposits?limit=20");
+      const res = await fetch("/api/admin/deposits?limit=20", {
+        headers: getAuthHeaders(),
+      });
+      if (res.status === 401) { setError("Sesión expirada, recarga la página"); return; }
       if (res.ok) {
         const data = await res.json();
         setRecentDeposits(data.deposits || []);
@@ -82,7 +97,7 @@ export function AdminPanel() {
     try {
       const res = await fetch("/api/admin/deposits", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({
           playerName: playerName.trim(),
           amount: numAmount,
@@ -92,6 +107,8 @@ export function AdminPanel() {
           adminName: adminName.trim() || "admin",
         }),
       });
+
+      if (res.status === 401) { setError("Sesión expirada, recarga la página"); return; }
 
       const data = await res.json();
 

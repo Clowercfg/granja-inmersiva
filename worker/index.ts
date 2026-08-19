@@ -1,6 +1,7 @@
 /**
  * Harvest Valley API — Cloudflare Worker
- * Replaces Express.js server. Uses D1 for database, KV for config.
+ * Uses D1 for database, KV for config.
+ * Admin endpoints protected by bearer token.
  */
 
 export interface Env {
@@ -10,12 +11,13 @@ export interface Env {
   WALLET_ADDRESS: string;
   WALLET_NETWORK: string;
   TELEGRAM: string;
+  ADMIN_SECRET: string;
 }
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
 function json(data: unknown, status = 200) {
@@ -27,6 +29,21 @@ function json(data: unknown, status = 200) {
 
 function error(msg: string, status = 400) {
   return json({ error: msg }, status);
+}
+
+async function hashPassword(secret: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(secret);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function verifyAdmin(request: Request, env: Env): Promise<boolean> {
+  const auth = request.headers.get("Authorization");
+  if (!auth?.startsWith("Bearer ")) return false;
+  const token = auth.slice(7);
+  const expected = await hashPassword(env.ADMIN_SECRET);
+  return token === expected;
 }
 
 async function initDb(db: D1Database) {
@@ -55,19 +72,33 @@ export default {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
 
-    // Ensure DB schema exists (first request)
+    // Ensure DB schema exists
     try {
       await initDb(env.DB);
-    } catch {
-      // Ignore if already exists
-    }
+    } catch {}
 
     // ─── Health ───
     if (path === "/api/health" && method === "GET") {
       return json({ ok: true, timestamp: new Date().toISOString() });
     }
 
-    // ─── Deposit config (from KV or env vars) ───
+    // ─── Admin: login (verify password, return token) ───
+    if (path === "/api/admin/login" && method === "POST") {
+      const body = await request.json() as any;
+      const { password } = body || {};
+      if (!password) return error("Password required");
+
+      const inputHash = await hashPassword(password);
+      const expectedHash = await hashPassword(env.ADMIN_SECRET);
+
+      if (inputHash !== expectedHash) {
+        return error("Invalid password", 401);
+      }
+
+      return json({ ok: true, token: expectedHash });
+    }
+
+    // ─── Deposit config (public) ───
     if (path === "/api/deposit/config" && method === "GET") {
       const wallet = (await env.KV.get("config:wallet_address")) || env.WALLET_ADDRESS;
       const network = (await env.KV.get("config:network")) || env.WALLET_NETWORK;
@@ -75,7 +106,7 @@ export default {
       return json({ walletAddress: wallet, network, telegram });
     }
 
-    // ─── Player deposits ───
+    // ─── Player deposits (public) ───
     const playerMatch = path.match(/^\/api\/deposits\/player\/(.+)$/);
     if (playerMatch && method === "GET") {
       const name = decodeURIComponent(playerMatch[1]);
@@ -97,6 +128,13 @@ export default {
       });
     }
 
+    // ─── All admin routes require auth below ───
+    if (path.startsWith("/api/admin/")) {
+      if (!(await verifyAdmin(request, env))) {
+        return error("Unauthorized", 401);
+      }
+    }
+
     // ─── Admin: confirm deposit ───
     if (path === "/api/admin/deposits" && method === "POST") {
       const body = await request.json() as any;
@@ -114,26 +152,21 @@ export default {
       const finalCurrency = currency || "USDT";
       const finalNetwork = network || "BEP20";
       const finalAdmin = adminName || "admin";
-
-      // Auto-generate tx hash if not provided (manual credit)
       const txHashClean = txHash?.trim() || `ADMIN-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-      // Check TX Hash uniqueness
       const existing = await env.DB.prepare("SELECT id FROM deposits WHERE tx_hash = ?1")
         .bind(txHashClean).first();
       if (existing) {
         return error("Esta transacción ya fue registrada.", 409);
       }
 
-      // Insert deposit
-      const result = await env.DB.prepare(
+      await env.DB.prepare(
         `INSERT INTO deposits (player_name, amount, currency, network, tx_hash, status, confirmed_by, confirmed_at)
          VALUES (?1, ?2, ?3, ?4, ?5, 'completed', ?6, datetime('now'))`
       ).bind(
         playerName.trim(), numAmount, finalCurrency, finalNetwork, txHashClean, finalAdmin.trim()
       ).run();
 
-      // Get the inserted deposit
       const deposit = await env.DB.prepare("SELECT * FROM deposits WHERE tx_hash = ?1")
         .bind(txHashClean).first();
 
