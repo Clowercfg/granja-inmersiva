@@ -4,11 +4,12 @@ import { useAuthStore } from "../../store/authStore";
 /**
  * TelegramGate:
  * Handles the entire auth flow:
- * 1. Detects Telegram Mini App → sends initData → auto-login
+ * 1. Initializes → detects Telegram → auto-login
  * 2. Dev mode: auto dev-login if outside Telegram
- * 3. Shows loading state while authenticating
- * 4. Shows error if not in Telegram (production)
- * 5. Renders children if authenticated
+ * 3. Shows loading state while bootstrapping / authenticating
+ * 4. Shows error if auth fails
+ * 5. Shows "not in Telegram" only AFTER bootstrap completes
+ * 6. Renders children if authenticated
  */
 export function TelegramGate({ children }: { children: React.ReactNode }) {
   const status = useAuthStore((s) => s.status);
@@ -16,28 +17,24 @@ export function TelegramGate({ children }: { children: React.ReactNode }) {
   const init = useAuthStore((s) => s.init);
 
   useEffect(() => {
-    if (status === "idle") {
+    if (status === "initializing") {
       init();
     }
   }, [status, init]);
 
-  if (status === "authenticated") {
-    return <>{children}</>;
+  switch (status) {
+    case "authenticated":
+      return <>{children}</>;
+    case "loading":
+      return <LoadingScreen />;
+    case "error":
+      return <ErrorScreen message={error || "Error de autenticación"} onRetry={init} />;
+    case "not_in_telegram":
+      return <NotInTelegramScreen />;
+    case "initializing":
+    default:
+      return <LoadingScreen />;
   }
-
-  if (status === "loading") {
-    return <LoadingScreen />;
-  }
-
-  if (status === "error") {
-    return <ErrorScreen message={error || "Error de autenticación"} onRetry={init} />;
-  }
-
-  if (status === "not_in_telegram") {
-    return <NotInTelegramScreen />;
-  }
-
-  return <LoadingScreen />;
 }
 
 function LoadingScreen() {

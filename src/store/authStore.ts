@@ -13,22 +13,22 @@ export interface TelegramUser {
   role: string;
 }
 
+export type AuthStatus =
+  | "initializing"
+  | "loading"
+  | "authenticated"
+  | "error"
+  | "not_in_telegram";
+
 interface AuthState {
   token: string | null;
   user: TelegramUser | null;
-  status: "idle" | "loading" | "authenticated" | "error" | "not_in_telegram";
+  status: AuthStatus;
   error: string | null;
 
-  /** Initialize auth: detect Telegram, send initData to backend */
   init: () => Promise<void>;
-
-  /** Dev mode: use /api/auth/dev-login */
   devLogin: () => Promise<void>;
-
-  /** Logout */
   logout: () => Promise<void>;
-
-  /** Get stored token */
   getToken: () => string | null;
 }
 
@@ -48,15 +48,65 @@ function clearToken() {
   try { localStorage.removeItem(SESSION_KEY); } catch {}
 }
 
-/** Detect if running inside Telegram Mini App */
-function isTelegramWebApp(): boolean {
-  return typeof window !== "undefined" && !!(window as any).Telegram?.WebApp?.initData;
+/* ─── Telegram WebApp helpers ─── */
+
+declare global {
+  interface Window {
+    Telegram?: { WebApp?: TelegramWebApp };
+  }
 }
 
-/** Get Telegram WebApp instance */
-function getTelegramWebApp(): any {
+interface TelegramWebApp {
+  initData: string;
+  initDataUnsafe?: Record<string, any>;
+  ready: () => void;
+  expand: () => void;
+  close: () => void;
+  colorScheme?: string;
+  themeParams?: Record<string, string>;
+  platform?: string;
+  version?: string;
+}
+
+function getTelegramWebApp(): TelegramWebApp | undefined {
   return (window as any).Telegram?.WebApp;
 }
+
+/**
+ * Primary Telegram detection — checks the official WebApp API.
+ * NOT user-agent based. Checks window.Telegram.WebApp.initData.
+ */
+function hasTelegramInitData(): boolean {
+  const tg = getTelegramWebApp();
+  return !!(tg && typeof tg.initData === "string" && tg.initData.length > 0);
+}
+
+/**
+ * Secondary detection — URL contains tgWebAppData param.
+ * This is present when Telegram opens a Mini App URL.
+ * Useful as fallback if the SDK hasn't fully initialized yet.
+ */
+function hasTelegramUrlParam(): boolean {
+  try {
+    const url = new URL(window.location.href);
+    return url.searchParams.has("tgWebAppData") || url.hash.includes("tgWebAppData");
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Combined Telegram context detection.
+ * Primary: official WebApp API with initData.
+ * Secondary: URL parameter presence (for early detection before SDK init).
+ */
+function detectTelegramContext(): "webapp" | "url_param" | "none" {
+  if (hasTelegramInitData()) return "webapp";
+  if (hasTelegramUrlParam()) return "url_param";
+  return "none";
+}
+
+/* ─── API helpers ─── */
 
 async function apiPost<T = any>(path: string, body: Record<string, unknown>, token?: string | null): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -80,57 +130,118 @@ async function apiGet<T = any>(path: string, token?: string | null): Promise<T> 
   return res.json();
 }
 
+/* ─── Telegram WebApp init ─── */
+
+function initTelegramWebAppUI() {
+  try {
+    const tg = getTelegramWebApp();
+    if (tg) {
+      if (tg.ready) tg.ready();
+      if (tg.expand) tg.expand();
+    }
+  } catch { /* ignore */ }
+}
+
+/* ─── Auth bootstrap ─── */
+
+/**
+ * Wait briefly for Telegram WebApp SDK to populate initData.
+ * When opened from Telegram, the SDK script loads and injects the
+ * object, but there's a small window where React may mount first.
+ *
+ * We poll with short intervals up to a max wait, then decide.
+ */
+async function waitForTelegramSdk(maxWaitMs = 2000): Promise<"webapp" | "none"> {
+  const interval = 100;
+  let elapsed = 0;
+
+  while (elapsed < maxWaitMs) {
+    if (hasTelegramInitData()) return "webapp";
+    await new Promise((r) => setTimeout(r, interval));
+    elapsed += interval;
+  }
+
+  return hasTelegramInitData() ? "webapp" : "none";
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   token: getStoredToken(),
   user: null,
-  status: "idle",
+  status: "initializing",
   error: null,
 
   init: async () => {
+    // Prevent double-init: only run if currently initializing
+    if (get().status !== "initializing") return;
+
+    // ── Step 1: Check existing session ──
     const stored = getStoredToken();
     if (stored) {
-      // Try to validate existing session
       set({ status: "loading" });
       try {
         const data = await apiGet("/me", stored);
         if (data.user) {
+          initTelegramWebAppUI();
           set({ token: stored, user: data.user, status: "authenticated", error: null });
-          // Initialize Telegram WebApp if available
-          initTelegramWebApp();
           return;
         }
       } catch {
-        // Invalid/expired session — clear and try fresh login
         clearToken();
       }
     }
 
-    // No valid session — check if in Telegram
-    const tgApp = getTelegramWebApp();
-    if (tgApp?.initData) {
-      // In Telegram — authenticate
+    // ── Step 2: Detect Telegram context ──
+    // First check immediately (SDK may already be loaded)
+    const quickDetection = detectTelegramContext();
+
+    if (quickDetection === "webapp") {
+      // Perfect — SDK is ready with initData
+      await authenticateWithTelegram();
+      return;
+    }
+
+    if (quickDetection === "url_param") {
+      // We're in Telegram but SDK hasn't fully loaded yet — wait briefly
       set({ status: "loading" });
-      try {
-        const data = await apiPost("/auth/telegram", { initData: tgApp.initData });
-        storeToken(data.token);
-        initTelegramWebApp();
-        set({ token: data.token, user: data.user, status: "authenticated", error: null });
-      } catch (err) {
-        set({ status: "error", error: (err as Error).message });
+      const result = await waitForTelegramSdk(1500);
+      if (result === "webapp") {
+        await authenticateWithTelegram();
+        return;
       }
-    } else if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
-      // Dev mode: outside Telegram — try dev-login
+    }
+
+    // ── Step 3: Dev mode fallback ──
+    if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
       set({ status: "loading" });
       try {
         const data = await apiGet("/auth/dev-login");
         storeToken(data.token);
         set({ token: data.token, user: data.user, status: "authenticated", error: null });
+        return;
       } catch {
-        set({ status: "not_in_telegram", error: null });
+        // dev-login unavailable — fall through
       }
-    } else {
-      // Production: not in Telegram
-      set({ status: "not_in_telegram", error: null });
+    }
+
+    // ── Step 4: Not in Telegram ──
+    set({ status: "not_in_telegram", error: null });
+
+    async function authenticateWithTelegram() {
+      const tgApp = getTelegramWebApp();
+      if (!tgApp?.initData) {
+        set({ status: "error", error: "Telegram WebApp initData not available" });
+        return;
+      }
+
+      set({ status: "loading" });
+      try {
+        const data = await apiPost("/auth/telegram", { initData: tgApp.initData });
+        storeToken(data.token);
+        initTelegramWebAppUI();
+        set({ token: data.token, user: data.user, status: "authenticated", error: null });
+      } catch (err) {
+        set({ status: "error", error: (err as Error).message });
+      }
     }
   },
 
@@ -149,23 +260,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const token = get().token;
     try { await apiPost("/auth/logout", {}, token); } catch { /* ignore */ }
     clearToken();
-    set({ token: null, user: null, status: "idle", error: null });
+    set({ token: null, user: null, status: "not_in_telegram", error: null });
   },
 
   getToken: () => get().token,
 }));
 
-/** Signal to Telegram that the Mini App is ready */
-function initTelegramWebApp() {
-  try {
-    const tgApp = getTelegramWebApp();
-    if (tgApp?.ready) tgApp.ready();
-  } catch { /* ignore */ }
-}
-
 /**
  * Get auth headers for API calls (bearer token).
- * Used by other stores to send authenticated requests.
  */
 export function getAuthHeaders(): Record<string, string> {
   const token = useAuthStore.getState().token;
