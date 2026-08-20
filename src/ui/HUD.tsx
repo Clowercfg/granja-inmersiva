@@ -9,7 +9,7 @@ import { animalRegistry } from "../store/farmStore";
 import { PRODUCTION_PRICE } from "../config/economy";
 import { getBuildingTypeByUid, getInteriorDef, hasInterior } from "../config/interiors";
 import type { DayPhase, Season } from "../systems/time/TimeManager";
-import { readSession } from "./auth/authStore";
+import { useAuthStore } from "../store/authStore";
 
 const PHASE_ICON: Record<DayPhase, string> = {
   dawn: "🌅",
@@ -46,10 +46,10 @@ export function HUD({ onLogout }: { onLogout: () => void }) {
   const gold = useEconomyStore((s) => s.gold);
   const interiorPhase = useInteriorStore((s) => s.phase);
   const interiorType = useInteriorStore((s) => s.type);
-  const [session] = useState(() => readSession());
   const [showHelp, setShowHelp] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const profileOpen = useRef(false);
+  const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
     profileOpen.current = showProfile;
@@ -85,7 +85,7 @@ export function HUD({ onLogout }: { onLogout: () => void }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const initials = (session?.name ?? "A")
+  const initials = (user?.firstName ?? "A")
     .split(/\s+/)
     .map((w) => w[0])
     .slice(0, 2)
@@ -142,7 +142,7 @@ export function HUD({ onLogout }: { onLogout: () => void }) {
             }}
             title="Abrir perfil"
           >
-            👤 <span className="profilebar-name">{session?.name ?? "Perfil"}</span>
+            👤 <span className="profilebar-name">{user?.firstName ?? "Perfil"}</span>
           </button>
           <button
             className="btn"
@@ -161,8 +161,8 @@ export function HUD({ onLogout }: { onLogout: () => void }) {
           <div className="profile-head">
             <div className="profile-avatar">{initials}</div>
             <div>
-              <b className="profile-name">{session?.name ?? "Agricultor"}</b>
-              <span className="profile-mail">{session?.email ?? "sin sesión"}</span>
+              <b className="profile-name">{user?.firstName ?? "Agricultor"}</b>
+              <span className="profile-mail">{user?.username ? `@${user.username}` : "conectado via Telegram"}</span>
             </div>
           </div>
           <button

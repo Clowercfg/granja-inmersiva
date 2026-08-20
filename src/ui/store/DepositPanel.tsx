@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useT } from "../../store/languageStore";
+import { useAuthStore } from "../../store/authStore";
+import { authFetch } from "../../store/authStore";
 
 interface DepositConfig {
   walletAddress: string;
@@ -18,18 +20,10 @@ interface DepositRecord {
 
 export function DepositPanel({ onClose }: { onClose: () => void }) {
   const t = useT();
+  const user = useAuthStore((s) => s.user);
   const [config, setConfig] = useState<DepositConfig | null>(null);
   const [deposits, setDeposits] = useState<DepositRecord[]>([]);
   const [copied, setCopied] = useState<string | null>(null);
-
-  const playerName = (() => {
-    try {
-      const raw = localStorage.getItem("granja_session");
-      return raw ? JSON.parse(raw).name : null;
-    } catch {
-      return null;
-    }
-  })();
 
   const loadConfig = useCallback(async () => {
     try {
@@ -39,15 +33,15 @@ export function DepositPanel({ onClose }: { onClose: () => void }) {
   }, []);
 
   const loadDeposits = useCallback(async () => {
-    if (!playerName) return;
+    if (!user) return;
     try {
-      const res = await fetch(`/api/deposits/player/${encodeURIComponent(playerName)}`);
+      const res = await authFetch("/deposits/player/me");
       if (res.ok) {
         const data = await res.json();
         setDeposits(data.deposits || []);
       }
     } catch { /* ignore */ }
-  }, [playerName]);
+  }, [user]);
 
   useEffect(() => {
     loadConfig();

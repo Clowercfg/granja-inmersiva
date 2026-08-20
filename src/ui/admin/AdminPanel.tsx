@@ -27,6 +27,32 @@ interface RecentDeposit {
   confirmedAt: string;
 }
 
+interface AffiliateRecord {
+  player_name: string;
+  affiliate_code: string;
+  referred_by: string | null;
+  status: string;
+  direct_count: number;
+  total_earned: number;
+  created_at: string;
+}
+
+interface CommissionRecord {
+  id: string;
+  beneficiary_user_id: string;
+  source_user_id: string;
+  affiliate_level: number;
+  commission_rate: number;
+  eligible_profit: number;
+  commission_amount: number;
+  status: string;
+  created_at: string;
+  beneficiary_code: string;
+  source_code: string;
+}
+
+type AdminTab = "deposits" | "affiliates";
+
 function getAuthHeaders(): Record<string, string> {
   try {
     const token = sessionStorage.getItem("hv_admin_token");
@@ -37,6 +63,7 @@ function getAuthHeaders(): Record<string, string> {
 }
 
 export function AdminPanel() {
+  const [activeTab, setActiveTab] = useState<AdminTab>("deposits");
   const [playerName, setPlayerName] = useState("");
   const [playerInfo, setPlayerInfo] = useState<PlayerInfo | null>(null);
   const [amount, setAmount] = useState("");
@@ -48,6 +75,34 @@ export function AdminPanel() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [recentDeposits, setRecentDeposits] = useState<RecentDeposit[]>([]);
+
+  // Affiliate admin state
+  const [affiliates, setAffiliates] = useState<AffiliateRecord[]>([]);
+  const [commissions, setCommissions] = useState<CommissionRecord[]>([]);
+  const [affSearch, setAffSearch] = useState("");
+  const [affLoading, setAffLoading] = useState(false);
+
+  const loadAffiliates = useCallback(async () => {
+    setAffLoading(true);
+    try {
+      const res = await fetch("/api/affiliate/admin/list?limit=50", { headers: getAuthHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setAffiliates(data.affiliates || []);
+      }
+    } catch { /* ignore */ }
+    setAffLoading(false);
+  }, []);
+
+  const loadCommissions = useCallback(async () => {
+    try {
+      const res = await fetch("/api/affiliate/admin/commissions?limit=50", { headers: getAuthHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setCommissions(data.commissions || []);
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   const searchPlayer = useCallback(async () => {
     if (!playerName.trim()) return;
@@ -133,12 +188,19 @@ export function AdminPanel() {
     <div className="admin-panel">
       <header className="admin-header">
         <h1>⚙️ Harvest Valley — Admin</h1>
-        <button className="admin-refresh" onClick={loadRecent}>Recargar historial</button>
       </header>
 
-      <section className="admin-section">
-        <h2>Añadir Saldo</h2>
-        <div className="admin-form">
+      <div className="admin-tabs">
+        <button className={`admin-tab ${activeTab === "deposits" ? "active" : ""}`} onClick={() => setActiveTab("deposits")}>💰 Depósitos</button>
+        <button className={`admin-tab ${activeTab === "affiliates" ? "active" : ""}`} onClick={() => { setActiveTab("affiliates"); loadAffiliates(); loadCommissions(); }}>🔗 Afiliados</button>
+      </div>
+
+      {activeTab === "deposits" && (
+        <>
+          <section className="admin-section">
+            <h2>Añadir Saldo</h2>
+            <button className="admin-refresh" onClick={loadRecent}>Recargar historial</button>
+            <div className="admin-form">
           <div className="admin-field">
             <label>Jugador *</label>
             <input
@@ -230,6 +292,73 @@ export function AdminPanel() {
             ))}
           </div>
         </section>
+      )}
+        </>
+      )}
+
+      {activeTab === "affiliates" && (
+        <>
+          <section className="admin-section">
+            <h2>Afiliados Registrados</h2>
+            <button className="admin-refresh" onClick={() => { loadAffiliates(); loadCommissions(); }}>Recargar</button>
+            {affLoading && <p style={{ color: "#999" }}>Cargando...</p>}
+            {!affLoading && affiliates.length === 0 && <p style={{ color: "#999" }}>No hay afiliados registrados.</p>}
+            <div className="admin-deposits-list">
+              {affiliates
+                .filter((a) => !affSearch || a.player_name.toLowerCase().includes(affSearch.toLowerCase()) || a.affiliate_code.toLowerCase().includes(affSearch.toLowerCase()))
+                .map((a) => (
+                <div key={a.player_name} className="admin-deposit-item">
+                  <div className="admin-deposit-main">
+                    <strong>{a.player_name}</strong>
+                    <span style={{ fontFamily: "monospace", color: "#c9a8ff" }}>{a.affiliate_code}</span>
+                    <span className="admin-deposit-amount">${(a.total_earned || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="admin-deposit-meta">
+                    <span>{a.status}</span>
+                    <span>{a.direct_count} referidos</span>
+                    <span>{a.referred_by ? `↓ ${a.referred_by}` : "sin patrocinador"}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="admin-section">
+            <h2>Últimas Comisiones</h2>
+            {commissions.length === 0 && <p style={{ color: "#999" }}>No hay comisiones registradas.</p>}
+            <div className="admin-deposits-list">
+              {commissions.map((c) => (
+                <div key={c.id} className="admin-deposit-item">
+                  <div className="admin-deposit-main">
+                    <strong>{c.beneficiary_user_id}</strong>
+                    <span style={{ color: "#7060a0", fontSize: 12 }}>← {c.source_user_id}</span>
+                    <span className="admin-deposit-amount">+${c.commission_amount.toFixed(2)}</span>
+                  </div>
+                  <div className="admin-deposit-meta">
+                    <span>L{c.affiliate_level}</span>
+                    <span>{(c.commission_rate * 100).toFixed(3)}%</span>
+                    <span>${c.eligible_profit.toFixed(2)} profit</span>
+                    <span>{c.status}</span>
+                    <span>{c.created_at}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      )}
+
+      {error && <div className="admin-error">{error}</div>}
+      {result && activeTab === "deposits" && (
+        <div className="admin-success">
+          <h3>✅ Saldo Añadido</h3>
+          <div><strong>Jugador:</strong> {result.playerName}</div>
+          <div><strong>Monto:</strong> ${result.amount.toFixed(2)} {result.currency}</div>
+          <div><strong>Red:</strong> {result.network}</div>
+          <div><strong>TX:</strong> {result.txHash}</div>
+          <div><strong>Confirmado por:</strong> {result.confirmedBy}</div>
+          <div><strong>Fecha:</strong> {result.confirmedAt}</div>
+        </div>
       )}
     </div>
   );

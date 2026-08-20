@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { getDb, saveDb } from "../db.js";
+import { optionalAuth, requireAuth } from "../middleware/auth.js";
 
 export function createDepositsRouter(dbPath) {
   const router = Router();
@@ -17,18 +18,15 @@ export function createDepositsRouter(dbPath) {
   });
 
   /**
-   * GET /api/deposits/player/:name
-   * Returns all completed deposits for a player.
+   * GET /api/deposits/player/me
+   * Returns all completed deposits for the authenticated user.
    */
-  router.get("/deposits/player/:name", (req, res) => {
+  router.get("/deposits/player/me", optionalAuth, requireAuth, (req, res) => {
     const db = getDb();
-    const name = req.params.name?.trim();
-    if (!name) return res.status(400).json({ error: "Player name required" });
-
     const stmt = db.prepare(
       "SELECT id, amount, currency, network, tx_hash, confirmed_at FROM deposits WHERE player_name = ? AND status = 'completed' ORDER BY confirmed_at DESC"
     );
-    stmt.bind([name]);
+    stmt.bind([req.userId]);
     const rows = [];
     while (stmt.step()) {
       const r = stmt.getAsObject();

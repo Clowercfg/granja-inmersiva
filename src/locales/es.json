@@ -72,7 +72,9 @@
     "calendar": "Calendario",
     "calendar_hint": "Fecha real y estación",
     "language": "Idioma",
-    "language_hint": "Cambia el idioma de la interfaz"
+    "language_hint": "Cambia el idioma de la interfaz",
+    "affiliates": "Afiliados",
+    "affiliates_hint": "Referidos y comisiones"
   },
   "language": {
     "title": "Idioma",
@@ -519,5 +521,45 @@
     "instr_tx": "TX Hash de la transferencia",
     "note": "El saldo será añadido manualmente después de verificar la transacción en la blockchain.",
     "history": "Depósitos confirmados"
+  },
+  "affiliate": {
+    "title": "AFILIADOS",
+    "subtitle": "Red de referidos y comisiones",
+    "your_code": "Tu código de afiliado",
+    "register_referral": "Registrarse con código de referido",
+    "code_placeholder": "Ingresa código (ej: FARM-X7K92A)",
+    "register_btn": "Vincular",
+    "register_success": "¡Registro exitoso! Ya formas parte de la red.",
+    "stats": "Estadísticas",
+    "direct_referrals": "Referidos directos",
+    "total_network": "Red total",
+    "pending": "Pendiente",
+    "available": "Disponible",
+    "total_earned": "Total ganado",
+    "by_level": "Desglose por nivel",
+    "level": "Nivel",
+    "users": "Usuarios",
+    "profit": "Ganancia",
+    "commission": "Comisión",
+    "tree": "Árbol de referidos",
+    "you": "TÚ",
+    "history": "Historial de comisiones",
+    "loading": "Cargando...",
+    "login_required": "Inicia sesión para ver tu panel de afiliados.",
+    "status": {
+      "pending": "Pendiente",
+      "available": "Disponible",
+      "reversed": "Revertido",
+      "cancelled": "Cancelado"
+    },
+    "error": {
+      "missing_fields": "Faltan campos obligatorios",
+      "invalid_code": "Código de referido no válido",
+      "referrer_inactive": "El patrocinador no está activo",
+      "self_referral": "No puedes invitarte a ti mismo",
+      "already_referred": "Ya tienes un patrocinador",
+      "cycle_detected": "Esta relación crearía un ciclo",
+      "network_error": "Error de red"
+    }
   }
 }

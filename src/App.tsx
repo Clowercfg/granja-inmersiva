@@ -1,14 +1,14 @@
-import { Suspense, lazy, useState, useMemo } from "react";
+import { Suspense, lazy, useMemo } from "react";
 import { Experience } from "./core/world/Experience";
 import { HUD } from "./ui/HUD";
 import { Sidebar } from "./ui/sidebar/Sidebar";
 import { Store } from "./ui/store/Store";
 import { TransitionOverlay } from "./ui/TransitionOverlay";
 import { CrateOverlay } from "./ui/CrateOverlay";
-import { AuthPanel } from "./ui/auth/AuthPanel";
+import { TelegramGate } from "./ui/auth/TelegramGate";
 import { AdminPanel } from "./ui/admin/AdminPanel";
 import { AdminGate } from "./ui/admin/AdminGate";
-import { clearSession, readSession } from "./ui/auth/authStore";
+import { useAuthStore } from "./store/authStore";
 import { getEngineMode } from "./engine/engineMode";
 
 const BabylonCanvasLazy = lazy(() =>
@@ -16,15 +16,20 @@ const BabylonCanvasLazy = lazy(() =>
 );
 
 export default function App() {
-  const [user, setUser] = useState<string | null>(() => readSession()?.name ?? null);
   const engineMode = getEngineMode();
   const isAdmin = useMemo(() => window.location.pathname === "/admin", []);
 
   if (isAdmin) return <AdminGate><AdminPanel /></AdminGate>;
 
-  if (!user) {
-    return <AuthPanel onSuccess={(name) => setUser(name)} />;
-  }
+  return (
+    <TelegramGate>
+      <AppContent engineMode={engineMode} />
+    </TelegramGate>
+  );
+}
+
+function AppContent({ engineMode }: { engineMode: string }) {
+  const logout = useAuthStore((s) => s.logout);
 
   // ─── Modo Babylon (?engine=babylon) ───
   if (engineMode === "babylon") {
@@ -33,7 +38,7 @@ export default function App() {
         <Suspense fallback={<div style={{ position: "fixed", inset: 0, background: "#1a2a1a", color: "#c9a84c", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif", fontSize: 18, zIndex: 99999 }}>Cargando Babylon.js...</div>}>
           <BabylonCanvasLazy />
         </Suspense>
-        <HUD onLogout={() => { clearSession(); setUser(null); }} />
+        <HUD onLogout={logout} />
         <Sidebar />
         <Store />
         <TransitionOverlay />
@@ -46,7 +51,7 @@ export default function App() {
   return (
     <>
       <Experience />
-      <HUD onLogout={() => { clearSession(); setUser(null); }} />
+      <HUD onLogout={logout} />
       <Sidebar />
       <Store />
       <TransitionOverlay />

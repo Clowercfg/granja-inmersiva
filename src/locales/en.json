@@ -72,7 +72,9 @@
     "calendar": "Calendar",
     "calendar_hint": "Real date and season",
     "language": "Language",
-    "language_hint": "Change the interface language"
+    "language_hint": "Change the interface language",
+    "affiliates": "Affiliates",
+    "affiliates_hint": "Referrals and commissions"
   },
   "language": {
     "title": "Language",
@@ -519,5 +521,45 @@
     "instr_tx": "TX Hash of the transfer",
     "note": "Balance will be added manually after verifying the transaction on the blockchain.",
     "history": "Confirmed deposits"
+  },
+  "affiliate": {
+    "title": "AFFILIATES",
+    "subtitle": "Referral network and commissions",
+    "your_code": "Your affiliate code",
+    "register_referral": "Register with referral code",
+    "code_placeholder": "Enter code (e.g: FARM-X7K92A)",
+    "register_btn": "Link",
+    "register_success": "Registration successful! You are now part of the network.",
+    "stats": "Statistics",
+    "direct_referrals": "Direct referrals",
+    "total_network": "Total network",
+    "pending": "Pending",
+    "available": "Available",
+    "total_earned": "Total earned",
+    "by_level": "Breakdown by level",
+    "level": "Level",
+    "users": "Users",
+    "profit": "Profit",
+    "commission": "Commission",
+    "tree": "Referral tree",
+    "you": "YOU",
+    "history": "Commission history",
+    "loading": "Loading...",
+    "login_required": "Log in to view your affiliate dashboard.",
+    "status": {
+      "pending": "Pending",
+      "available": "Available",
+      "reversed": "Reversed",
+      "cancelled": "Cancelled"
+    },
+    "error": {
+      "missing_fields": "Missing required fields",
+      "invalid_code": "Invalid referral code",
+      "referrer_inactive": "Sponsor is not active",
+      "self_referral": "You cannot refer yourself",
+      "already_referred": "You already have a sponsor",
+      "cycle_detected": "This relationship would create a cycle",
+      "network_error": "Network error"
+    }
   }
 }
