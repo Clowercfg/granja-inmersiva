@@ -160,28 +160,6 @@ export const SICKNESS_ECONOMY = {
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   💎 DIAMANTES — Paquetes de compra con dinero real
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-export interface DiamondPackage {
-  id: string;
-  diamonds: number;
-  price: number;
-  currency: string;
-  nameKey: string;
-  badge?: string;
-}
-
-export const DIAMOND_PACKAGES: DiamondPackage[] = [
-  { id: "initial",   diamonds: 80,    price: 0.99,  currency: "USD", nameKey: "diamond_pkg.initial",   badge: undefined },
-  { id: "basic",     diamonds: 420,   price: 4.99,  currency: "USD", nameKey: "diamond_pkg.basic",     badge: undefined },
-  { id: "farmer",    diamonds: 900,   price: 9.99,  currency: "USD", nameKey: "diamond_pkg.farmer",    badge: "⭐ MÁS POPULAR" },
-  { id: "big",       diamonds: 2000,  price: 19.99, currency: "USD", nameKey: "diamond_pkg.big",       badge: undefined },
-  { id: "premium",   diamonds: 5500,  price: 49.99, currency: "USD", nameKey: "diamond_pkg.premium",   badge: "🏆 MEJOR VALOR" },
-  { id: "mega",      diamonds: 12000, price: 99.99, currency: "USD", nameKey: "diamond_pkg.mega",      badge: "💎 PREMIUM" },
-];
-
-/* ═══════════════════════════════════════════════════════════════════════════
    ⚡ PRECIOS DE ACELERACIÓN (diamantes por horas ahorradas)
    ═══════════════════════════════════════════════════════════════════════════ */
 

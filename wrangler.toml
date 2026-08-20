@@ -1,0 +1,23 @@
+name = "harvest-valley-api"
+main = "worker/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# ─── D1 Database ───
+[[d1_databases]]
+binding = "DB"
+database_name = "harvest_valley_db"
+database_id = "3ffd9d94-ac75-4832-888b-a8b6d98725b7"
+
+# ─── KV (config cache) ───
+[[kv_namespaces]]
+binding = "KV"
+id = "ed0b35d0060a41fda7b43d36cb89980e"
+
+# ─── Environment Variables ───
+[vars]
+WALLET_ADDRESS = "TU_DIRECCION_AQUI"
+WALLET_NETWORK = "USDT (BEP20)"
+TELEGRAM = "@SerebryakovCuba"
+# PRODUCCION: usar `wrangler secret put ADMIN_SECRET` en vez de esto
+ADMIN_SECRET = "hv2026"

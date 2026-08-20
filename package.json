@@ -6,9 +6,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:full": "wrangler dev & vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc -b --noEmit",
+    "deploy:setup": "pwsh scripts/setup-cloudflare.ps1",
+    "deploy:api": "wrangler deploy",
+    "deploy:pages": "wrangler pages deploy dist",
+    "deploy": "npm run build && npm run deploy:api && npm run deploy:pages",
+    "db:init": "wrangler d1 migrations apply harvest_valley_db"
   },
   "dependencies": {
     "@babylonjs/core": "^9.21.2",
@@ -26,6 +32,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240923.0",
     "@types/node": "^26.2.0",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.18",

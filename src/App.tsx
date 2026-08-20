@@ -1,12 +1,13 @@
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, useState, useMemo } from "react";
 import { Experience } from "./core/world/Experience";
 import { HUD } from "./ui/HUD";
 import { Sidebar } from "./ui/sidebar/Sidebar";
 import { Store } from "./ui/store/Store";
 import { TransitionOverlay } from "./ui/TransitionOverlay";
 import { CrateOverlay } from "./ui/CrateOverlay";
-import { DiamondPurchaseModal } from "./ui/store/DiamondPurchaseModal";
 import { AuthPanel } from "./ui/auth/AuthPanel";
+import { AdminPanel } from "./ui/admin/AdminPanel";
+import { AdminGate } from "./ui/admin/AdminGate";
 import { clearSession, readSession } from "./ui/auth/authStore";
 import { getEngineMode } from "./engine/engineMode";
 
@@ -17,6 +18,9 @@ const BabylonCanvasLazy = lazy(() =>
 export default function App() {
   const [user, setUser] = useState<string | null>(() => readSession()?.name ?? null);
   const engineMode = getEngineMode();
+  const isAdmin = useMemo(() => window.location.pathname === "/admin", []);
+
+  if (isAdmin) return <AdminGate><AdminPanel /></AdminGate>;
 
   if (!user) {
     return <AuthPanel onSuccess={(name) => setUser(name)} />;
@@ -32,7 +36,6 @@ export default function App() {
         <HUD onLogout={() => { clearSession(); setUser(null); }} />
         <Sidebar />
         <Store />
-        <DiamondPurchaseModal />
         <TransitionOverlay />
         <CrateOverlay />
       </>
@@ -46,7 +49,6 @@ export default function App() {
       <HUD onLogout={() => { clearSession(); setUser(null); }} />
       <Sidebar />
       <Store />
-      <DiamondPurchaseModal />
       <TransitionOverlay />
       <CrateOverlay />
     </>

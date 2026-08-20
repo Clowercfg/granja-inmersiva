@@ -70,8 +70,19 @@ export const ASSETS: Record<string, AssetDef> = {
   "prop:sign": { url: "assets/3d/props/sign.glb", kind: "gltf" },
 };
 
-/** Resuelve una ruta pública respetando el base de Vite (./ en build, / en dev). */
+/**
+ * Resolves asset URL. Uses R2 public URL in production, local paths in dev.
+ * Set VITE_R2_PUBLIC_URL env var for production R2 bucket.
+ */
 export function resolveUrl(path: string): string {
+  // In production, use R2 bucket URL
+  const r2Url = import.meta.env.VITE_R2_PUBLIC_URL;
+  if (r2Url) {
+    // path is like "assets/3d/animals/cow.glb" → strip "assets/" prefix for R2
+    const r2Path = path.replace(/^assets\//, "");
+    return r2Url.replace(/\/$/, "") + "/" + r2Path;
+  }
+  // In development, use local paths
   const base = import.meta.env.BASE_URL;
   const prefix = base.endsWith("/") ? base : base + "/";
   return prefix + path;
