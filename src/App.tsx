@@ -2,6 +2,7 @@ import { Suspense, lazy, useMemo } from "react";
 import { Experience } from "./core/world/Experience";
 import { HUD } from "./ui/HUD";
 import { Sidebar } from "./ui/sidebar/Sidebar";
+import { BottomBar } from "./ui/BottomBar";
 import { Store } from "./ui/store/Store";
 import { TransitionOverlay } from "./ui/TransitionOverlay";
 import { CrateOverlay } from "./ui/CrateOverlay";
@@ -40,6 +41,7 @@ function AppContent({ engineMode }: { engineMode: string }) {
         </Suspense>
         <HUD onLogout={logout} />
         <Sidebar />
+        <BottomBar />
         <Store />
         <TransitionOverlay />
         <CrateOverlay />
@@ -53,6 +55,7 @@ function AppContent({ engineMode }: { engineMode: string }) {
       <Experience />
       <HUD onLogout={logout} />
       <Sidebar />
+      <BottomBar />
       <Store />
       <TransitionOverlay />
       <CrateOverlay />

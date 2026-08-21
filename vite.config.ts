@@ -1,8 +1,18 @@
-import { defineConfig } from "vite";
+import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 
+function telegramSdkPlugin(): Plugin {
+  return {
+    name: "telegram-sdk",
+    transformIndexHtml(html) {
+      const tag = `<script src="https://telegram.org/js/telegram-web-app.js"></script>`;
+      return html.replace("</head>", `    ${tag}\n  </head>`);
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), telegramSdkPlugin()],
   base: "./",
   build: {
     target: "es2022",

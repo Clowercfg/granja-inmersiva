@@ -10,10 +10,7 @@ import { LanguagePanel } from "./panels/LanguagePanel";
 import { AffiliatePanel } from "./panels/AffiliatePanel";
 
 const SECTIONS: Array<{ id: GameSectionId; labelKey: string; hintKey: string; icon: string }> = [
-  { id: "animals", labelKey: "sidebar.animals", hintKey: "sidebar.animals_hint", icon: "🐄" },
   { id: "veterinary", labelKey: "sidebar.veterinary", hintKey: "sidebar.veterinary_hint", icon: "🩺" },
-  { id: "crops", labelKey: "sidebar.crops", hintKey: "sidebar.crops_hint", icon: "🌾" },
-  { id: "processing", labelKey: "sidebar.processing", hintKey: "sidebar.processing_hint", icon: "🏭" },
   { id: "calendar", labelKey: "sidebar.calendar", hintKey: "sidebar.calendar_hint", icon: "📅" },
   { id: "language", labelKey: "sidebar.language", hintKey: "sidebar.language_hint", icon: "🌐" },
   { id: "affiliates", labelKey: "sidebar.affiliates", hintKey: "sidebar.affiliates_hint", icon: "🔗" },

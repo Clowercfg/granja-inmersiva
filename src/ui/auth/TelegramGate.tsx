@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useAuthStore } from "../../store/authStore";
+import "./auth.css";
 
 /**
  * TelegramGate:

@@ -554,7 +554,7 @@ canvas {
   left: 84px;
   top: 84px;
   width: 320px;
-  max-height: calc(100vh - 140px);
+  max-height: calc(100dvh - 140px);
   overflow-y: auto;
   background: rgba(8, 18, 28, 0.88);
   border: 1px solid rgba(140, 200, 150, 0.2);
@@ -1189,6 +1189,73 @@ canvas {
 
 .sbtn-store.active .sbtn-label {
   color: #fff3d6;
+}
+
+/* ============ BOTTOM BAR ============ */
+
+.bottombar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 25;
+  display: flex;
+  gap: 0;
+  background: rgba(8, 18, 28, 0.92);
+  border-top: 1px solid rgba(140, 200, 150, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.bb-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 10px 4px 8px;
+  border: none;
+  background: transparent;
+  color: #8fa89a;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bb-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 18%;
+  right: 18%;
+  height: 2px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg, rgba(122, 199, 79, 0.6), rgba(170, 240, 170, 0.9), rgba(122, 199, 79, 0.6));
+  transform: scaleX(0);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bb-btn.active::before {
+  transform: scaleX(1);
+}
+
+.bb-btn.active {
+  color: #eaffdc;
+}
+
+.bb-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+.bb-label {
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  font-weight: 700;
 }
 
 /* Mientras la tienda estÃ¡ abierta, la HUD se atenÃºa para dejar ver la granja 3D. */
@@ -2695,7 +2762,7 @@ body.store-open .hud {
   position: relative;
   width: 100%;
   max-width: 520px;
-  max-height: 90vh;
+  max-height: 90dvh;
   overflow-y: auto;
   background: linear-gradient(145deg, #1e2a1a, #162012);
   border: 2px solid #4caf50;
@@ -2973,7 +3040,7 @@ body.store-open .hud {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .admin-panel {
-  min-height: 100vh;
+  min-height: 100dvh;
   background: #111811;
   color: #e0f0e0;
   font-family: "Nunito", sans-serif;
@@ -3388,4 +3455,360 @@ body.store-open .hud {
   padding: 24px;
   color: #7060a0;
   font-size: 13px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   📱 MOBILE OPTIMIZATION — Telegram Mini App + Phones
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Global mobile fixes ── */
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, input, select, textarea {
+  font-size: 16px !important;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="password"],
+input[type="email"] {
+  min-height: 44px;
+}
+
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ── Topbar: stack on narrow screens ── */
+
+@media (max-width: 480px) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
+  .brand h1 { font-size: 12px; letter-spacing: 1.5px; }
+  .brand span { font-size: 9px; }
+
+  .timeblock {
+    order: 3;
+    width: 100%;
+    gap: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .timeblock span { font-size: 10px; }
+  .timeblock b { font-size: 13px; }
+  .clock b { font-size: 16px; }
+  .clock-sec { display: none; }
+
+  .rightbar { gap: 6px; }
+  .pill { padding: 4px 8px; font-size: 12px; }
+  .profilebar-name { max-width: 70px; }
+}
+
+/* ── Small phones (≤380px) ── */
+
+@media (max-width: 380px) {
+  .topbar { padding: 6px 8px; gap: 4px; }
+  .brand h1 { font-size: 11px; letter-spacing: 1px; }
+  .brand span { display: none; }
+  .timeblock { gap: 4px; padding: 4px 8px; }
+  .pill { padding: 4px 6px; font-size: 11px; }
+  .btn { padding: 5px 8px; font-size: 12px; }
+}
+
+/* ── Sidebar rail: constrain height on short screens ── */
+
+@media (max-height: 640px) {
+  .sidebar-rail {
+    max-height: calc(100dvh - 80px);
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .sidebar-rail::-webkit-scrollbar { display: none; }
+}
+
+/* ── Sidebar panel: full-width sheet on mobile ── */
+
+@media (max-width: 480px) {
+  .sidepanel {
+    left: 8px;
+    right: 8px;
+    width: auto;
+    top: 60px;
+    max-height: calc(100dvh - 80px);
+    border-radius: 14px;
+  }
+
+  .sidepanel-close {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .sbtn {
+    width: 52px;
+    padding: 8px 4px;
+  }
+
+  .sbtn-icon { font-size: 20px; }
+  .sbtn-label { font-size: 8px; }
+}
+
+/* ── Left panel (selection): full-width on mobile ── */
+
+@media (max-width: 480px) {
+  .leftpanel {
+    left: 8px;
+    right: 8px;
+    top: auto;
+    bottom: 80px;
+    width: auto;
+    max-width: none;
+  }
+}
+
+/* ── Help + Profile panels: reposition on mobile ── */
+
+@media (max-width: 480px) {
+  .helppanel,
+  .profilepanel {
+    right: 8px;
+    left: 8px;
+    top: 60px;
+    width: auto;
+    max-width: none;
+  }
+
+  .profile-mail { max-width: 140px; }
+}
+
+/* ── Exit button: avoid collision with crate overlay on mobile ── */
+
+@media (max-width: 480px) {
+  .exitbutton {
+    right: 10px;
+    bottom: 10px;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+/* ── Crate overlay: responsive width on mobile ── */
+
+@media (max-width: 480px) {
+  .crateoverlay {
+    left: 8px;
+    right: 8px;
+    transform: none;
+    bottom: 12px;
+  }
+  .crateoverlay-card {
+    min-width: 0;
+    width: 100%;
+    padding: 10px 12px;
+  }
+  .crateoverlay-actions { flex-wrap: wrap; }
+}
+
+/* ── Store overlay: full-width on mobile ── */
+
+@media (max-width: 480px) {
+  .store-overlay { left: 0; }
+  .store-frame { padding: 6px 8px 8px; gap: 6px; }
+
+  .store-top { gap: 8px; }
+  .store-sign { display: none; }
+
+  .store-tabs { padding: 6px 8px; gap: 4px; }
+  .store-tab { padding: 7px 10px; font-size: 10px; gap: 4px; }
+  .store-tab-icon { font-size: 15px; }
+
+  .store-mid { gap: 8px; }
+
+  .panel-head { padding: 10px 12px; gap: 6px; }
+  .panel-head-title { font-size: 13px; letter-spacing: 1px; }
+  .panel-body { padding: 10px; }
+
+  .store-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .scard { padding: 12px; }
+  .scard-icon { font-size: 36px; }
+  .scard-title { font-size: 12px; }
+
+  .store-right > * { flex-basis: 100%; }
+
+  .res-panel { padding: 5px 7px; gap: 6px; border-radius: 10px; }
+  .res-icon { font-size: 18px; }
+  .res-value { font-size: 14px; }
+  .res-label { font-size: 7px; }
+  .res-add { width: 26px; height: 26px; font-size: 14px; }
+  .store-close { width: 32px; height: 32px; font-size: 14px; }
+
+  .buybtn { padding: 10px; font-size: 12px; }
+  .scard-info-btn { width: 28px; height: 28px; font-size: 14px; }
+
+  .offer-special { padding: 14px 12px 12px; }
+  .diamond-panel { padding: 12px; }
+}
+
+/* ── Deposit modal: mobile-friendly ── */
+
+@media (max-width: 480px) {
+  .deposit-backdrop { padding: 8px; }
+  .deposit-modal {
+    max-height: calc(100dvh - 16px);
+    border-radius: 14px;
+    padding: 20px 16px 16px;
+  }
+  .deposit-close {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+  .deposit-header h2 { font-size: 18px; }
+  .deposit-address { font-size: 12px; padding: 8px 10px; }
+  .deposit-copy {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* ── Admin panel: mobile ── */
+
+@media (max-width: 480px) {
+  .admin-panel {
+    min-height: 100dvh;
+    padding: 16px 12px;
+  }
+  .admin-header h1 { font-size: 22px; }
+  .admin-section { padding: 14px; }
+  .admin-deposit-meta { flex-wrap: wrap; gap: 6px; }
+  .admin-row { flex-wrap: wrap; }
+  .admin-row input { min-width: 0; }
+  .admin-tabs { flex-wrap: wrap; }
+  .admin-tab { min-width: 0; font-size: 12px; padding: 8px 12px; }
+  .admin-row button,
+  .admin-confirm-btn { width: 100%; }
+}
+
+/* ── Aff table: horizontal scroll wrapper ── */
+
+.aff-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.aff-table-wrap::-webkit-scrollbar { display: none; }
+
+/* ── Deposit history items: stack on mobile ── */
+
+@media (max-width: 480px) {
+  .deposit-item-main { flex-wrap: wrap; }
+  .deposit-item-meta { flex-wrap: wrap; gap: 4px; }
+}
+
+/* ── Telegram Gate screens: safe area support ── */
+
+/* ── Bottom bar: safe area + mobile tweaks ── */
+
+@media (max-width: 480px) {
+  .bottombar {
+    border-top: 1px solid rgba(140, 200, 150, 0.25);
+  }
+  .bb-icon { font-size: 22px; }
+  .bb-label { font-size: 9px; }
+  .bb-btn { padding: 8px 4px 6px; }
+
+  .sidepanel {
+    max-height: calc(100dvh - 140px);
+    bottom: 72px;
+    top: auto;
+  }
+}
+
+@media (pointer: coarse) {
+  .bb-btn { min-height: 48px; }
+}
+
+.tg-loading {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Login / AuthPanel: improve mobile ── */
+
+@media (max-width: 480px) {
+  .tg-loading-card {
+    max-width: 320px;
+    padding: 30px 24px;
+  }
+  .tg-loading-text { font-size: 14px; }
+  .tg-loading-sub { font-size: 12px; }
+  .tg-error-text { font-size: 14px; }
+  .tg-error-detail { font-size: 12px; }
+}
+
+/* ── Landscape / very short screens ── */
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .sidebar-rail {
+    max-height: calc(100dvh - 40px);
+    gap: 4px;
+    padding: 4px;
+  }
+  .sbtn { padding: 6px 4px; }
+  .sbtn-icon { font-size: 18px; }
+  .sbtn-label { display: none; }
+
+  .sidepanel {
+    top: 8px;
+    max-height: calc(100dvh - 16px);
+  }
+}
+
+/* ── Safe area padding for Telegram Mini App ── */
+
+@supports (padding: env(safe-area-inset-top)) {
+  .topbar {
+    padding-top: max(10px, env(safe-area-inset-top));
+  }
+  .exitbutton {
+    bottom: max(16px, calc(env(safe-area-inset-bottom) + 8px));
+  }
+  .crateoverlay {
+    bottom: max(12px, calc(env(safe-area-inset-bottom) + 4px));
+  }
+}
+
+/* ── Improve tap targets globally on mobile ── */
+
+@media (pointer: coarse) {
+  .btn { min-height: 44px; min-width: 44px; }
+  .profile-opt { min-height: 44px; }
+  .sbtn { min-height: 44px; }
+  .qty-btn { width: 40px; height: 40px; }
+  .store-tab { min-height: 40px; }
+  .lang-btn { min-height: 44px; }
+}
+
+/* ── Prevent body scroll when panels open ── */
+
+body.store-open {
+  touch-action: none;
+  overflow: hidden;
 }

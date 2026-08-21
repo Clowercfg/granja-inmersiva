@@ -63,7 +63,7 @@ export function AdminGate({ children }: { children: ReactNode }) {
 
   return (
     <div style={{
-      minHeight: "100vh",
+      minHeight: "100dvh",
       background: "#111811",
       display: "flex",
       alignItems: "center",
@@ -76,7 +76,7 @@ export function AdminGate({ children }: { children: ReactNode }) {
         borderRadius: 14,
         padding: 32,
         textAlign: "center",
-        width: 320,
+        width: "min(320px, calc(100% - 32px))",
       }}>
         <h2 style={{ color: "#c9e8c9", fontFamily: "'Fredoka', sans-serif", marginTop: 0 }}>
           ⚙️ Admin
