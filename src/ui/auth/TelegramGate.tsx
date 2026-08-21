@@ -40,7 +40,7 @@ export function TelegramGate({ children }: { children: React.ReactNode }) {
 
 function LoadingScreen() {
   return (
-    <div className="tg-loading">
+    <div className="tg-loading" style={{ backgroundImage: "url(/loading-bg.png)" }}>
       <div className="tg-loading-card">
         <div className="tg-logo">
           <svg viewBox="0 0 48 48" width="64" height="64">

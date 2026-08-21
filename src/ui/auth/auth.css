@@ -1089,13 +1089,23 @@
   inset: 0;
   z-index: 9999;
   background: #0d1f13;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: "Nunito", "Inter", system-ui, sans-serif;
 }
+.tg-loading::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(13, 31, 19, 0.75);
+}
 
 .tg-loading-card {
+  position: relative;
   text-align: center;
   padding: 40px 32px;
   border-radius: 16px;
