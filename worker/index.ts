@@ -261,15 +261,25 @@ async function initDb(db: D1Database) {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
+
+    try {
+      return await handleRequest(request, env);
+    } catch (err) {
+      console.error("Unhandled Worker error:", err);
+      return json({ error: "internal_error", message: (err as Error)?.message || "Unknown error" }, 500);
+    }
+  },
+};
+
+async function handleRequest(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
 
-    if (method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: CORS_HEADERS });
-    }
-
-    try { await initDb(env.DB); } catch {}
+    try { await initDb(env.DB); } catch (e) { console.error("initDb failed:", e); }
 
     // ─── Health ───
     if (path === "/api/health" && method === "GET") {
@@ -601,5 +611,4 @@ export default {
 
     // ─── Everything else → static assets (SPA) ───
     return env.ASSETS.fetch(request);
-  },
-};
+}

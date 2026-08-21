@@ -113,8 +113,12 @@ async function apiPost<T = any>(path: string, body: Record<string, unknown>, tok
   if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(`${API}${path}`, { method: "POST", headers, body: JSON.stringify(body) });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: "network_error" }));
-    throw new Error(err.error || err.message || `HTTP ${res.status}`);
+    const ct = res.headers.get("content-type") || "";
+    if (ct.includes("application/json")) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || err.message || `HTTP ${res.status}`);
+    }
+    throw new Error(`server_error_${res.status}`);
   }
   return res.json();
 }
@@ -124,8 +128,12 @@ async function apiGet<T = any>(path: string, token?: string | null): Promise<T> 
   if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(`${API}${path}`, { headers });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: "network_error" }));
-    throw new Error(err.error || err.message || `HTTP ${res.status}`);
+    const ct = res.headers.get("content-type") || "";
+    if (ct.includes("application/json")) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || err.message || `HTTP ${res.status}`);
+    }
+    throw new Error(`server_error_${res.status}`);
   }
   return res.json();
 }
