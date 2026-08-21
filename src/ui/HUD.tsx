@@ -94,13 +94,7 @@ export function HUD({ onLogout }: { onLogout: () => void }) {
 
   if (!booted) {
     return (
-      <div className="loading">
-        <h1>{t("app.brand")}</h1>
-        <div className="barwrap">
-          <div />
-        </div>
-        <span>{mode === "webgpu" ? t("app.loading.webgpu") : t("app.loading.webgl")}</span>
-      </div>
+      <div className="loading" />
     );
   }
 
