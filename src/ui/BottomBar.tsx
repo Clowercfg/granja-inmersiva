@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useUiStore, type GameSectionId } from "../store/uiStore";
 import { useT } from "../store/languageStore";
 
@@ -12,7 +13,7 @@ export function BottomBar() {
   const toggle = useUiStore((s) => s.toggleSection);
   const t = useT();
 
-  return (
+  return createPortal(
     <div className="bottombar">
       {TABS.map((tab) => {
         const active = section === tab.id;
@@ -27,6 +28,7 @@ export function BottomBar() {
           </button>
         );
       })}
-    </div>
+    </div>,
+    document.body
   );
 }
