@@ -9,9 +9,11 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
   background: #111;
   color: #e8efe8;
+  -webkit-text-size-adjust: 100%;
 }
 
 #root {
@@ -25,6 +27,8 @@ body {
   overflow: hidden;
   background: #0b1622;
   z-index: 1;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 @media (min-width: 600px) {

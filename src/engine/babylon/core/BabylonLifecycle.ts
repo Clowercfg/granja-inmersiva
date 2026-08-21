@@ -18,7 +18,7 @@ export class BabylonLifecycle {
   private _lastTime = 0;
   private _frameCount = 0;
   private _fpsAccum = 0;
-  private _onResize: () => void;
+  private _ro: ResizeObserver;
   private _loopFn: () => void;
   private _firstFrameDone = false;
   private _onFirstFrame: (() => void) | null = null;
@@ -31,9 +31,13 @@ export class BabylonLifecycle {
     });
     this.scene = new Scene(this.engine);
     this.scene.clearColor = new Color4(0.66, 0.81, 0.9, 1);
-    this._onResize = () => this.engine.resize();
     this._loopFn = this._renderLoop.bind(this);
-    window.addEventListener("resize", this._onResize);
+    this._ro = new ResizeObserver(() => {
+      if (canvas.parentElement) {
+        this.engine.resize();
+      }
+    });
+    this._ro.observe(canvas.parentElement ?? canvas);
   }
 
   onFirstFrame(cb: () => void): this {
@@ -64,7 +68,7 @@ export class BabylonLifecycle {
 
   dispose(): void {
     this.stop();
-    window.removeEventListener("resize", this._onResize);
+    this._ro.disconnect();
     for (const sys of this.systems) sys.dispose();
     this.systems.length = 0;
     this.scene.dispose();

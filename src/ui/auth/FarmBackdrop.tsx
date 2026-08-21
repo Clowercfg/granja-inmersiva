@@ -75,13 +75,14 @@ function PollenLayer({ active }: { active: boolean }) {
     };
 
     resize();
-    window.addEventListener("resize", resize);
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas.parentElement ?? canvas);
     if (active && !REDUCED) raf = requestAnimationFrame(draw);
     else if (!active) ctx.clearRect(0, 0, w, h);
 
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener("resize", resize);
+      ro.disconnect();
     };
   }, [active]);
 
