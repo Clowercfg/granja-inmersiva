@@ -35,7 +35,7 @@ function AppContent({ engineMode }: { engineMode: string }) {
   if (engineMode === "babylon") {
     return (
       <>
-        <Suspense fallback={<div style={{ position: "fixed", inset: 0, background: "#1a2a1a", color: "#c9a84c", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif", fontSize: 18, zIndex: 99999 }}>Cargando Babylon.js...</div>}>
+        <Suspense fallback={<div style={{ position: "absolute", inset: 0, background: "#1a2a1a", color: "#c9a84c", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif", fontSize: 18, zIndex: 99999 }}>Cargando Babylon.js...</div>}>
           <BabylonCanvasLazy />
         </Suspense>
         <HUD onLogout={logout} />

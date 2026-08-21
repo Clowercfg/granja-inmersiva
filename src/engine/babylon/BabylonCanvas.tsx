@@ -122,7 +122,7 @@ export function BabylonCanvas() {
   if (error) {
     return (
       <div style={{
-        position: "fixed", inset: 0, zIndex: 99999,
+        position: "absolute", inset: 0, zIndex: 99999,
         background: "#1a0a0a", color: "#ff6b6b",
         display: "flex", flexDirection: "column", alignItems: "center",
         justifyContent: "center", fontFamily: "monospace", fontSize: 14, padding: 40,
@@ -134,7 +134,7 @@ export function BabylonCanvas() {
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 0 }}>
+    <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
       <canvas
         ref={canvasRef}
         style={{ width: "100%", height: "100%", display: "block", outline: "none" }}

@@ -5,14 +5,32 @@
 }
 
 html,
-body,
-#root {
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-  background: #0b1622;
+  background: #111;
   color: #e8efe8;
+}
+
+#root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+  overflow: hidden;
+  background: #0b1622;
+  z-index: 1;
+}
+
+@media (min-width: 600px) {
+  html, body {
+    background: #111;
+  }
 }
 
 canvas {
@@ -22,7 +40,7 @@ canvas {
 }
 
 .hud {
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 10;
@@ -405,7 +423,7 @@ canvas {
 }
 
 .loading {
-  position: fixed;
+  position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
@@ -457,7 +475,7 @@ canvas {
 /* ============ SIDEBAR ============ */
 
 .sidebar {
-  position: fixed;
+  position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
@@ -858,7 +876,7 @@ canvas {
 }
 
 .exitbutton {
-  position: fixed;
+  position: absolute;
   right: 16px;
   bottom: 16px;
   z-index: 15;
@@ -1003,7 +1021,7 @@ canvas {
 /* ============ TRANSITION OVERLAY ============ */
 
 .transitionoverlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 40;
   background: #05070b;
@@ -1047,7 +1065,7 @@ canvas {
 /* ============ CRATE OVERLAY ============ */
 
 .crateoverlay {
-  position: fixed;
+  position: absolute;
   left: 50%;
   bottom: 18px;
   transform: translateX(-50%);
@@ -1177,7 +1195,7 @@ body.store-open .hud {
 }
 
 .store-overlay {
-  position: fixed;
+  position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
@@ -2290,7 +2308,7 @@ body.store-open .hud {
 /* ============ EFECTOS Y TOASTS ============ */
 
 .store-fx {
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
   display: flex;
@@ -2327,7 +2345,7 @@ body.store-open .hud {
 }
 
 .store-toasts {
-  position: fixed;
+  position: absolute;
   bottom: 22px;
   left: 50%;
   transform: translateX(-50%);
@@ -2658,7 +2676,7 @@ body.store-open .hud {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .deposit-backdrop {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 10000;
   background: rgba(0, 0, 0, 0.6);
