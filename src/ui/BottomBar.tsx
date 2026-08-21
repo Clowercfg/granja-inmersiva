@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import { useUiStore, type GameSectionId } from "../store/uiStore";
 import { useT } from "../store/languageStore";
+import { useAuthStore } from "../store/authStore";
 
 const TABS: Array<{ id: GameSectionId; icon: string; labelKey: string }> = [
   { id: "crops", icon: "🌾", labelKey: "sidebar.crops" },
@@ -9,9 +10,12 @@ const TABS: Array<{ id: GameSectionId; icon: string; labelKey: string }> = [
 ];
 
 export function BottomBar() {
+  const status = useAuthStore((s) => s.status);
   const section = useUiStore((s) => s.section);
   const toggle = useUiStore((s) => s.toggleSection);
   const t = useT();
+
+  if (status !== "authenticated") return null;
 
   return createPortal(
     <div className="bottombar">
