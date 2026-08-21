@@ -438,12 +438,6 @@ canvas {
   z-index: 50;
   color: #d7f0c9;
 }
-.loading::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(11, 22, 34, 0.7);
-}
 .loading > * {
   position: relative;
 }
