@@ -6,6 +6,20 @@ import { STATIC_BUILDINGS } from "../../config/layout";
 import { BUILDING_CONFIG } from "../../config/world";
 import { POND } from "../../utils/terrainMath";
 import { mark, remark } from "../../core/bootMetrics";
+import { logTapTarget, recordPipelineStage } from "../../core/bootMetrics";
+
+function describeElement(el: Element | null): string {
+  if (!el) return "null";
+  const parts: string[] = [];
+  let cur: Element | null = el;
+  for (let i = 0; i < 4 && cur; i++) {
+    const id = cur.id ? `#${cur.id}` : "";
+    const cls = cur.className && typeof cur.className === "string" ? `.${cur.className.split(" ").slice(0, 2).join(".")}` : "";
+    parts.push(`<${cur.tagName.toLowerCase()}>${id}${cls}`);
+    cur = cur.parentElement;
+  }
+  return parts.join(" < ");
+}
 
 export interface HitResult {
   type: "plot" | "animal" | "building" | "pond" | "none";
@@ -80,9 +94,11 @@ export function setupInteraction(
   let firstInputFired = false;
 
   const onPointerDown = (e: PointerEvent) => {
+    recordPipelineStage("t0_pointerdown");
     mark("first_pointerdown");
     if (!firstInputFired) {
       firstInputFired = true;
+      logTapTarget(describeElement(document.elementFromPoint(e.clientX, e.clientY)));
       mark("canvas2d_first_input");
     }
     dragging = true;
@@ -111,8 +127,10 @@ export function setupInteraction(
       const rect = canvas.getBoundingClientRect();
       const sx = (e.clientX - rect.left) * (canvas.width / rect.width);
       const sy = (e.clientY - rect.top) * (canvas.height / rect.height);
+      recordPipelineStage("t1_pointerup");
       mark("first_pointerup");
       const result = hitTest(sx, sy, cam, cw(), ch(), []);
+      recordPipelineStage("t2_hitTest");
       remark("first_hit_test_done");
       console.log(`[interaction] pointerup→hitTest=${(performance.now() - tHit0).toFixed(2)}ms type=${result.type}`);
       onHit(result);

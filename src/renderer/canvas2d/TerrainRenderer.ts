@@ -445,11 +445,38 @@ export function renderTerrain(
   cam: CameraState,
   w: number,
   h: number,
+  dpr: number,
   timeOfDay: number,
   waterTime: number
 ): TerrainStats {
   const timeBright = 0.85 + timeOfDay * 0.15;
   const worldHalf = 320;
+
+  const key = `${w}x${h}|d:${dpr.toFixed(2)}|x:${cam.x.toFixed(2)}|z:${cam.z.toFixed(2)}|z:${cam.zoom.toFixed(4)}|t:${timeOfDay.toFixed(2)}`;
+  let tilesDrawn = 0;
+  let tilesVisible = 0;
+
+  if (cacheKey === key && cacheCanvas) {
+    ctx.drawImage(cacheCanvas, 0, 0, w, h);
+    drawWater(ctx, cam, w, h, waterTime, timeBright);
+    cacheHits++;
+    return { tilesDrawn: -1, tilesVisible: -1, tilesTotal: cacheHits };
+  }
+
+  if (!cacheCanvas) {
+    cacheCanvas = document.createElement("canvas");
+    cacheCtx = cacheCanvas.getContext("2d");
+  }
+  const pw = Math.max(1, Math.round(w * dpr));
+  const ph = Math.max(1, Math.round(h * dpr));
+  if (cacheCanvas.width !== pw || cacheCanvas.height !== ph) {
+    cacheCanvas.width = pw;
+    cacheCanvas.height = ph;
+  }
+  if (!cacheCtx) return { tilesDrawn: 0, tilesVisible: 0, tilesTotal: 0 };
+  const cctx = cacheCtx;
+  cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  cctx.clearRect(0, 0, w, h);
 
   const halfTiles = Math.ceil(Math.max(w, h) / (TILE_SIZE * cam.zoom)) + 3;
   const minWX = cam.x - halfTiles * TILE_SIZE;
@@ -462,9 +489,6 @@ export function renderTerrain(
   const minIZ = Math.max(-Math.floor(worldHalf / TILE_SIZE), Math.floor(minWZ / TILE_SIZE));
   const maxIZ = Math.min(Math.floor(worldHalf / TILE_SIZE), Math.ceil(maxWZ / TILE_SIZE));
 
-  let tilesDrawn = 0;
-  let tilesVisible = 0;
-
   for (let iz = minIZ; iz <= maxIZ; iz++) {
     for (let ix = minIX; ix <= maxIX; ix++) {
       const tile = getTile(ix, iz);
@@ -472,44 +496,59 @@ export function renderTerrain(
 
       const wx0 = ix * TILE_SIZE;
       const wz0 = iz * TILE_SIZE;
-      const hw = TILE_SIZE / 2;
-      const hh = TILE_SIZE / 2;
 
       const [sx0, sy0] = worldToScreen(wx0, wz0, cam, w, h);
       const [sx1, sy1] = worldToScreen(wx0 + TILE_SIZE, wz0, cam, w, h);
-      const [sx2, sy2] = worldToScreen(wx0 + TILE_SIZE, wz0 + TILE_SIZE, cam, w, h);
       const [sx3, sy3] = worldToScreen(wx0, wz0 + TILE_SIZE, cam, w, h);
 
       const pad = 50;
-      if (sx0 < -pad && sx1 < -pad && sx2 < -pad && sx3 < -pad) continue;
-      if (sx0 > w + pad && sx1 > w + pad && sx2 > w + pad && sx3 > w + pad) continue;
-      if (sy0 < -pad && sy1 < -pad && sy2 < -pad && sy3 < -pad) continue;
-      if (sy0 > h + pad && sy1 > h + pad && sy2 > h + pad && sy3 > h + pad) continue;
+      if (sx0 < -pad && sx1 < -pad && sx3 < -pad) continue;
+      if (sx0 > w + pad && sx1 > w + pad && sx3 > w + pad) continue;
+      if (sy0 < -pad && sy1 < -pad && sy3 < -pad) continue;
+      if (sy0 > h + pad && sy1 > h + pad && sy3 > h + pad) continue;
       tilesVisible++;
 
-      const scx = (sx0 + sx1 + sx2 + sx3) / 4;
-      const scy = (sy0 + sy1 + sy2 + sy3) / 4;
+      const scx = (sx0 + sx1 + (sx1 + (sx3 - sx0)) + sx3) / 4;
+      const scy = (sy0 + sy1 + (sy1 + (sy3 - sy0)) + sy3) / 4;
       const shw = Math.abs(sx1 - sx0) / 2;
       const shh = Math.abs(sy0 - sy3) / 2;
 
       if (tile.kind === "path") {
         const pathInfo = getPathTileInfo(ix, iz);
-        drawPathTile(ctx, scx, scy, shw, shh, pathInfo, tile.variant, timeBright);
+        drawPathTile(cctx, scx, scy, shw, shh, pathInfo, tile.variant, timeBright);
       } else {
-        drawTileDetail(ctx, scx, scy, shw, shh, tile, timeBright);
+        drawTileDetail(cctx, scx, scy, shw, shh, tile, timeBright);
       }
 
       const edges = getEdgeBlends(ix, iz);
-      drawEdgeBlend(ctx, scx, scy, shw, shh, edges);
+      drawEdgeBlend(cctx, scx, scy, shw, shh, edges);
 
       tilesDrawn++;
     }
   }
 
+  drawPlotBeds(cctx, cam, w, h, timeBright);
+  drawEnclosureGround(cctx, cam, w, h, timeBright);
+  drawFenceLines(cctx, cam, w, h);
+
+  cacheKey = key;
+  ctx.drawImage(cacheCanvas, 0, 0, w, h);
   drawWater(ctx, cam, w, h, waterTime, timeBright);
-  drawPlotBeds(ctx, cam, w, h, timeBright);
-  drawEnclosureGround(ctx, cam, w, h, timeBright);
-  drawFenceLines(ctx, cam, w, h);
 
   return { tilesDrawn, tilesVisible, tilesTotal: tilesVisible };
+}
+
+let cacheCanvas: HTMLCanvasElement | null = null;
+let cacheCtx: CanvasRenderingContext2D | null = null;
+let cacheKey = "";
+let cacheHits = 0;
+
+export function invalidateTerrainCache(): void {
+  cacheKey = "";
+  if (cacheCanvas) {
+    cacheCanvas.width = 0;
+    cacheCanvas.height = 0;
+    cacheCanvas = null;
+    cacheCtx = null;
+  }
 }

@@ -4,6 +4,50 @@ const marks: Record<string, number> = {};
 const log: Array<{ label: string; ms: number }> = [];
 export const longTasks: Array<{ start: number; duration: number }> = [];
 
+export interface PipelineRecord {
+  t0_pointerdown: number;
+  t1_pointerup: number;
+  t2_hitTest: number;
+  t3_entityFound: number;
+  t4_actionStarted: number;
+  t5_zustandSet: number;
+  t6_subscriber: number;
+  t7_rendererDetects: number;
+  t8_renderStart: number;
+  t9_renderEnd: number;
+  t10_nextFrame: number;
+  t11_visible: number;
+}
+export const lastPipeline: Partial<PipelineRecord> = {};
+export const pipelineHistory: Array<{ totalMs: number; stages: string }> = [];
+export const resizeLog: Array<{ t: number; w: number; h: number; dpr: number; reason: string }> = [];
+export const tgEvents: Array<{ t: number; type: string; detail: string }> = [];
+export const tapTargets: Array<{ t: number; chain: string }> = [];
+export const storeSetCounts: Record<string, { count: number; lastT: number }> = {};
+
+export function trackStoreSet(name: string): void {
+  const e = storeSetCounts[name];
+  if (e) { e.count++; e.lastT = performance.now(); } else { storeSetCounts[name] = { count: 1, lastT: performance.now() }; }
+}
+
+export function recordPipelineStage<K extends keyof PipelineRecord>(stage: K): void {
+  lastPipeline[stage] = performance.now();
+}
+
+export function logResize(w: number, h: number, dpr: number, reason: string): void {
+  resizeLog.push({ t: performance.now() - BOOT_START, w, h, dpr, reason });
+  if (resizeLog.length > 50) resizeLog.shift();
+}
+
+export function logTgEvent(type: string, detail: string): void {
+  tgEvents.push({ t: performance.now() - BOOT_START, type, detail });
+}
+
+export function logTapTarget(chain: string): void {
+  tapTargets.push({ t: performance.now() - BOOT_START, chain });
+  if (tapTargets.length > 10) tapTargets.shift();
+}
+
 export interface MetricSnapshot {
   bootStartAbs: number;
   marks: Record<string, { abs: number; rel: number }>;

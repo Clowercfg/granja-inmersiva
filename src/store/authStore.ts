@@ -186,6 +186,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     const done = () => remark("auth_completed");
 
+    // ── Step 0: notg debug mode — no Telegram SDK, no backend ──
+    if (new URLSearchParams(window.location.search).get("notg") === "true") {
+      set({
+        token: "debug-local",
+        user: { id: "debug", firstName: "Debug", lastName: "Local", username: "debug_local", photoUrl: "", languageCode: "es", role: "player" },
+        status: "authenticated",
+        error: null,
+      });
+      mark("auth_completed");
+      console.log("[auth] NOTG MODE: local fake session, zero network");
+      return;
+    }
+
     // ── Step 1: Check existing session ──
     const stored = getStoredToken();
     if (stored) {

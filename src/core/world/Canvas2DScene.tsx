@@ -10,6 +10,8 @@ import { createRandom, updateAgent, registerSeparation } from "../../systems/ani
 import { animalRegistry } from "../../store/farmStore";
 import { spawnInitialAnimals } from "../../entities/animals/spawn";
 import { mark } from "../bootMetrics";
+import { trackStoreSet } from "../bootMetrics";
+import { installTgInstrumentation } from "../tgDebug";
 
 export function Canvas2DScene() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -18,6 +20,7 @@ export function Canvas2DScene() {
   useEffect(() => {
     if (!containerRef.current) return;
     mark("canvas2d_scene_mount");
+    installTgInstrumentation();
     console.log(`[Canvas2D] scene mount, time since app_start: ${performance.now().toFixed(0)}ms`);
 
     const adapter = new Canvas2DAdapter();
@@ -36,8 +39,14 @@ export function Canvas2DScene() {
       timeManager.tick(dt);
       tickAtmosphere(dt);
     }));
+    let lastClockSync = 0;
     unsubs.push(onTick(() => {
-      useWorldStore.getState().syncClock(timeManager.getNow());
+      const now = performance.now();
+      if (now - lastClockSync >= 250) {
+        lastClockSync = now;
+        useWorldStore.getState().syncClock(timeManager.getNow());
+        trackStoreSet("world");
+      }
     }));
     unsubs.push(onTick((dt) => {
       if (useWorldStore.getState().paused) return;

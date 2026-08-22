@@ -466,21 +466,55 @@ export function renderFrame(
   cam: CameraState,
   cropMap: Record<number, PlantedCrop | undefined>,
   animals: AnimalAgent[],
-  timeOfDay: number
+  timeOfDay: number,
+  debugFlash?: { plotIndex: number; until: number } | null
 ): void {
   if (!ctx) return;
-  const w = canvas.width;
-  const h = canvas.height;
+  const rect = canvas.getBoundingClientRect();
+  const w = rect.width || canvas.width;
+  const h = rect.height || canvas.height;
+  const dpr = canvas.width / Math.max(1, w);
 
   ctx.clearRect(0, 0, w, h);
 
   waterTime += 0.016;
 
-  renderTerrain(ctx, cam, w, h, timeOfDay, waterTime);
+  renderTerrain(ctx, cam, w, h, dpr, timeOfDay, waterTime);
 
   const entities = buildSortedEntities(animals, cam, w, h, cropMap);
   for (const ent of entities) {
     ent.draw();
+  }
+
+  if (debugFlash && performance.now() < debugFlash.until) {
+    const plot = PLOTS[debugFlash.plotIndex];
+    if (plot) {
+      const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 60);
+      const corners: [number, number][] = [
+        [plot.cx - plot.w / 2 - 1, plot.cz - plot.d / 2 - 1],
+        [plot.cx + plot.w / 2 + 1, plot.cz - plot.d / 2 - 1],
+        [plot.cx + plot.w / 2 + 1, plot.cz + plot.d / 2 + 1],
+        [plot.cx - plot.w / 2 - 1, plot.cz + plot.d / 2 + 1],
+      ];
+      const sc = corners.map(([x, z]) => worldToScreen(x, z, cam, w, h));
+      ctx.beginPath();
+      ctx.moveTo(sc[0][0], sc[0][1]);
+      ctx.lineTo(sc[1][0], sc[1][1]);
+      ctx.lineTo(sc[2][0], sc[2][1]);
+      ctx.lineTo(sc[3][0], sc[3][1]);
+      ctx.closePath();
+      ctx.fillStyle = `rgba(255,40,40,${(0.25 + 0.35 * pulse).toFixed(3)})`;
+      ctx.fill();
+      ctx.strokeStyle = "#ff2020";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      const cx = sc.reduce((s, p) => s + p[0], 0) / 4;
+      const cy = sc.reduce((s, p) => s + p[1], 0) / 4;
+      ctx.fillStyle = "#ff2020";
+      ctx.font = "bold 16px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("ACTION VISIBLE", cx, cy);
+    }
   }
 }
 

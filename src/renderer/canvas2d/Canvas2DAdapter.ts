@@ -3,15 +3,25 @@ import type { CameraState } from "./Camera2D";
 import { createCamera, centerOnFarm, worldToScreen } from "./Camera2D";
 import { setupInteraction, type HitResult } from "./Interaction";
 import { renderFrame, init as initRenderer, destroy as destroyRenderer } from "./Renderer2D";
+import { invalidateTerrainCache } from "./TerrainRenderer";
 import { isStressMode, runStressTests } from "./StressTestRunner";
 import { useCropStore, type PlantedCrop } from "../../store/cropStore";
 import { useFarmStore, animalRegistry } from "../../store/farmStore";
 import { useWorldStore } from "../../store/worldStore";
 import { useUiStore } from "../../store/uiStore";
-import { mark, remark, dumpMetrics, hasMark, getSnapshot } from "../../core/bootMetrics";
+import { mark, remark, dumpMetrics, hasMark, recordPipelineStage, lastPipeline, pipelineHistory, logResize, type PipelineRecord } from "../../core/bootMetrics";
 
 function fmt(v: number | null): string {
-  return v === null ? "—" : v.toFixed(1);
+  return v === null || v === undefined ? "—" : (v as number).toFixed(1);
+}
+
+function diff(a: number | undefined, b: number | undefined): number | null {
+  if (a === undefined || b === undefined) return null;
+  return b - a;
+}
+
+function t10Value(): number | undefined {
+  return lastPipeline.t10_nextFrame;
 }
 
 export class Canvas2DAdapter implements RendererAdapter {
@@ -26,6 +36,11 @@ export class Canvas2DAdapter implements RendererAdapter {
   private cleanupInteraction: (() => void) | null = null;
   private lastDpr = 1;
   private firstFrameDone = false;
+  private debugFlash: { plotIndex: number; until: number } | null = null;
+  private lastPlantedRef: readonly unknown[] | null = null;
+  private cropMapVersion = 0;
+  private lastRenderMs = 0;
+  private pendingVisibleCheck = false;
 
   initialize(container: HTMLElement): void {
     const t0 = performance.now();
@@ -51,6 +66,10 @@ export class Canvas2DAdapter implements RendererAdapter {
 
     this.cleanupInteraction = setupInteraction(canvas, this.cam, (hit: HitResult) => {
       this.onHit(hit);
+    });
+
+    useCropStore.subscribe(() => {
+      recordPipelineStage("t6_subscriber");
     });
 
     window.addEventListener("resize", this.onResize);
@@ -82,6 +101,7 @@ export class Canvas2DAdapter implements RendererAdapter {
     this.canvas = null;
     this.ctx = null;
     this.container = null;
+    invalidateTerrainCache();
     destroyRenderer();
   }
 
@@ -94,8 +114,14 @@ export class Canvas2DAdapter implements RendererAdapter {
     const rect = this.container.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.lastDpr = dpr;
-    this.canvas.width = Math.floor(rect.width * dpr);
-    this.canvas.height = Math.floor(rect.height * dpr);
+    const newW = Math.floor(rect.width * dpr);
+    const newH = Math.floor(rect.height * dpr);
+    if (this.canvas.width !== newW || this.canvas.height !== newH) {
+      const duringFlash = this.debugFlash && performance.now() < this.debugFlash.until;
+      logResize(newW, newH, dpr, duringFlash ? "container-resize-DURING-FLASH" : "container-resize");
+    }
+    this.canvas.width = newW;
+    this.canvas.height = newH;
     if (this.ctx) {
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
@@ -125,6 +151,11 @@ export class Canvas2DAdapter implements RendererAdapter {
     const cropStore = useCropStore.getState();
     const animals = animalRegistry;
 
+    if (this.lastPlantedRef !== cropStore.planted && this.lastPlantedRef !== null) {
+      recordPipelineStage("t7_rendererDetects");
+      remark("renderer_detected_change");
+    }
+
     const animalList = animals.values();
     const animalPositions: Array<{ id: number; x: number; z: number; kind: string }> = [];
     for (const a of animalList) {
@@ -135,14 +166,21 @@ export class Canvas2DAdapter implements RendererAdapter {
     for (const c of cropStore.planted) {
       cropMap[c.plotIndex] = c;
     }
+    this.lastPlantedRef = cropStore.planted;
+    this.cropMapVersion++;
 
+    recordPipelineStage("t8_renderStart");
+    const tRender0 = performance.now();
     renderFrame(
       this.canvas,
       this.cam,
       cropMap,
       Array.from(animals.values()),
-      0.5
+      0.5,
+      this.debugFlash
     );
+    this.lastRenderMs = performance.now() - tRender0;
+    recordPipelineStage("t9_renderEnd");
   }
 
   private onHit(hit: HitResult): void {
@@ -153,11 +191,14 @@ export class Canvas2DAdapter implements RendererAdapter {
       this.selectedType = null;
       return;
     }
+    recordPipelineStage("t3_entityFound");
 
     this.selectedId = hit.id;
     this.selectedType = hit.type;
 
     if (hit.type === "plot") {
+      recordPipelineStage("t4_actionStarted");
+      this.debugFlash = { plotIndex: hit.index, until: performance.now() + 1000 };
       const cropStore = useCropStore.getState();
       const crop = cropStore.planted.find((c) => c.plotIndex === hit.index);
       if (crop && crop.state === "ready") {
@@ -168,18 +209,44 @@ export class Canvas2DAdapter implements RendererAdapter {
           cropStore.plantCrop(cropId, hit.index);
         }
       }
+      recordPipelineStage("t5_zustandSet");
     }
 
     remark("first_action_completed");
     console.log(`[interaction] hit→action total=${(performance.now() - t0).toFixed(2)}ms (${hit.type})`);
-    console.log(`[interaction] pipeline: pointerdown=${fmt(this.marksDiff("first_pointerdown", "first_pointerup"))}ms hitTest=${fmt(this.marksDiff("first_pointerup", "first_hit_test_done"))}ms action=${fmt(this.marksDiff("first_hit_test_done", "first_action_completed"))}ms`);
+    this.scheduleVisibleCheck();
   }
 
-  private marksDiff(a: string, b: string): number | null {
-    const snapA = getSnapshot().marks[a];
-    const snapB = getSnapshot().marks[b];
-    if (!snapA || !snapB) return null;
-    return snapB.rel - snapA.rel;
+  private scheduleVisibleCheck(): void {
+    if (this.pendingVisibleCheck) return;
+    this.pendingVisibleCheck = true;
+    requestAnimationFrame(() => {
+      recordPipelineStage("t10_nextFrame");
+      requestAnimationFrame(() => {
+        recordPipelineStage("t11_visible");
+        this.pendingVisibleCheck = false;
+        this.printPipeline();
+      });
+    });
+  }
+
+  private printPipeline(): void {
+    const p = lastPipeline;
+    const rel = (k: keyof PipelineRecord): number | null =>
+      p.t0_pointerdown !== undefined && p[k] !== undefined ? (p[k] as number) - p.t0_pointerdown : null;
+    const total = rel("t11_visible");
+    const stages = [
+      `pointer→action=${fmt(rel("t4_actionStarted"))}`,
+      `action→state=${fmt(diff(p.t4_actionStarted, p.t5_zustandSet))}`,
+      `state→subscriber=${fmt(diff(p.t5_zustandSet, p.t6_subscriber))}`,
+      `state→renderer=${fmt(diff(p.t5_zustandSet, p.t7_rendererDetects))}`,
+      `renderMs=${this.lastRenderMs.toFixed(1)}`,
+      `frame=${fmt(diff(p.t9_renderEnd, t10Value()))}`,
+      `TOTAL TOUCH→VISIBLE=${total === null ? "—" : total.toFixed(1) + "ms"}`,
+    ].join(" | ");
+    pipelineHistory.push({ totalMs: total ?? -1, stages });
+    if (pipelineHistory.length > 20) pipelineHistory.shift();
+    console.log(`[pipeline] ${stages}`);
   }
 
   private getCropForPlot(plotIndex: number): string | null {
