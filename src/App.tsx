@@ -82,7 +82,7 @@ function AppContent({ engineMode }: { engineMode: "legacy" | "babylon" | "canvas
         <Suspense fallback={LoadingFallback}>
           <BabylonCanvasLazy />
         </Suspense>
-        <HUD onLogout={logout} />
+        <HUD />
         <Sidebar />
         <BottomBar />
         <Store />
@@ -98,7 +98,7 @@ function AppContent({ engineMode }: { engineMode: "legacy" | "babylon" | "canvas
         <Suspense fallback={LoadingFallback}>
           <Canvas2DSceneLazy />
         </Suspense>
-        {authed && <HUD onLogout={logout} />}
+        {authed && <HUD />}
         <Sidebar />
         <BottomBar />
         <Store />
@@ -114,7 +114,7 @@ function AppContent({ engineMode }: { engineMode: "legacy" | "babylon" | "canvas
       <Suspense fallback={LoadingFallback}>
         <ExperienceLazy />
       </Suspense>
-      {authed && <HUD onLogout={logout} />}
+      {authed && <HUD />}
       <Sidebar />
       <BottomBar />
       <Store />

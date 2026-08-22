@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useWorldStore } from "../store/worldStore";
 import { useEconomyStore } from "../store/economyStore";
 import { useSelectionStore } from "../store/selectionStore";
@@ -8,52 +8,14 @@ import { useT } from "../store/languageStore";
 import { animalRegistry } from "../store/farmStore";
 import { PRODUCTION_PRICE } from "../config/economy";
 import { getBuildingTypeByUid, getInteriorDef, hasInterior } from "../config/interiors";
-import type { DayPhase, Season } from "../systems/time/TimeManager";
-import { useAuthStore } from "../store/authStore";
 
-const PHASE_ICON: Record<DayPhase, string> = {
-  dawn: "🌅",
-  morning: "🌤️",
-  midday: "☀️",
-  afternoon: "🌇",
-  dusk: "🌆",
-  night: "🌙",
-};
-
-const SEASON_ICON: Record<Season, string> = {
-  spring: "🌸",
-  summer: "☀️",
-  autumn: "🍂",
-  winter: "❄️",
-};
-
-function pad(n: number): string {
-  return String(n).padStart(2, "0");
-}
-
-export function HUD({ onLogout }: { onLogout: () => void }) {
+export function HUD() {
   const t = useT();
   const booted = useWorldStore((s) => s.booted);
-  const hour = useWorldStore((s) => s.hour);
-  const minute = useWorldStore((s) => s.minute);
-  const second = useWorldStore((s) => s.second);
-  const dayOfMonth = useWorldStore((s) => s.dayOfMonth);
-  const year = useWorldStore((s) => s.year);
-  const season = useWorldStore((s) => s.season);
-  const dayPhase = useWorldStore((s) => s.dayPhase);
-  const weather = useWorldStore((s) => s.weather);
-  const mode = useWorldStore((s) => s.rendererMode);
-  const gold = useEconomyStore((s) => s.gold);
   const interiorPhase = useInteriorStore((s) => s.phase);
   const interiorType = useInteriorStore((s) => s.type);
+  const gold = useEconomyStore((s) => s.gold);
   const [showHelp, setShowHelp] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
-  const profileOpen = useRef(false);
-  const user = useAuthStore((s) => s.user);
-
-  useEffect(() => {
-    profileOpen.current = showProfile;
-  }, [showProfile]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -61,10 +23,6 @@ export function HUD({ onLogout }: { onLogout: () => void }) {
         const ui = useUiStore.getState();
         if (ui.storeOpen) {
           ui.closeStore();
-          return;
-        }
-        if (profileOpen.current) {
-          setShowProfile(false);
           return;
         }
         const it = useInteriorStore.getState();
@@ -85,103 +43,17 @@ export function HUD({ onLogout }: { onLogout: () => void }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const initials = (user?.firstName ?? "A")
-    .split(/\s+/)
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
   if (!booted) {
     return (
       <div className="loading" />
     );
   }
 
-  const nowD = new Date();
-  const dow = t(`time.weekday.${nowD.getDay()}`);
-  const mon = t(`time.month.${nowD.getMonth()}`);
-
   return (
     <div className="hud">
-      <div className="topbar">
-        <div className="brand">
-          <h1>{t("app.brand")}</h1>
-          <span>{t("app.tagline")}</span>
-        </div>
-        <div className="timeblock">
-          <span className="clock">
-            <b>
-              {pad(hour)}:{pad(minute)}
-            </b>
-            <span className="clock-sec">:{pad(second)}</span>
-          </span>
-          <span>
-            <b>{t("time.date_hud", { dow, day: dayOfMonth, month: mon, year })}</b>
-          </span>
-          <span>
-            {PHASE_ICON[dayPhase]} {t(`time.dayphase.${dayPhase}`)} · {SEASON_ICON[season]}{" "}
-            {t(`time.season.${season}`)}
-          </span>
-          <span>{t(`weather.${weather}`)}</span>
-          <span>{mode === "webgpu" ? "WebGPU" : "WebGL2"}</span>
-        </div>
-        <div className="rightbar">
-          <div className="pill gold">USD {Math.round(gold).toLocaleString()}</div>
-          <button
-            className={`btn profilebar${showProfile ? " active" : ""}`}
-            onClick={() => {
-              setShowProfile((p) => !p);
-              setShowHelp(false);
-            }}
-            title="Abrir perfil"
-          >
-            👤 <span className="profilebar-name">{user?.firstName ?? "Perfil"}</span>
-          </button>
-          <button
-            className="btn"
-            onClick={() => {
-              setShowHelp((h) => !h);
-              setShowProfile(false);
-            }}
-          >
-            ?
-          </button>
-        </div>
+      <div className="rightbar">
+        <div className="pill gold">USD {Math.round(gold).toLocaleString()}</div>
       </div>
-
-      {showProfile && (
-        <div className="profilepanel">
-          <div className="profile-head">
-            <div className="profile-avatar">{initials}</div>
-            <div>
-              <b className="profile-name">{user?.firstName ?? "Agricultor"}</b>
-              <span className="profile-mail">{user?.username ? `@${user.username}` : "conectado via Telegram"}</span>
-            </div>
-          </div>
-          <button
-            className="profile-opt"
-            onClick={() => {
-              setShowProfile(false);
-              useUiStore.getState().openSection("calendar");
-            }}
-          >
-            📅 Calendario
-          </button>
-          <button
-            className="profile-opt"
-            onClick={() => {
-              setShowProfile(false);
-              setShowHelp(true);
-            }}
-          >
-            ❓ Ayuda y controles
-          </button>
-          <button className="profile-opt danger" onClick={onLogout}>
-            🚪 Cerrar sesión
-          </button>
-        </div>
-      )}
 
       <SelectionPanel />
 
