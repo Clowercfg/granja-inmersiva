@@ -6,6 +6,8 @@ export interface SpriteEntry {
   anchorFrac: number;
 }
 
+const ASSET_BASE = `${import.meta.env.BASE_URL}assets/2d`.replace(/\/+$/, "");
+
 const BUILDING_W: Record<string, number> = {
   house: 13,
   barn: 18.5,
@@ -33,12 +35,12 @@ const ANIMAL_FRAMES = ["idle_01", "idle_02", "walk_01", "walk_02", "walk_03"] as
 const CATALOG: Record<string, SpriteEntry> = {};
 
 for (const [b, w] of Object.entries(BUILDING_W)) {
-  CATALOG[`bldg:${b}`] = { url: `/assets/2d/buildings/${b}.webp`, worldW: w, anchorFrac: 210 / 256 };
+  CATALOG[`bldg:${b}`] = { url: `${ASSET_BASE}/buildings/${b}.webp`, worldW: w, anchorFrac: 210 / 256 };
 }
 for (const a of ["cow", "chicken", "rooster", "pig"]) {
   for (const f of ANIMAL_FRAMES) {
     CATALOG[`animal:${a}:${f}`] = {
-      url: `/assets/2d/animals/${a}_${f}.webp`,
+      url: `${ASSET_BASE}/animals/${a}_${f}.webp`,
       worldW: ANIMAL_W[a],
       anchorFrac: 112 / 128,
     };
@@ -47,19 +49,19 @@ for (const a of ["cow", "chicken", "rooster", "pig"]) {
 for (const c of ["carrot", "wheat", "corn", "potato"]) {
   for (const st of ["seed", "growing", "ready"]) {
     CATALOG[`crop:${c}:${st}`] = {
-      url: `/assets/2d/crops/${c}_${st}.webp`,
+      url: `${ASSET_BASE}/crops/${c}_${st}.webp`,
       worldW: CROP_W[c],
       anchorFrac: 112 / 128,
     };
   }
 }
 for (const v of [1, 2, 3]) {
-  CATALOG[`tree:0${v}`] = { url: `/assets/2d/vegetation/tree_0${v}.webp`, worldW: 7, anchorFrac: 212 / 256 };
+  CATALOG[`tree:0${v}`] = { url: `${ASSET_BASE}/vegetation/tree_0${v}.webp`, worldW: 7, anchorFrac: 212 / 256 };
 }
 for (const v of [1, 2]) {
-  CATALOG[`bush:0${v}`] = { url: `/assets/2d/vegetation/bush_0${v}.webp`, worldW: 3, anchorFrac: 112 / 128 };
-  CATALOG[`rock:0${v}`] = { url: `/assets/2d/vegetation/rock_0${v}.webp`, worldW: 2.6, anchorFrac: 110 / 128 };
-  CATALOG[`flower:0${v}`] = { url: `/assets/2d/vegetation/flower_0${v}.webp`, worldW: 1.7, anchorFrac: 111 / 128 };
+  CATALOG[`bush:0${v}`] = { url: `${ASSET_BASE}/vegetation/bush_0${v}.webp`, worldW: 3, anchorFrac: 112 / 128 };
+  CATALOG[`rock:0${v}`] = { url: `${ASSET_BASE}/vegetation/rock_0${v}.webp`, worldW: 2.6, anchorFrac: 110 / 128 };
+  CATALOG[`flower:0${v}`] = { url: `${ASSET_BASE}/vegetation/flower_0${v}.webp`, worldW: 1.7, anchorFrac: 111 / 128 };
 }
 
 export const ALL_SPRITE_KEYS = Object.keys(CATALOG);
