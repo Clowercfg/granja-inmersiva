@@ -8,6 +8,8 @@ import { growthProgressOf } from "../../store/cropStore";
 import { CROP_TYPES, PLOT_CROPS } from "../../config/crops";
 import type { AnimalAgent } from "../../types";
 import { renderTerrain } from "./TerrainRenderer";
+import { drawWorldSprite, cropStageKey, animalFrameKey } from "./spriteCatalog";
+import { getVegetation } from "../../entities/vegetation/vegetationData";
 
 const COS30 = 0.866025;
 const SIN30 = 0.5;
@@ -112,6 +114,8 @@ function drawIsoBox(
   ctx.stroke();
 }
 
+const lastFacing = new Map<number, boolean>();
+
 function drawAnimal(
   ctx: CanvasRenderingContext2D,
   cam: CameraState,
@@ -125,9 +129,44 @@ function drawAnimal(
 
   drawShadow(ctx, sx, sy + baseSize * 0.3, baseSize * 1.3, baseSize * 0.5);
 
-  ctx.save();
-  ctx.translate(sx, sy);
+  const vx = animal.velocity[0];
+  if (vx < -0.02) lastFacing.set(animal.id, true);
+  else if (vx > 0.02) lastFacing.set(animal.id, false);
+  const flip = lastFacing.get(animal.id) ?? false;
+  const moving = animal.state === "wander" && Math.hypot(vx, animal.velocity[2]) > 0.08;
+  const t = performance.now();
+  const phase = moving
+    ? t / 130 + animal.walkPhase
+    : t / 750 + animal.idlePhase;
+  const spriteKey = animalFrameKey(animal.kind, moving, phase);
+  const drew = drawWorldSprite(ctx, spriteKey, sx, sy, cam.zoom, (animal.scale || 1) * (cfg.size / 1.4), flip);
+  if (!drew) {
+    ctx.save();
+    ctx.translate(sx, sy);
+    drawAnimalProcedural(ctx, animal, cfg, baseSize);
+    ctx.restore();
+  }
 
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.font = `bold ${Math.max(8, 9 * cam.zoom)}px sans-serif`;
+  ctx.textAlign = "center";
+  ctx.fillText(animal.name, sx, sy - baseSize * 1.5);
+
+  if (isSelected) {
+    ctx.beginPath();
+    ctx.ellipse(sx, sy + baseSize * 0.2, baseSize * 1.8, baseSize * 0.7, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = "#ffcc00";
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  }
+}
+
+function drawAnimalProcedural(
+  ctx: CanvasRenderingContext2D,
+  animal: AnimalAgent,
+  cfg: { body: string; accent: string; size: number },
+  baseSize: number
+): void {
   if (animal.kind === "cow") {
     const bodyW = baseSize * 1.6;
     const bodyH = baseSize * 0.9;
@@ -270,21 +309,6 @@ function drawAnimal(
     ctx.fillStyle = cfg.accent;
     ctx.fill();
   }
-
-  ctx.restore();
-
-  ctx.fillStyle = "rgba(255,255,255,0.85)";
-  ctx.font = `bold ${Math.max(8, 9 * cam.zoom)}px sans-serif`;
-  ctx.textAlign = "center";
-  ctx.fillText(animal.name, sx, sy - baseSize * 1.5);
-
-  if (isSelected) {
-    ctx.beginPath();
-    ctx.ellipse(sx, sy + baseSize * 0.2, baseSize * 1.8, baseSize * 0.7, 0, 0, Math.PI * 2);
-    ctx.strokeStyle = "#ffcc00";
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-  }
 }
 function drawCropPlot(
   ctx: CanvasRenderingContext2D,
@@ -322,35 +346,39 @@ function drawCropPlot(
         const conf = CROP_TYPES.find(c => c.id === crop.cropId);
         if (conf) {
           const progress = growthProgressOf(crop);
-          const h = conf.heightMax * progress;
+          const drewCrop = drawWorldSprite(ctx, cropStageKey(crop.cropId, progress), px, py + 2 * cam.zoom, cam.zoom);
 
-          if (h > 0.1) {
-            const stemH = h * 4;
-            ctx.strokeStyle = "#4a8c3f";
-            ctx.lineWidth = Math.max(1, 1.2 * cam.zoom);
-            ctx.beginPath();
-            ctx.moveTo(px, py);
-            ctx.lineTo(px, py - stemH * cam.zoom);
-            ctx.stroke();
+          if (!drewCrop) {
+            const h = conf.heightMax * progress;
 
-            const leafSize = 1.5 * cam.zoom * progress;
-            ctx.fillStyle = `hsl(${110 + progress * 20}, ${50 + progress * 20}%, ${35 + progress * 15}%)`;
-            ctx.beginPath();
-            ctx.ellipse(px - leafSize * 0.5, py - stemH * cam.zoom * 0.6, leafSize, leafSize * 0.5, -0.3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(px + leafSize * 0.5, py - stemH * cam.zoom * 0.4, leafSize * 0.8, leafSize * 0.4, 0.3, 0, Math.PI * 2);
-            ctx.fill();
-
-            if (progress >= 0.8) {
-              const fruitSize = 1.8 * cam.zoom * progress;
-              ctx.fillStyle = conf.color ?? "#f0c040";
+            if (h > 0.1) {
+              const stemH = h * 4;
+              ctx.strokeStyle = "#4a8c3f";
+              ctx.lineWidth = Math.max(1, 1.2 * cam.zoom);
               ctx.beginPath();
-              ctx.arc(px, py - stemH * cam.zoom * 0.9, fruitSize, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.strokeStyle = "rgba(0,0,0,0.15)";
-              ctx.lineWidth = 0.5;
+              ctx.moveTo(px, py);
+              ctx.lineTo(px, py - stemH * cam.zoom);
               ctx.stroke();
+
+              const leafSize = 1.5 * cam.zoom * progress;
+              ctx.fillStyle = `hsl(${110 + progress * 20}, ${50 + progress * 20}%, ${35 + progress * 15}%)`;
+              ctx.beginPath();
+              ctx.ellipse(px - leafSize * 0.5, py - stemH * cam.zoom * 0.6, leafSize, leafSize * 0.5, -0.3, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.beginPath();
+              ctx.ellipse(px + leafSize * 0.5, py - stemH * cam.zoom * 0.4, leafSize * 0.8, leafSize * 0.4, 0.3, 0, Math.PI * 2);
+              ctx.fill();
+
+              if (progress >= 0.8) {
+                const fruitSize = 1.8 * cam.zoom * progress;
+                ctx.fillStyle = conf.color ?? "#f0c040";
+                ctx.beginPath();
+                ctx.arc(px, py - stemH * cam.zoom * 0.9, fruitSize, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = "rgba(0,0,0,0.15)";
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+              }
             }
           }
         }
@@ -407,12 +435,15 @@ function buildSortedEntities(
       draw: () => {
         if (!ctx) return;
         const [sx, syy] = worldToScreen(bx, bz, cam, canvasW, canvasH);
-        drawShadow(ctx, sx, syy, halfW * 0.9, halfD * 0.6, 0.15);
-        drawIsoBox(ctx, sx, syy, halfW * cam.zoom, halfD * cam.zoom, wallH * cam.zoom, colors);
-        ctx.fillStyle = "rgba(255,255,255,0.8)";
-        ctx.font = `bold ${Math.max(8, 9 * cam.zoom)}px sans-serif`;
-        ctx.textAlign = "center";
-        ctx.fillText(config?.label ?? b.type, sx, syy - wallH * cam.zoom - 8);
+        const drew = drawWorldSprite(ctx, `bldg:${b.type}`, sx, syy, cam.zoom);
+        if (!drew) {
+          drawShadow(ctx, sx, syy, halfW * 0.9, halfD * 0.6, 0.15);
+          drawIsoBox(ctx, sx, syy, halfW * cam.zoom, halfD * cam.zoom, wallH * cam.zoom, colors);
+          ctx.fillStyle = "rgba(255,255,255,0.8)";
+          ctx.font = `bold ${Math.max(8, 9 * cam.zoom)}px sans-serif`;
+          ctx.textAlign = "center";
+          ctx.fillText(config?.label ?? b.type, sx, syy - wallH * cam.zoom - 8);
+        }
       }
     });
   }
@@ -439,6 +470,36 @@ function buildSortedEntities(
     entities.push({
       sortKey: sy,
       draw: () => { if (ctx) drawAnimal(ctx, cam, canvasW, canvasH, animal, false); }
+    });
+  }
+
+  const veg = getVegetation();
+  const inView = (x: number, z: number, pad: number): boolean => {
+    const [vx, vy] = worldToScreen(x, z, cam, canvasW, canvasH);
+    return vx > -pad && vx < canvasW + pad && vy > -pad * 1.5 && vy < canvasH + pad * 1.5;
+  };
+  for (const t of veg.trees) {
+    if (!inView(t.x, t.z, 160)) continue;
+    const [, sy] = worldToScreen(t.x, t.z, cam, canvasW, canvasH);
+    const variant = 1 + (Math.floor(t.phase * 3) % 3);
+    entities.push({
+      sortKey: sy,
+      draw: () => {
+        if (!ctx) return;
+        drawWorldSprite(ctx, `tree:0${variant}`, ...worldToScreen(t.x, t.z, cam, canvasW, canvasH), cam.zoom, t.scale);
+      },
+    });
+  }
+  for (const b of veg.bushes) {
+    if (!inView(b.x, b.z, 90)) continue;
+    const [, sy] = worldToScreen(b.x, b.z, cam, canvasW, canvasH);
+    const variant = 1 + (Math.floor(b.phase * 2) % 2);
+    entities.push({
+      sortKey: sy,
+      draw: () => {
+        if (!ctx) return;
+        drawWorldSprite(ctx, `bush:0${variant}`, ...worldToScreen(b.x, b.z, cam, canvasW, canvasH), cam.zoom, b.scale);
+      },
     });
   }
 

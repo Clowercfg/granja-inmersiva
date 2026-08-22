@@ -6,7 +6,7 @@ import { STATIC_BUILDINGS } from "../../config/layout";
 import { BUILDING_CONFIG } from "../../config/world";
 import { POND } from "../../utils/terrainMath";
 import { mark, remark } from "../../core/bootMetrics";
-import { logTapTarget, recordPipelineStage } from "../../core/bootMetrics";
+import { logTapTarget, recordPipelineStage, lastPipeline } from "../../core/bootMetrics";
 
 function describeElement(el: Element | null): string {
   if (!el) return "null";
@@ -94,6 +94,8 @@ export function setupInteraction(
   let firstInputFired = false;
 
   const onPointerDown = (e: PointerEvent) => {
+    recordPipelineStage("t0_pointerdown");
+    for (const k of Object.keys(lastPipeline)) delete lastPipeline[k as keyof typeof lastPipeline];
     recordPipelineStage("t0_pointerdown");
     mark("first_pointerdown");
     if (!firstInputFired) {

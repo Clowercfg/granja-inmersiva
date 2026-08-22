@@ -23,12 +23,6 @@ export const pipelineHistory: Array<{ totalMs: number; stages: string }> = [];
 export const resizeLog: Array<{ t: number; w: number; h: number; dpr: number; reason: string }> = [];
 export const tgEvents: Array<{ t: number; type: string; detail: string }> = [];
 export const tapTargets: Array<{ t: number; chain: string }> = [];
-export const storeSetCounts: Record<string, { count: number; lastT: number }> = {};
-
-export function trackStoreSet(name: string): void {
-  const e = storeSetCounts[name];
-  if (e) { e.count++; e.lastT = performance.now(); } else { storeSetCounts[name] = { count: 1, lastT: performance.now() }; }
-}
 
 export function recordPipelineStage<K extends keyof PipelineRecord>(stage: K): void {
   lastPipeline[stage] = performance.now();

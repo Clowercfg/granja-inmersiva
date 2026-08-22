@@ -3,6 +3,8 @@ import { worldToScreen } from "./Camera2D";
 import { PLOTS, POND, PATH_WIDTH, distanceToPaths } from "../../utils/terrainMath";
 import { ENCLOSURES } from "../../config/enclosures";
 import { TILE_SIZE, type TileKind, type TileInfo, type NeighborMask, type EdgeResult, type PathTileInfo, getTile, getNeighbors, getEdgeBlends, getPathTileInfo } from "./TileSystem";
+import { getVegetation } from "../../entities/vegetation/vegetationData";
+import { drawWorldSprite } from "./spriteCatalog";
 
 const COS30 = 0.866025;
 const SIN30 = 0.5;
@@ -530,6 +532,18 @@ export function renderTerrain(
   drawPlotBeds(cctx, cam, w, h, timeBright);
   drawEnclosureGround(cctx, cam, w, h, timeBright);
   drawFenceLines(cctx, cam, w, h);
+
+  const veg = getVegetation();
+  for (const f of veg.flowers) {
+    if (f.x < minWX || f.x > maxWX || f.z < minWZ || f.z > maxWZ) continue;
+    const [fx, fy] = worldToScreen(f.x, f.z, cam, w, h);
+    drawWorldSprite(cctx, `flower:0${1 + (Math.floor(f.phase * 2) % 2)}`, fx, fy, cam.zoom, f.scale);
+  }
+  for (const r of veg.rocks) {
+    if (r.x < minWX || r.x > maxWX || r.z < minWZ || r.z > maxWZ) continue;
+    const [rx2, ry2] = worldToScreen(r.x, r.z, cam, w, h);
+    drawWorldSprite(cctx, `rock:0${1 + (Math.floor(r.phase * 2) % 2)}`, rx2, ry2, cam.zoom, r.scale);
+  }
 
   cacheKey = key;
   ctx.drawImage(cacheCanvas, 0, 0, w, h);

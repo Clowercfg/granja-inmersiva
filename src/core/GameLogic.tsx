@@ -22,17 +22,6 @@ export function GameLogic() {
       })
     );
 
-    let lastSync = 0;
-    unsubs.push(
-      onTick(() => {
-        const now = Date.now();
-        if (now - lastSync >= 1000) {
-          lastSync = now;
-          useWorldStore.getState().syncClock(timeManager.getNow());
-        }
-      })
-    );
-
     unsubs.push(
       onTick((dt) => {
         if (useWorldStore.getState().paused) return;

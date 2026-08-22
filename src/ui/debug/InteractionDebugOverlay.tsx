@@ -7,7 +7,6 @@ import {
   resizeLog,
   tgEvents,
   tapTargets,
-  storeSetCounts,
   type MetricSnapshot,
 } from "../../core/bootMetrics";
 import { useAuthStore } from "../../store/authStore";
@@ -74,7 +73,6 @@ export function InteractionDebugOverlay() {
   const totalVisible = rel("t11_visible");
 
   const tgState = getTgInfo();
-  const worldSets = storeSetCounts["world"];
 
   const rows: Array<[string, string]> = [
     ["First Draw", val("first_draw_real")],
@@ -171,8 +169,6 @@ export function InteractionDebugOverlay() {
         {"\n"}
         TG: {tgState.present ? `${tgState.platform}/${tgState.version}` : "no-sdk"} vp={tgState.viewportH}
         {"\n"}
-        worldStore.set/s: {worldSets ? Math.round(worldSets.count / Math.max(1, (performance.now() - bootRef) / 1000)) : 0}
-        {"\n"}
       </span>
       {tapTargets.length > 0 ? (
         <span style={{ color: "#FFFFFF" }}>
@@ -192,8 +188,6 @@ export function InteractionDebugOverlay() {
     </div>
   );
 }
-
-const bootRef = performance.now();
 
 function fmtMs(v: number | null): string {
   return v === null ? "—" : `${v.toFixed(1)}ms`;

@@ -1,13 +1,6 @@
 import { create } from "zustand";
 import type { WeatherKind } from "../config/world";
-import {
-  MONTH_LABEL,
-  WEEKDAY_LABEL,
-  dayPhaseOf,
-  seasonOf,
-  type DayPhase,
-  type Season,
-} from "../systems/time/TimeManager";
+import type { DayPhase, Season } from "../systems/time/TimeManager";
 
 interface WorldStore {
   booted: boolean;
@@ -35,7 +28,6 @@ interface WorldStore {
   setRendererMode: (m: "webgpu" | "webgl") => void;
   setBooted: (b: boolean) => void;
   setFps: (f: number) => void;
-  syncClock: (d: Date) => void;
 }
 
 export const useWorldStore = create<WorldStore>((set) => ({
@@ -63,18 +55,4 @@ export const useWorldStore = create<WorldStore>((set) => ({
   setRendererMode: (m) => set({ rendererMode: m }),
   setBooted: (b) => set({ booted: b }),
   setFps: (f) => set({ fps: f }),
-  syncClock: (d) =>
-    set({
-      now: d.getTime(),
-      hour: d.getHours(),
-      minute: d.getMinutes(),
-      second: d.getSeconds(),
-      dayOfMonth: d.getDate(),
-      month: d.getMonth() + 1,
-      year: d.getFullYear(),
-      dayOfWeek: WEEKDAY_LABEL[d.getDay()],
-      monthName: MONTH_LABEL[d.getMonth()],
-      dayPhase: dayPhaseOf(d),
-      season: seasonOf(d),
-    }),
 }));

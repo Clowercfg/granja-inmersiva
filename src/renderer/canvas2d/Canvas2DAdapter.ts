@@ -10,6 +10,7 @@ import { useFarmStore, animalRegistry } from "../../store/farmStore";
 import { useWorldStore } from "../../store/worldStore";
 import { useUiStore } from "../../store/uiStore";
 import { mark, remark, dumpMetrics, hasMark, recordPipelineStage, lastPipeline, pipelineHistory, logResize, type PipelineRecord } from "../../core/bootMetrics";
+import { preloadSceneSprites, spritesLoadedCount } from "./spriteCatalog";
 
 function fmt(v: number | null): string {
   return v === null || v === undefined ? "—" : (v as number).toFixed(1);
@@ -29,6 +30,14 @@ export class Canvas2DAdapter implements RendererAdapter {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private cam: CameraState = createCamera();
+
+  getCam(): CameraState {
+    return this.cam;
+  }
+
+  getCanvasEl(): HTMLCanvasElement | null {
+    return this.canvas;
+  }
   private rafId = 0;
   private running = false;
   private selectedId: number | string | null = null;
@@ -138,6 +147,17 @@ export class Canvas2DAdapter implements RendererAdapter {
       mark("first_draw_real");
       console.log(`[Canvas2D] REAL first frame painted at ${t0.toFixed(0)}ms, draw took ${(performance.now() - t0).toFixed(1)}ms`);
       dumpMetrics();
+      preloadSceneSprites();
+      const started = performance.now();
+      const checkLoaded = (): void => {
+        if (spritesLoadedCount() >= 46 || performance.now() - started > 15000) {
+          remark("sprites_ready");
+          console.log(`[sprites] ${spritesLoadedCount()}/46 loaded in ${(performance.now() - started).toFixed(0)}ms (visualtest=${new URLSearchParams(location.search).get("visualtest")})`);
+        } else {
+          requestAnimationFrame(checkLoaded);
+        }
+      };
+      requestAnimationFrame(checkLoaded);
     }
     this.rafId = requestAnimationFrame(this.loop);
   };

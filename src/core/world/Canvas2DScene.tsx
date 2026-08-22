@@ -8,9 +8,8 @@ import { tickAtmosphere } from "../../shaders/atmosphere";
 import { startGameLoop, stopGameLoop, onTick } from "../gameLoop";
 import { createRandom, updateAgent, registerSeparation } from "../../systems/animalAI/ai";
 import { animalRegistry } from "../../store/farmStore";
-import { spawnInitialAnimals } from "../../entities/animals/spawn";
+import { spawnInitialAnimals, createAnimalAgent } from "../../entities/animals/spawn";
 import { mark } from "../bootMetrics";
-import { trackStoreSet } from "../bootMetrics";
 import { installTgInstrumentation } from "../tgDebug";
 
 export function Canvas2DScene() {
@@ -27,6 +26,22 @@ export function Canvas2DScene() {
     adapterRef.current = adapter;
     adapter.initialize(containerRef.current);
 
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("interactiondebug") === "true" || params.get("visualtest") === "true") {
+      (window as unknown as Record<string, unknown>).__farmDebug = {
+        registry: animalRegistry,
+        adapter,
+        spawnTest: (kind: string, n: number, at?: [number, number]) => {
+          for (let i = 0; i < n; i++) {
+            const a = createAnimalAgent(kind as never, `T${kind}${i}`);
+            if (at) a.position = [at[0], a.position[1], at[1]];
+            animalRegistry.set(a.id, a);
+          }
+          return animalRegistry.size;
+        },
+      };
+    }
+
     useWorldStore.getState().setBooted(true);
     mark("canvas2d_booted");
 
@@ -38,15 +53,6 @@ export function Canvas2DScene() {
     unsubs.push(onTick((dt) => {
       timeManager.tick(dt);
       tickAtmosphere(dt);
-    }));
-    let lastClockSync = 0;
-    unsubs.push(onTick(() => {
-      const now = performance.now();
-      if (now - lastClockSync >= 250) {
-        lastClockSync = now;
-        useWorldStore.getState().syncClock(timeManager.getNow());
-        trackStoreSet("world");
-      }
     }));
     unsubs.push(onTick((dt) => {
       if (useWorldStore.getState().paused) return;
