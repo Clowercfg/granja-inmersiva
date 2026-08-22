@@ -34,10 +34,10 @@ const KIND_COLORS: Record<
 };
 
 const SCALES: Record<AnimalKind, [number, number, number]> = {
-  cow: [1, 1, 1],
-  pig: [0.7, 0.7, 0.7],
-  chicken: [0.35, 0.35, 0.35],
-  rooster: [0.4, 0.4, 0.4],
+  cow: [1.15, 1.15, 1.15],
+  pig: [0.78, 0.78, 0.78],
+  chicken: [0.42, 0.42, 0.42],
+  rooster: [0.48, 0.48, 0.48],
 };
 
 const WALK_SPEED: Record<AnimalKind, number> = {

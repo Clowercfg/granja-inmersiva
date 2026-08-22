@@ -97,8 +97,8 @@ export function TimeSystem() {
         shadow-bias={-0.0004}
       />
       <directionalLight ref={moonRef} position={[-120, 120, -80]} intensity={0} color="#9db4ff" />
-      <hemisphereLight args={["#d9e8f2", "#3c5a3a", 0.55]} />
-      <ambientLight intensity={0.25} color="#dfe8e0" />
+      <hemisphereLight args={["#d9e8f2", "#4a6642", 0.65]} />
+      <ambientLight intensity={0.32} color="#dfe8e0" />
       <mesh ref={sunBall}>
         <sphereGeometry args={[26, 24, 24]} />
         <meshBasicMaterial color="#ffe9a8" fog={false} />

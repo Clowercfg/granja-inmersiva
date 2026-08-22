@@ -22,9 +22,9 @@ export class LightingSystem implements BabylonSystem {
   init(scene: Scene, engine: Engine): void {
     this.sun = new DirectionalLight("sun", new Vector3(-0.6, -0.8, 0.4), scene);
     this.sun.position = new Vector3(80, 160, -60);
-    this.sun.intensity = 1.8;
-    this.sun.diffuse = new Color3(1, 0.96, 0.88);
-    this.sun.specular = new Color3(1, 0.95, 0.85);
+    this.sun.intensity = 2.05;
+    this.sun.diffuse = new Color3(1, 0.94, 0.82);
+    this.sun.specular = new Color3(1, 0.94, 0.82);
     this.sun.shadowMinZ = 0;
     this.sun.shadowMaxZ = 400;
     this.sun.shadowOrthoScale = 2;
@@ -38,14 +38,14 @@ export class LightingSystem implements BabylonSystem {
     shadowGen.transparencyShadow = true;
 
     this.ambient = new HemisphericLight("ambient", new Vector3(0, 1, 0), scene);
-    this.ambient.intensity = 0.7;
+    this.ambient.intensity = 0.58;
     this.ambient.diffuse = new Color3(0.75, 0.82, 0.95);
-    this.ambient.groundColor = new Color3(0.35, 0.3, 0.22);
+    this.ambient.groundColor = new Color3(0.34, 0.38, 0.22);
     this.ambient.specular = new Color3(0.15, 0.15, 0.15);
 
     scene.fogMode = Scene.FOGMODE_EXP2;
     scene.fogDensity = 0.0008;
-    scene.fogColor = new Color3(0.72, 0.78, 0.86);
+    scene.fogColor = new Color3(0.66, 0.77, 0.88);
 
     scene.ambientColor = new Color3(0.5, 0.5, 0.5);
 

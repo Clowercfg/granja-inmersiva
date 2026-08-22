@@ -18,10 +18,10 @@ interface CameraStore {
 }
 
 export const useCameraStore = create<CameraStore>((set) => ({
-  target: [0, 0, -20],
+  target: [-10, 0, 12],
   yaw: 0,
-  pitch: (55 * Math.PI) / 180,
-  distance: 95,
+  pitch: (47 * Math.PI) / 180,
+  distance: 50,
   keys: {},
   rightDown: false,
   rightStart: null,

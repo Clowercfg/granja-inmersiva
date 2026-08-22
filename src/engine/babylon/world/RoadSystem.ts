@@ -12,7 +12,7 @@ import type { ShadowGenerator } from "@babylonjs/core";
 import type { BabylonSystem } from "../core/BabylonLifecycle";
 import { PATHS, PATH_WIDTH, terrainHeight } from "./terrainMath";
 
-const HALF_W = PATH_WIDTH / 2;
+const HALF_W = (PATH_WIDTH * 1.35) / 2;
 const SEG_RES = 3;        // subdivisions per segment for extra vertices
 
 /** Build the path ribbon for a single waypoint chain. */

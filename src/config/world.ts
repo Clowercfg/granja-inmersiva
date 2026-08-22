@@ -10,10 +10,10 @@ export const WORLD = {
 export const CAMERA = {
   pitchMin: (20 * Math.PI) / 180,
   pitchMax: (68 * Math.PI) / 180,
-  pitchDefault: (55 * Math.PI) / 180,
-  distanceMin: 18,
+  pitchDefault: (47 * Math.PI) / 180,
+  distanceMin: 14,
   distanceMax: 260,
-  distanceDefault: 95,
+  distanceDefault: 50,
   panSpeed: 95,
   panSpeedBoost: 2.1,
   rotateSpeed: 0.0038,

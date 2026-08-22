@@ -16,24 +16,24 @@ export interface ZoneDensity {
 }
 
 export const ZONE_DENSITY: Record<ZoneType, ZoneDensity> = {
-  farmCore: { trees: 0.08, grass: 0.10, flowers: 0.04, bushes: 0.05, rocks: 0.05 },
+  farmCore: { trees: 0.14, grass: 0.14, flowers: 0.08, bushes: 0.1, rocks: 0.07 },
   fields: { trees: 0, grass: 0, flowers: 0, bushes: 0, rocks: 0 },
   roads: { trees: 0, grass: 0, flowers: 0, bushes: 0, rocks: 0 },
-  pond: { trees: 0.20, grass: 0.40, flowers: 0.15, bushes: 0.20, rocks: 0.15 },
-  pasture: { trees: 0.12, grass: 0.35, flowers: 0.05, bushes: 0.08, rocks: 0.08 },
-  wildArea: { trees: 0.45, grass: 0.45, flowers: 0.10, bushes: 0.35, rocks: 0.25 },
-  forestEdge: { trees: 0.80, grass: 0.35, flowers: 0.05, bushes: 0.45, rocks: 0.20 },
+  pond: { trees: 0.25, grass: 0.45, flowers: 0.2, bushes: 0.24, rocks: 0.18 },
+  pasture: { trees: 0.18, grass: 0.4, flowers: 0.08, bushes: 0.11, rocks: 0.1 },
+  wildArea: { trees: 0.5, grass: 0.48, flowers: 0.13, bushes: 0.4, rocks: 0.28 },
+  forestEdge: { trees: 0.85, grass: 0.38, flowers: 0.06, bushes: 0.5, rocks: 0.22 },
 };
 
 export const VEGETATION_CONFIG = {
   seed: 20260214,
 
   global: {
-    grassMultiplier: 0.28,
-    treeMultiplier: 0.50,
-    flowerMultiplier: 0.18,
-    bushMultiplier: 0.38,
-    rockMultiplier: 0.65,
+    grassMultiplier: 0.38,
+    treeMultiplier: 0.8,
+    flowerMultiplier: 0.3,
+    bushMultiplier: 0.55,
+    rockMultiplier: 0.8,
   },
 
   grass: {
@@ -51,8 +51,8 @@ export const VEGETATION_CONFIG = {
   trees: {
     farmRadius: 100,
     outerRadius: 260,
-    farmTarget: 50,
-    outerTarget: 70,
+    farmTarget: 70,
+    outerTarget: 95,
     minSpacing: 7.0,
     pathMargin: 3.5,
     pondMargin: 4.5,
@@ -79,8 +79,8 @@ export const VEGETATION_CONFIG = {
   bushes: {
     farmRadius: 60,
     outerRadius: 200,
-    farmTarget: 18,
-    outerTarget: 55,
+    farmTarget: 26,
+    outerTarget: 75,
     minSpacing: 4.5,
     pathMargin: 3.2,
     pondMargin: 3.5,

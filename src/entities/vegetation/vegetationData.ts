@@ -106,7 +106,7 @@ export function getVegetation() {
   }
 
   const flowers: VegetationInstance[] = [];
-  const flowerCount = 2600;
+  const flowerCount = 3400;
   for (let i = 0; i < flowerCount; i++) {
     const r = Math.sqrt(rng()) * 150;
     const a = rng() * Math.PI * 2;
@@ -128,7 +128,7 @@ export function getVegetation() {
   }
 
   const rocks: VegetationInstance[] = [];
-  const rockCount = 420;
+  const rockCount = 520;
   for (let i = 0; i < rockCount; i++) {
     const r = Math.sqrt(rng()) * 250;
     const a = rng() * Math.PI * 2;
@@ -150,7 +150,7 @@ export function getVegetation() {
     });
   }
 
-  const bushes: VegetationInstance[] = scatter(rng, 60, 200, 32, 110, 4.0, true);
+  const bushes: VegetationInstance[] = scatter(rng, 60, 200, 45, 135, 3.8, true);
 
   cached = { trees, grass, flowers, rocks, bushes };
   return cached;

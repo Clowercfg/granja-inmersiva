@@ -174,7 +174,7 @@ function buildBarn(
 ): void {
   const size = BUILDING_CONFIG.barn.size;
   const [w, d] = size;
-  const wallH = 6;
+  const wallH = 7.5;
 
   const base = MeshBuilder.CreateBox("barnBody", { width: w, height: wallH, depth: d }, scene);
   base.position.y = wallH / 2;
@@ -182,12 +182,12 @@ function buildBarn(
   base.receiveShadows = true;
   shadows.addShadowCaster(base);
 
-  const roof = createGableRoof(scene, w + 1, d + 1, 3.5, mats.redRoof, "barnRoof");
+  const roof = createGableRoof(scene, w + 1, d + 1, 4.6, mats.redRoof, "barnRoof");
   roof.position.y = wallH;
   shadows.addShadowCaster(roof);
 
-  const door = MeshBuilder.CreateBox("barnDoor", { width: 3.5, height: 4.5, depth: 0.15 }, scene);
-  door.position.set(0, 2.25, d / 2 + 0.08);
+  const door = MeshBuilder.CreateBox("barnDoor", { width: 3.5, height: 5.2, depth: 0.15 }, scene);
+  door.position.set(0, 2.6, d / 2 + 0.08);
   door.material = mats.darkDoor;
 
   const trim = MeshBuilder.CreateBox("barnTrim", { width: w + 0.4, height: 0.2, depth: d + 0.4 }, scene);
@@ -202,7 +202,7 @@ function buildHouse(
 ): void {
   const size = BUILDING_CONFIG.house.size;
   const [w, d] = size;
-  const wallH = 4.5;
+  const wallH = 5.6;
 
   const base = MeshBuilder.CreateBox("houseBody", { width: w, height: wallH, depth: d }, scene);
   base.position.y = wallH / 2;
@@ -210,21 +210,21 @@ function buildHouse(
   base.receiveShadows = true;
   shadows.addShadowCaster(base);
 
-  const roof = createGableRoof(scene, w + 0.8, d + 0.8, 3, mats.redRoof, "houseRoof");
+  const roof = createGableRoof(scene, w + 0.8, d + 0.8, 3.8, mats.redRoof, "houseRoof");
   roof.position.y = wallH;
   shadows.addShadowCaster(roof);
 
-  const door = MeshBuilder.CreateBox("houseDoor", { width: 1.2, height: 2.4, depth: 0.12 }, scene);
-  door.position.set(0, 1.2, d / 2 + 0.07);
+  const door = MeshBuilder.CreateBox("houseDoor", { width: 1.2, height: 2.8, depth: 0.12 }, scene);
+  door.position.set(0, 1.4, d / 2 + 0.07);
   door.material = mats.darkDoor;
 
   const windowW = 1;
-  const windowH = 1;
+  const windowH = 1.2;
   const windowPositions = [
-    new Vector3(-3, 2.5, d / 2 + 0.06),
-    new Vector3(3, 2.5, d / 2 + 0.06),
-    new Vector3(-3, 2.5, -d / 2 - 0.06),
-    new Vector3(3, 2.5, -d / 2 - 0.06),
+    new Vector3(-3, 3.1, d / 2 + 0.06),
+    new Vector3(3, 3.1, d / 2 + 0.06),
+    new Vector3(-3, 3.1, -d / 2 - 0.06),
+    new Vector3(3, 3.1, -d / 2 - 0.06),
   ];
   for (let i = 0; i < windowPositions.length; i++) {
     const win = MeshBuilder.CreateBox(`houseWindow${i}`, { width: windowW, height: windowH, depth: 0.08 }, scene);
@@ -244,7 +244,7 @@ function buildWorkshop(
 ): void {
   const size = BUILDING_CONFIG.workshop.size;
   const [w, d] = size;
-  const wallH = 4;
+  const wallH = 5;
 
   const base = MeshBuilder.CreateBox("workshopBody", { width: w, height: wallH, depth: d }, scene);
   base.position.y = wallH / 2;
@@ -252,12 +252,12 @@ function buildWorkshop(
   base.receiveShadows = true;
   shadows.addShadowCaster(base);
 
-  const roof = createGableRoof(scene, w + 0.6, d + 0.6, 2.5, mats.grayRoof, "workshopRoof");
+  const roof = createGableRoof(scene, w + 0.6, d + 0.6, 3.2, mats.grayRoof, "workshopRoof");
   roof.position.y = wallH;
   shadows.addShadowCaster(roof);
 
-  const door = MeshBuilder.CreateBox("workshopDoor", { width: 2.2, height: 3.2, depth: 0.12 }, scene);
-  door.position.set(0, 1.6, d / 2 + 0.07);
+  const door = MeshBuilder.CreateBox("workshopDoor", { width: 2.2, height: 3.8, depth: 0.12 }, scene);
+  door.position.set(0, 1.9, d / 2 + 0.07);
   door.material = mats.darkDoor;
 
   const trim = MeshBuilder.CreateBox("workshopTrim", { width: w + 0.2, height: 0.12, depth: d + 0.2 }, scene);
@@ -272,7 +272,7 @@ function buildWarehouse(
 ): void {
   const size = BUILDING_CONFIG.warehouse.size;
   const [w, d] = size;
-  const wallH = 5;
+  const wallH = 6.2;
 
   const base = MeshBuilder.CreateBox("warehouseBody", { width: w, height: wallH, depth: d }, scene);
   base.position.y = wallH / 2;
@@ -290,8 +290,8 @@ function buildWarehouse(
   trim.position.y = wallH + 0.35;
   trim.material = mats.woodFrame;
 
-  const door = MeshBuilder.CreateBox("warehouseDoor", { width: 3, height: 3.5, depth: 0.12 }, scene);
-  door.position.set(0, 1.75, d / 2 + 0.07);
+  const door = MeshBuilder.CreateBox("warehouseDoor", { width: 3, height: 4.2, depth: 0.12 }, scene);
+  door.position.set(0, 2.1, d / 2 + 0.07);
   door.material = mats.darkDoor;
 }
 
@@ -302,7 +302,7 @@ function buildGreenhouse(
 ): void {
   const size = BUILDING_CONFIG.greenhouse.size;
   const [w, d] = size;
-  const wallH = 3.5;
+  const wallH = 4.2;
 
   const glassPanels = [
     { w: w, h: wallH, d: 0.08, pos: new Vector3(0, wallH / 2, d / 2) },
@@ -317,7 +317,7 @@ function buildGreenhouse(
     panel.material = mats.glass;
   }
 
-  const roof = createGableRoof(scene, w + 0.4, d + 0.4, 2, mats.glass, "ghRoof");
+  const roof = createGableRoof(scene, w + 0.4, d + 0.4, 2.6, mats.glass, "ghRoof");
   roof.position.y = wallH;
 
   const frameH = 0.08;

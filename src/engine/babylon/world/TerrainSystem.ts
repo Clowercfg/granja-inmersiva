@@ -115,7 +115,7 @@ function bakeColorCanvas(res: number): HTMLCanvasElement {
       const h = terrainHeight(x, z);
       if (h < -0.4) c = lerpRGB(c, C_DIRT, Math.min(1, (-0.4 - h) * 0.5));
 
-      c = mulRGB(c, 0.92 + rnd2 * 0.14);
+      c = mulRGB(c, 0.9 + rnd2 * 0.2);
       if (slope < 0.15) c = mulRGB(c, 0.97);
 
       const idx = (j * res + i) * 4;

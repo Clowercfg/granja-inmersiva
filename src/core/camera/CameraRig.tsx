@@ -18,7 +18,7 @@ export function CameraRig() {
     pitch: number;
     distance: number;
   }>({
-    target: new THREE.Vector3(0, 0, -20),
+    target: new THREE.Vector3(-8, 0, 6),
     yaw: 0,
     pitch: CAMERA.pitchDefault,
     distance: CAMERA.distanceDefault,

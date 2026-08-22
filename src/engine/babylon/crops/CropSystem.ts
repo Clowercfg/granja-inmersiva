@@ -150,8 +150,8 @@ export class CropSystem implements BabylonSystem {
     const halfD = plot.d / 2 - 1;
     const rows = cropDef?.rows ?? 4;
     const spacing = cropDef?.spacing ?? 1.0;
-    const heightMin = cropDef?.heightMin ?? 0.6;
-    const heightMax = cropDef?.heightMax ?? 1.0;
+    const heightMin = (cropDef?.heightMin ?? 0.6) * 1.35;
+    const heightMax = (cropDef?.heightMax ?? 1.0) * 1.35;
 
     const rng = this._seedRandom(plotIndex * 1337 + 42);
 
@@ -177,7 +177,7 @@ export class CropSystem implements BabylonSystem {
         stem.material = stemMat;
         stems.push(stem);
 
-        const headSize = 0.1 + rng() * 0.12;
+        const headSize = (0.1 + rng() * 0.12) * 1.3;
         const head = MeshBuilder.CreateSphere(
           `head_${plotIndex}_${row}_${c}`,
           { diameter: headSize, segments: 6 },
