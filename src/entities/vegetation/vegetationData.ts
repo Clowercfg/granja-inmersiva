@@ -1,4 +1,4 @@
-import { POND, PLOTS, distanceToPaths, terrainHeight, terrainNormal } from "../../utils/terrain";
+import { POND, PLOTS, distanceToPaths, terrainHeight, terrainNormal } from "../../utils/terrainMath";
 import { makeRng } from "../../utils/math";
 import { isNearObstacle } from "../../config/layout";
 import { insideAnyEnclosure } from "../../config/enclosures";

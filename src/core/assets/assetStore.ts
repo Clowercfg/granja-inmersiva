@@ -1,11 +1,10 @@
 import { create } from "zustand";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
-import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { ASSETS, resolveUrl, type AssetDef } from "./assetConfig";
+import { ASSETS, resolveUrl, type AssetDef, ASSET_KEYS_BY_PRIORITY } from "./assetConfig";
 import type { AnimalKind } from "../../types";
+import { mark } from "../bootMetrics";
 
 export type AssetStatus = "idle" | "loading" | "loaded" | "missing";
 
@@ -18,6 +17,7 @@ export interface AssetEntry {
 interface AssetStore {
   entries: Record<string, AssetEntry>;
   ensure: (key: string) => void;
+  ensurePriority: (maxPriority: number) => void;
 }
 
 const IDLE_ENTRY: AssetEntry = { status: "idle" };
@@ -27,18 +27,6 @@ let gltfLoader: GLTFLoader | null = null;
 function getLoader(): GLTFLoader {
   if (!gltfLoader) {
     gltfLoader = new GLTFLoader();
-    try {
-      const draco = new DRACOLoader();
-      draco.setDecoderPath(resolveUrl("three/draco/"));
-      gltfLoader.setDRACOLoader(draco);
-    } catch {
-      /* Draco es opcional */
-    }
-    try {
-      gltfLoader.setMeshoptDecoder(MeshoptDecoder);
-    } catch {
-      /* Meshopt es opcional */
-    }
   }
   return gltfLoader;
 }
@@ -61,7 +49,7 @@ async function loadGltf(key: string, def: AssetDef): Promise<void> {
   } catch {
     if (!warned.has(key)) {
       warned.add(key);
-      console.warn(`[assets] No se encontró ${def.url} → usando placeholder procedural.`);
+      console.warn(`[assets] No se encontro ${def.url} → usando placeholder procedural.`);
     }
     markLoaded(key, { status: "missing" });
   }
@@ -79,11 +67,13 @@ async function loadTexture(key: string, def: AssetDef): Promise<void> {
   } catch {
     if (!warned.has(key)) {
       warned.add(key);
-      console.warn(`[assets] No se encontró ${def.url} → usando textura procedural.`);
+      console.warn(`[assets] No se encontro ${def.url} → usando textura procedural.`);
     }
     markLoaded(key, { status: "missing" });
   }
 }
+
+let priorityQueueStarted = false;
 
 export const useAssetStore = create<AssetStore>((set, get) => ({
   entries: {},
@@ -94,6 +84,31 @@ export const useAssetStore = create<AssetStore>((set, get) => ({
     set((s) => ({ entries: { ...s.entries, [key]: { status: "loading" } } }));
     if (def.kind === "gltf") void loadGltf(key, def);
     else void loadTexture(key, def);
+  },
+  ensurePriority: (maxPriority) => {
+    if (priorityQueueStarted) return;
+    priorityQueueStarted = true;
+    mark("assets_priority_start");
+
+    const scheduleLoad = (keys: string[], delay: number) => {
+      setTimeout(() => {
+        for (const key of keys) {
+          const def = ASSETS[key];
+          const entry = get().entries[key];
+          if (!def || entry?.status === "loading" || entry?.status === "loaded" || entry?.status === "missing") continue;
+          set((s) => ({ entries: { ...s.entries, [key]: { status: "loading" } } }));
+          if (def.kind === "gltf") void loadGltf(key, def);
+          else void loadTexture(key, def);
+        }
+      }, delay);
+    };
+
+    for (let p = 1; p <= maxPriority; p++) {
+      const keys = ASSET_KEYS_BY_PRIORITY[p as keyof typeof ASSET_KEYS_BY_PRIORITY];
+      if (!keys || keys.length === 0) continue;
+      const delay = (p - 1) * 2000;
+      scheduleLoad(keys, delay);
+    }
   },
 }));
 
@@ -121,10 +136,6 @@ export interface AnimalPartsBase {
   phaseOffset: number[];
 }
 
-/**
- * Busca nodos animables por nombre convencional (body, head, tail, leg*, wing*).
- * Los nodos ausentes simplemente no se animan.
- */
 export function attachAnimalParts(model: THREE.Object3D, _kind: AnimalKind): AnimalPartsBase {
   const names = new Map<string, THREE.Object3D>();
   const legs: THREE.Object3D[] = [];
@@ -147,7 +158,6 @@ export function attachAnimalParts(model: THREE.Object3D, _kind: AnimalKind): Ani
   };
 }
 
-/** Clona el modelo del animal y le adjunta los nodos animables. */
 export function prepareAnimalModel(entry: AssetEntry | undefined, kind: AnimalKind): THREE.Object3D | null {
   const clone = cloneAsset(entry);
   if (!clone) return null;
@@ -155,7 +165,6 @@ export function prepareAnimalModel(entry: AssetEntry | undefined, kind: AnimalKi
   return clone;
 }
 
-/** Fusiona todas las geometrías de un modelo en una sola (para instancing). */
 export function geometryFromObject(model: THREE.Object3D): THREE.BufferGeometry | null {
   const parts: THREE.BufferGeometry[] = [];
   model.updateMatrixWorld(true);
@@ -173,7 +182,6 @@ export function geometryFromObject(model: THREE.Object3D): THREE.BufferGeometry 
   return merged;
 }
 
-/** Asegura un atributo de color blanco (necesario para instancing con tintado). */
 export function ensureWhiteVertexColors(geo: THREE.BufferGeometry): THREE.BufferGeometry {
   if (!geo.getAttribute("color")) {
     const pos = geo.attributes.position;

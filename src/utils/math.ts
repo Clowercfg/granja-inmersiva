@@ -1,5 +1,3 @@
-import * as THREE from "three";
-
 export function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
@@ -66,5 +64,3 @@ export function randomPointInRing(rMin: number, rMax: number, rng: () => number)
 export function degToRad(d: number): number {
   return (d * Math.PI) / 180;
 }
-
-export const UP = new THREE.Vector3(0, 1, 0);

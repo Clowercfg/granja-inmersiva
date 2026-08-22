@@ -1,17 +1,8 @@
 import { useEffect } from "react";
 import { useAuthStore } from "../../store/authStore";
+import "../../core/bootMetrics";
 import "./auth.css";
 
-/**
- * TelegramGate:
- * Handles the entire auth flow:
- * 1. Initializes → detects Telegram → auto-login
- * 2. Dev mode: auto dev-login if outside Telegram
- * 3. Shows loading state while bootstrapping / authenticating
- * 4. Shows error if auth fails
- * 5. Shows "not in Telegram" only AFTER bootstrap completes
- * 6. Renders children if authenticated
- */
 export function TelegramGate({ children }: { children: React.ReactNode }) {
   const status = useAuthStore((s) => s.status);
   const error = useAuthStore((s) => s.error);
@@ -23,24 +14,15 @@ export function TelegramGate({ children }: { children: React.ReactNode }) {
     }
   }, [status, init]);
 
-  switch (status) {
-    case "authenticated":
-      return <>{children}</>;
-    case "loading":
-      return <LoadingScreen />;
-    case "error":
-      return <ErrorScreen message={error || "Error de autenticación"} onRetry={init} />;
-    case "not_in_telegram":
-      return <NotInTelegramScreen />;
-    case "initializing":
-    default:
-      return <LoadingScreen />;
-  }
+  if (status === "authenticated") return <>{children}</>;
+  if (status === "error") return <ErrorScreen message={error || "Error de autenticación"} onRetry={init} />;
+  if (status === "not_in_telegram") return <NotInTelegramScreen />;
+  return <LoadingScreen />;
 }
 
 function LoadingScreen() {
   return (
-    <div className="tg-loading" style={{ backgroundImage: "url(/loading-bg.png)" }}>
+    <div className="tg-loading" style={{ backgroundImage: "url(/loading-bg.webp)" }}>
       <div className="tg-loading-card">
         <div className="tg-logo">
           <svg viewBox="0 0 48 48" width="64" height="64">

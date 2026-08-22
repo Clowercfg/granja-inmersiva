@@ -1,9 +1,10 @@
 import type { AnimalAgent, AnimalBounds } from "../../types";
-import { terrainHeight } from "../../utils/terrain";
+import { terrainHeight } from "../../utils/terrainMath";
 import { WORLD } from "../../config/world";
 import { OBSTACLES } from "../../config/layout";
 import { getTreeColliders } from "../../entities/vegetation/vegetationData";
 import { angLerp, clamp, lerp } from "../../utils/math";
+import { isNightTime } from "../time/timeLogic";
 import { timeManager } from "../time/TimeManager";
 import { useVetStore } from "../../store/vetStore";
 import { useUpgradesStore } from "../../store/upgradesStore";
@@ -54,8 +55,7 @@ function clampToBounds(a: AnimalAgent, margin = 1.2): void {
 }
 
 function isNight(): boolean {
-  const h = timeManager.getNow().getHours();
-  return h < 6 || h >= 21;
+  return isNightTime(timeManager.getNow());
 }
 
 function pickState(a: AnimalAgent, rng: () => number): void {

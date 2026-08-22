@@ -1,65 +1,22 @@
 export type TimeMode = "real" | "paused" | "sim";
-export type DayPhase = "dawn" | "morning" | "midday" | "afternoon" | "dusk" | "night";
-export type Season = "spring" | "summer" | "autumn" | "winter";
 
-export const DAY_PHASE_LABEL: Record<DayPhase, string> = {
-  dawn: "Amanecer",
-  morning: "Mañana",
-  midday: "Mediodía",
-  afternoon: "Tarde",
-  dusk: "Atardecer",
-  night: "Noche",
-};
-
-export const SEASON_LABEL: Record<Season, string> = {
-  spring: "Primavera",
-  summer: "Verano",
-  autumn: "Otoño",
-  winter: "Invierno",
-};
-
-export const WEEKDAY_LABEL = [
-  "Domingo",
-  "Lunes",
-  "Martes",
-  "Miércoles",
-  "Jueves",
-  "Viernes",
-  "Sábado",
-] as const;
-
-export const MONTH_LABEL = [
-  "enero",
-  "febrero",
-  "marzo",
-  "abril",
-  "mayo",
-  "junio",
-  "julio",
-  "agosto",
-  "septiembre",
-  "octubre",
-  "noviembre",
-  "diciembre",
-] as const;
-
-export function dayPhaseOf(d: Date): DayPhase {
-  const h = d.getHours();
-  if (h >= 5 && h < 8) return "dawn";
-  if (h >= 8 && h < 11) return "morning";
-  if (h >= 11 && h < 15) return "midday";
-  if (h >= 15 && h < 18) return "afternoon";
-  if (h >= 18 && h < 21) return "dusk";
-  return "night";
-}
-
-export function seasonOf(d: Date): Season {
-  const m = d.getMonth();
-  if (m >= 2 && m <= 4) return "spring";
-  if (m >= 5 && m <= 7) return "summer";
-  if (m >= 8 && m <= 10) return "autumn";
-  return "winter";
-}
+export {
+  type DayPhase,
+  type Season,
+  DAY_PHASE_LABEL,
+  SEASON_LABEL,
+  WEEKDAY_LABEL,
+  MONTH_LABEL,
+  dayPhaseOf,
+  seasonOf,
+  hourOfDay,
+  isNightTime,
+  computeSun,
+  computeAtmosphere,
+  type SunInfo,
+  type Weather,
+  type AtmosphereColors,
+} from "./timeLogic";
 
 type TimeEvent = "second" | "minute" | "hour" | "day";
 
@@ -70,11 +27,6 @@ interface ClockSnapshot {
   day: string;
 }
 
-/**
- * Controla el tiempo del juego. La regla principal: el reloj del juego se
- * sincroniza con la hora real del sistema. También guarda la arquitectura
- * para futuros modos PAUSED y SIMULATION SPEED.
- */
 class TimeManager {
   private mode: TimeMode = "real";
   private speed = 1;
@@ -91,7 +43,6 @@ class TimeManager {
     return this.speed;
   }
 
-  /** Obtiene la fecha/hora actual del juego. En modo real = fecha del sistema. */
   getNow(): Date {
     if (this.mode === "paused" && this.frozenAt !== null) return new Date(this.frozenAt);
     if (this.mode === "sim") return new Date(Date.now() + this.simOffsetMs);
@@ -117,7 +68,6 @@ class TimeManager {
     this.speed = Math.max(0.25, speed);
   }
 
-  /** Avanza el offset simulado y dispara los eventos de tiempo. Llamado desde el frame loop. */
   tick(dtSec: number): void {
     if (this.mode === "sim") this.simOffsetMs += (this.speed - 1) * dtSec * 1000;
 

@@ -1,11 +1,12 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
-import { getVegetation } from "./vegetationData";
+import { getVegetation, type VegetationInstance } from "./vegetationData";
 import { createGrassMaterial } from "../../shaders/grass";
 import { atmosphere } from "../../shaders/atmosphere";
 import { useRendererMode } from "../../core/renderer/useRendererMode";
 import { useWorldStore } from "../../store/worldStore";
+import { useWorldStore as useWS } from "../../store/worldStore";
 
 function buildBladeGeometry(): THREE.BufferGeometry {
   const positions = new Float32Array([
@@ -26,13 +27,22 @@ function buildBladeGeometry(): THREE.BufferGeometry {
   return geo;
 }
 
-function buildInstanced(data: ReturnType<typeof getVegetation>["grass"], geo: THREE.BufferGeometry, mode: string) {
+const GRASS_BATCH_SIZE = 6000;
+
+function buildBatchInstanced(
+  data: VegetationInstance[],
+  geo: THREE.BufferGeometry,
+  mode: string,
+  start: number,
+  count: number
+): THREE.InstancedMesh {
+  const slice = data.slice(start, start + count);
   const mat =
     mode === "webgpu"
       ? new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, alphaTest: 0.4, side: THREE.DoubleSide })
       : createGrassMaterial();
 
-  const mesh = new THREE.InstancedMesh(geo, mat, data.length);
+  const mesh = new THREE.InstancedMesh(geo, mat, slice.length);
   mesh.frustumCulled = false;
   mesh.castShadow = false;
   mesh.receiveShadow = true;
@@ -42,9 +52,9 @@ function buildInstanced(data: ReturnType<typeof getVegetation>["grass"], geo: TH
   const euler = new THREE.Euler();
   const s = new THREE.Vector3();
   const col = new THREE.Color();
-  const colors = new Float32Array(data.length * 3);
+  const colors = new Float32Array(slice.length * 3);
 
-  data.forEach((g, i) => {
+  slice.forEach((g, i) => {
     euler.set(0, g.yaw, 0);
     q.setFromEuler(euler);
     const sc = g.scale;
@@ -62,11 +72,11 @@ function buildInstanced(data: ReturnType<typeof getVegetation>["grass"], geo: TH
   return mesh;
 }
 
-export function GrassField() {
-  const mode = useRendererMode();
-  const bladeGeo = useMemo(() => buildBladeGeometry(), []);
-  const data = useMemo(() => getVegetation(), []);
-  const mesh = useMemo(() => buildInstanced(data.grass, bladeGeo, mode), [data, bladeGeo, mode]);
+function GrassBatch({ bladeGeo, data, mode, start }: { bladeGeo: THREE.BufferGeometry; data: VegetationInstance[]; mode: string; start: number }) {
+  const mesh = useMemo(
+    () => buildBatchInstanced(data, bladeGeo, mode, start, GRASS_BATCH_SIZE),
+    [data, bladeGeo, mode, start]
+  );
   const ref = useRef<THREE.InstancedMesh>(null);
 
   useFrame((_, delta) => {
@@ -89,4 +99,51 @@ export function GrassField() {
   });
 
   return <primitive object={mesh} ref={ref} dispose={null} />;
+}
+
+export function GrassField() {
+  const mode = useRendererMode();
+  const bladeGeo = useMemo(() => buildBladeGeometry(), []);
+  const data = useMemo(() => getVegetation(), []);
+  const booted = useWorldStore((s) => s.booted);
+  const [visibleCount, setVisibleCount] = useState(0);
+
+  useEffect(() => {
+    if (!booted) return;
+    const totalBatches = Math.ceil(data.grass.length / GRASS_BATCH_SIZE);
+    let currentBatch = 0;
+
+    const addBatch = () => {
+      currentBatch++;
+      setVisibleCount(Math.min(currentBatch * GRASS_BATCH_SIZE, data.grass.length));
+      if (currentBatch < totalBatches) {
+        setTimeout(addBatch, 50);
+      }
+    };
+
+    const timer = setTimeout(addBatch, 200);
+    return () => clearTimeout(timer);
+  }, [booted, data.grass.length]);
+
+  const batches = useMemo(() => {
+    const result: number[] = [];
+    for (let i = 0; i < visibleCount; i += GRASS_BATCH_SIZE) {
+      result.push(i);
+    }
+    return result;
+  }, [visibleCount]);
+
+  return (
+    <group>
+      {batches.map((start) => (
+        <GrassBatch
+          key={start}
+          bladeGeo={bladeGeo}
+          data={data.grass}
+          mode={mode}
+          start={start}
+        />
+      ))}
+    </group>
+  );
 }

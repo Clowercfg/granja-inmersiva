@@ -434,7 +434,7 @@ canvas {
   align-items: center;
   justify-content: center;
   gap: 18px;
-  background: #0b1622 url(/loading-bg.png) center/cover no-repeat;
+  background: #0b1622 url(/loading-bg.webp) center/cover no-repeat;
   z-index: 50;
   color: #d7f0c9;
 }
@@ -1292,6 +1292,7 @@ body.store-open .hud {
   max-width: 1500px;
   margin: 0 auto;
   height: 100%;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 10px;

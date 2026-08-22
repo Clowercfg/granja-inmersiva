@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { useWorldStore } from "../../store/worldStore";
+import { mark } from "../bootMetrics";
 
 export type RendererLike = THREE.WebGLRenderer;
 
@@ -43,6 +44,10 @@ export interface RendererProps {
   alpha?: boolean;
 }
 
+function isMobile(): boolean {
+  return typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+}
+
 export async function createRenderer(props: RendererProps): Promise<RendererLike> {
   const canvas = props.canvas;
   const useWebgpu = preferWebgpu() && webgpuSupported();
@@ -57,6 +62,7 @@ export async function createRenderer(props: RendererProps): Promise<RendererLike
       await (renderer as unknown as { init?: () => Promise<void> }).init?.();
       configureWebgpu(renderer);
       useWorldStore.getState().setRendererMode("webgpu");
+      mark("webgpu_ready");
       return renderer;
     } catch (err) {
       console.warn("[renderer] WebGPU no disponible, usando WebGL2.", err);
@@ -71,6 +77,7 @@ export async function createRenderer(props: RendererProps): Promise<RendererLike
   });
   configureWebgl(renderer);
   useWorldStore.getState().setRendererMode("webgl");
+  mark("webgl_ready");
   return renderer;
 }
 
@@ -80,7 +87,8 @@ function configureWebgl(renderer: THREE.WebGLRenderer): void {
   renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const maxDpr = isMobile() ? 1.5 : 2;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxDpr));
 }
 
 function configureWebgpu(renderer: RendererLike): void {
@@ -93,5 +101,6 @@ function configureWebgpu(renderer: RendererLike): void {
   r.outputColorSpace = THREE.SRGBColorSpace;
   r.toneMapping = THREE.ACESFilmicToneMapping;
   r.toneMappingExposure = 1.05;
-  r.setPixelRatio?.(Math.min(window.devicePixelRatio, 2));
+  const maxDpr = isMobile() ? 1.5 : 2;
+  r.setPixelRatio?.(Math.min(window.devicePixelRatio, maxDpr));
 }

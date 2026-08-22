@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { mark, remark } from "../core/bootMetrics";
 
 const API = "/api";
 const SESSION_KEY = "granja_session_token";
@@ -181,6 +182,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   init: async () => {
     // Prevent double-init: only run if currently initializing
     if (get().status !== "initializing") return;
+    mark("auth_started");
+
+    const done = () => remark("auth_completed");
 
     // ── Step 1: Check existing session ──
     const stored = getStoredToken();
@@ -191,6 +195,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (data.user) {
           initTelegramWebAppUI();
           set({ token: stored, user: data.user, status: "authenticated", error: null });
+          done();
           return;
         }
       } catch {
@@ -225,6 +230,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const data = await apiGet("/auth/dev-login");
         storeToken(data.token);
         set({ token: data.token, user: data.user, status: "authenticated", error: null });
+        done();
         return;
       } catch {
         // dev-login unavailable — fall through
@@ -233,6 +239,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     // ── Step 4: Not in Telegram ──
     set({ status: "not_in_telegram", error: null });
+    done();
 
     async function authenticateWithTelegram() {
       const tgApp = getTelegramWebApp();
@@ -247,6 +254,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         storeToken(data.token);
         initTelegramWebAppUI();
         set({ token: data.token, user: data.user, status: "authenticated", error: null });
+        done();
       } catch (err) {
         set({ status: "error", error: (err as Error).message });
       }

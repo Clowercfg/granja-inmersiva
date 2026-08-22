@@ -3,48 +3,11 @@ import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useWorldStore } from "../../store/worldStore";
 import { timeManager } from "./TimeManager";
-import { atmosphere, setFog, setSun, setAmbient, tickAtmosphere } from "../../shaders/atmosphere";
-
-const sunColDay = new THREE.Color("#fff3dd");
-const sunColDusk = new THREE.Color("#ffb36b");
-const sunColCloudy = new THREE.Color("#e6ebf2");
-const moonCol = new THREE.Color("#9db4ff");
-
-const skyDay = new THREE.Color("#a9cfe6");
-const skyDusk = new THREE.Color("#f0c9a0");
-const skyNight = new THREE.Color("#0b1622");
-const skyCloudy = new THREE.Color("#b8c4cc");
-
-const fogDay = new THREE.Color("#d7e3d6");
-const fogDusk = new THREE.Color("#d9c2a2");
-const fogNight = new THREE.Color("#101a24");
-const fogCloudy = new THREE.Color("#aebbbf");
-
-const ambDay = new THREE.Color("#e9f0ea");
-const ambNight = new THREE.Color("#1c2836");
+import { computeSun, computeAtmosphere } from "./timeLogic";
+import { setFog, setSun, setAmbient } from "../../shaders/atmosphere";
 
 const tmp = new THREE.Color();
 const tmp2 = new THREE.Color();
-
-function mixColor(out: THREE.Color, a: THREE.Color, b: THREE.Color, t: number): THREE.Color {
-  return out.copy(a).lerp(b, t);
-}
-
-/** Calcula la posición del sol a partir de la hora real (6h amanecer, 12h cenit, 18h atardecer). */
-function sunFromHour(hour: number): { dir: THREE.Vector3; dayFactor: number; duskFactor: number } {
-  const t = hour / 24;
-  const phi = (t - 0.25) * Math.PI * 2;
-  const elev = Math.sin(phi);
-  const horizon = Math.sqrt(Math.max(0, 1 - elev * elev));
-
-  const dir = new THREE.Vector3(Math.cos(phi) * horizon, elev, Math.sin(phi) * horizon);
-  if (dir.lengthSq() < 1e-6) dir.set(0, 1, 0);
-  dir.normalize();
-
-  const dayFactor = THREE.MathUtils.clamp(elev * 1.4 + 0.15, 0, 1);
-  const duskFactor = THREE.MathUtils.clamp(1 - Math.abs(elev) * 6, 0, 1) * dayFactor;
-  return { dir, dayFactor, duskFactor };
-}
 
 export function TimeSystem() {
   const sunRef = useRef<THREE.DirectionalLight>(null);
@@ -54,7 +17,6 @@ export function TimeSystem() {
   const starsRef = useRef<THREE.Points>(null);
   const scene = useThree((s) => s.scene);
   const camera = useThree((s) => s.camera);
-  const lastSync = useRef(0);
 
   const starPositions = useMemo(() => {
     const count = 900;
@@ -73,59 +35,37 @@ export function TimeSystem() {
 
   useFrame((_, rawDelta) => {
     const dt = Math.min(rawDelta, 0.05);
-    timeManager.tick(dt);
-    tickAtmosphere(dt);
-
     const d = timeManager.getNow();
 
-    // El reloj se refleja en React como mucho 1 vez por segundo.
-    const now = Date.now();
-    if (now - lastSync.current >= 1000) {
-      lastSync.current = now;
-      useWorldStore.getState().syncClock(d);
-    }
-
     const hour = d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
-    const { dir: sunDir, dayFactor, duskFactor } = sunFromHour(hour);
+    const { dirX, dirY, dirZ, dayFactor, duskFactor } = computeSun(hour);
+    const sunDir = new THREE.Vector3(dirX, dirY, dirZ);
 
     const weather = useWorldStore.getState().weather;
-    const weatherDim = weather === "clear" ? 1 : weather === "cloudy" ? 0.55 : 0.35;
-    const weatherFog = weather === "clear" ? 1 : weather === "cloudy" ? 1.8 : 2.6;
+    const atm = computeAtmosphere(hour, weather);
 
-    const sunIntensity = Math.max(0.05, Math.pow(dayFactor, 1.3)) * weatherDim;
-    const sunColor = mixColor(tmp, sunColDay, sunColDusk, duskFactor);
-    if (weather !== "clear") sunColor.lerp(sunColCloudy, weather === "cloudy" ? 0.5 : 0.72);
+    setSun(sunDir, tmp.setRGB(atm.sunR, atm.sunG, atm.sunB), atm.sunIntensity);
+    setAmbient(tmp2.setRGB(atm.ambR, atm.ambG, atm.ambB));
 
-    const skyColor = mixColor(tmp2, skyDay, skyNight, 1 - dayFactor);
-    if (duskFactor > 0.05) skyColor.lerp(skyDusk, duskFactor * 0.9);
-    if (weather !== "clear") skyColor.lerp(skyCloudy, weather === "cloudy" ? 0.6 : 0.8);
-
-    setSun(sunDir, sunColor, sunIntensity * 2.4);
-    setAmbient(mixColor(tmp2, ambDay, ambNight, 1 - dayFactor));
-
-    const fogColor = mixColor(tmp, fogDay, fogNight, 1 - dayFactor);
-    if (duskFactor > 0.05) fogColor.lerp(fogDusk, duskFactor * 0.8);
-    if (weather !== "clear") fogColor.lerp(fogCloudy, weather === "cloudy" ? 0.55 : 0.8);
-    const fogDensity = 0.00045 * weatherFog + (1 - dayFactor) * 0.00025;
-
-    setFog(fogColor, fogDensity);
+    const fogColor = tmp.setRGB(atm.fogR, atm.fogG, atm.fogB);
+    setFog(fogColor, atm.fogDensity);
     const sceneFog = scene.fog as THREE.FogExp2 | null;
     if (sceneFog) {
       sceneFog.color.copy(fogColor);
-      sceneFog.density = fogDensity;
+      sceneFog.density = atm.fogDensity;
     }
-    if (scene.background) (scene.background as THREE.Color).copy(skyColor);
+    if (scene.background) (scene.background as THREE.Color).setRGB(atm.skyR, atm.skyG, atm.skyB);
 
     if (sunRef.current) {
       sunRef.current.position.copy(sunDir).multiplyScalar(320);
-      sunRef.current.intensity = sunIntensity;
-      sunRef.current.color.copy(sunColor);
+      sunRef.current.intensity = atm.sunIntensity / 2.4;
+      sunRef.current.color.setRGB(atm.sunR, atm.sunG, atm.sunB);
     }
     if (moonRef.current) {
       const moonFactor = 1 - dayFactor;
       moonRef.current.position.copy(sunDir).multiplyScalar(-320);
       moonRef.current.intensity = moonFactor * 0.35;
-      moonRef.current.color.copy(moonCol);
+      moonRef.current.color.setRGB(0.616, 0.706, 1);
     }
 
     const sunPos = camera.position.clone().add(sunDir.clone().multiplyScalar(420));
@@ -135,8 +75,7 @@ export function TimeSystem() {
 
     if (starsRef.current) {
       const m = starsRef.current.material as THREE.PointsMaterial;
-      const target = Math.pow(1 - dayFactor, 1.6);
-      m.opacity = THREE.MathUtils.damp(m.opacity, target, 2, dt);
+      m.opacity = THREE.MathUtils.damp(m.opacity, atm.starsOpacity, 2, dt);
     }
   });
 
@@ -157,7 +96,7 @@ export function TimeSystem() {
         shadow-camera-far={800}
         shadow-bias={-0.0004}
       />
-      <directionalLight ref={moonRef} position={[-120, 120, -80]} intensity={0} color={moonCol} />
+      <directionalLight ref={moonRef} position={[-120, 120, -80]} intensity={0} color="#9db4ff" />
       <hemisphereLight args={["#d9e8f2", "#3c5a3a", 0.55]} />
       <ambientLight intensity={0.25} color="#dfe8e0" />
       <mesh ref={sunBall}>

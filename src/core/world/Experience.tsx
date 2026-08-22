@@ -1,3 +1,4 @@
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useWorldStore } from "../../store/worldStore";
 import { useFarmStore } from "../../store/farmStore";
@@ -20,7 +21,6 @@ import {
 } from "../../config/offers";
 import { createRenderer } from "../renderer/renderer";
 import { CameraRig } from "../camera/CameraRig";
-import { PostFX } from "../fx/PostFX";
 import { Terrain } from "../../entities/terrain/Terrain";
 import { Water } from "../../entities/terrain/Water";
 import { Trees } from "../../entities/vegetation/Trees";
@@ -41,9 +41,25 @@ import { ProcessingSystem } from "../../systems/processing/ProcessingSystem";
 import { PhysicsWorld } from "../../systems/physics/PhysicsWorld";
 import { InteriorCamera } from "../interiors/InteriorCamera";
 import { InteriorGroup } from "../interiors/InteriorGroup";
+import { GameLogic } from "../GameLogic";
+import { mark } from "../bootMetrics";
+
+const PostFXLazy = lazy(() => import("../fx/PostFX").then((m) => ({ default: m.PostFX })));
+
+function PhysicsFallback() {
+  return null;
+}
 
 export function Experience() {
   const booted = useWorldStore((s) => s.booted);
+  const [showPostFX, setShowPostFX] = useState(false);
+
+  useEffect(() => {
+    if (booted) {
+      const timer = setTimeout(() => setShowPostFX(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [booted]);
 
   return (
     <div
@@ -56,6 +72,7 @@ export function Experience() {
       gl={createRenderer as unknown as React.ComponentProps<typeof Canvas>["gl"]}
       camera={{ fov: 50, near: 0.5, far: 1600, position: [110, 95, -125] }}
       onCreated={(state) => {
+        mark("canvas_created");
         useWorldStore.getState().setBooted(true);
         (window as unknown as Record<string, unknown>).__IFS__ = {
           renderer: state.gl,
@@ -84,6 +101,7 @@ export function Experience() {
       }}
     >
       <color attach="background" args={["#a9cfe6"]} />
+      <GameLogic />
       <TimeSystem />
       <CameraRig />
       <InteriorCamera />
@@ -105,8 +123,14 @@ export function Experience() {
       <CropSystem />
       <VetSystem />
       <ProcessingSystem />
-      <PhysicsWorld />
-      {booted && <PostFX />}
+      <Suspense fallback={<PhysicsFallback />}>
+        <PhysicsWorld />
+      </Suspense>
+      {showPostFX && (
+        <Suspense fallback={null}>
+          <PostFXLazy />
+        </Suspense>
+      )}
       </Canvas>
     </div>
   );
